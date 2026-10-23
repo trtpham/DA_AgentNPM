@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="220" viewBox="0 0 800 220" role="img" aria-labelledby="title desc">
+  <title id="title">Chưa có ảnh kết quả</title>
+  <desc id="desc">Khung chờ ảnh kết quả thật của tuần.</desc>
+  <rect width="800" height="220" rx="14" fill="#f5f6f8"/>
+  <rect x="12" y="12" width="776" height="196" rx="10" fill="none" stroke="#b8c0cc" stroke-dasharray="8 8"/>
+  <text x="400" y="102" text-anchor="middle" fill="#344054" font-family="Arial, sans-serif" font-size="26" font-weight="700">CHƯA CÓ ẢNH KẾT QUẢ</text>
+  <text x="400" y="139" text-anchor="middle" fill="#667085" font-family="Arial, sans-serif" font-size="16">Thay bằng ảnh thật khi hoàn thành công việc của tuần</text>
+</svg>
