@@ -76,3 +76,15 @@ EVIDENCE_REFERENCES: Người dùng làm rõ trong chat: “ý tôi là tool rea
 - Owner: Codex. Reviewer/PO: Phạm Minh Triết.
 - Phạm vi: thay báo cáo chỉ có sau khi chạy bằng dashboard HTTP chỉ lắng nghe `127.0.0.1`, cập nhật trace và verdict theo thời gian thực trong lúc A-TLM/A-SLM chạy; giữ bản HTML cuối để xem lại.
 - Không mở server ra LAN, không chạy mã npm, không chuyển nội dung file/prompt/phản hồi thô qua dashboard.
+
+## B0.7 — Chạy A-TLM và A-LLM
+
+DECISION: APPROVED
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-10-23 Asia/Saigon
+EVIDENCE_REFERENCES: Yêu cầu trực tiếp trong chat: “TLM với LLM chạy giúp tôi”.
+
+- Owner: Codex. Reviewer/PO: Phạm Minh Triết.
+- Phạm vi: mở lựa chọn A-LLM từ cấu hình `qwen3.5:9b` đã có; chạy A-TLM và A-LLM trên fixture vô hại qua dashboard localhost, ghi kết quả và giới hạn thật.
+- Không chạy install script npm, không dùng mẫu độc hoặc nhận kết quả model làm nhãn dữ liệu.
+- Kết quả kiểm chứng: A-TLM (`qwen3.5:0.8b`) FAIL sau 15 bước vì verdict không hợp schema; A-LLM (`qwen3.5:9b`) PASS sau 3 bước với verdict `benign`, `approve`, bằng chứng `postinstall.js:2` trên fixture vô hại.

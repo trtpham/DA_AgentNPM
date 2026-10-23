@@ -135,7 +135,7 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
 def main() -> None:
     parser = argparse.ArgumentParser(description="Analyze an extracted npm package without executing it")
     parser.add_argument("package", help="path to an extracted package")
-    parser.add_argument("model", choices=("A-TLM", "A-SLM"))
+    parser.add_argument("model", choices=("A-TLM", "A-SLM", "A-LLM"))
     args = parser.parse_args()
     config = Path("experiments/configs") / f"{args.model}.yaml"
     values = dict(line.split(": ", 1) for line in config.read_text().splitlines() if ": " in line)

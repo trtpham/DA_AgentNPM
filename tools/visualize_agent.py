@@ -167,7 +167,7 @@ def render(variant: str, model: str, trace: list[dict], verdict=None, error: str
 def main() -> None:
     parser = argparse.ArgumentParser(description="Visualize a read-only npm agent run as HTML")
     parser.add_argument("package", help="path to an extracted package")
-    parser.add_argument("variant", choices=("A-TLM", "A-SLM"))
+    parser.add_argument("variant", choices=("A-TLM", "A-SLM", "A-LLM"))
     parser.add_argument("--output", type=Path, default=Path("reports/agent-flow.html"))
     args = parser.parse_args()
     config = Path(__file__).resolve().parents[1] / "experiments" / "configs" / f"{args.variant}.yaml"

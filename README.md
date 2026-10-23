@@ -33,4 +33,11 @@ Chạy Ollama rồi khởi động bảng theo dõi trong lúc agent phân tích
 rtk python -m tools.visualize_agent tests/fixtures/benign-package A-SLM
 ```
 
-Mở URL `http://127.0.0.1:<port>/` mà lệnh in ra ngay khi bắt đầu; các bước cập nhật trong lúc model chạy. Sau khi xem xong, nhấn Ctrl+C để dừng server. Bản HTML cuối được lưu ở `reports/agent-flow.html`. Có thể thay `A-SLM` bằng `A-TLM`. Nếu model không tạo được verdict hợp lệ, trang vẫn ghi các bước và lý do lỗi. Trang không chứa mã nguồn gói, prompt hay phản hồi thô của model. File HTML sinh ra được Git ignore.
+Mở URL `http://127.0.0.1:<port>/` mà lệnh in ra ngay khi bắt đầu; các bước cập nhật trong lúc model chạy. Sau khi xem xong, nhấn Ctrl+C để dừng server. Bản HTML cuối được lưu ở `reports/agent-flow.html`. Có thể thay `A-SLM` bằng `A-TLM` hoặc `A-LLM`; dùng `--output reports/A-LLM-agent-flow.html` nếu muốn giữ báo cáo từng model. Nếu model không tạo được verdict hợp lệ, trang vẫn ghi các bước và lý do lỗi. Trang không chứa mã nguồn gói, prompt hay phản hồi thô của model. File HTML sinh ra được Git ignore.
+
+Chạy lần lượt hai biến thể TLM và LLM, mỗi lệnh mở một URL dashboard riêng:
+
+```powershell
+rtk python -m tools.visualize_agent tests/fixtures/benign-package A-TLM --output reports/A-TLM-agent-flow.html
+rtk python -m tools.visualize_agent tests/fixtures/benign-package A-LLM --output reports/A-LLM-agent-flow.html
+```
