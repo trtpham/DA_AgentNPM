@@ -19,6 +19,17 @@ Agent trả verdict hợp lệ với công cụ giả; sandbox ghi dấu vết t
 - NOT_RUN: vòng lặp agent, gọi Ollama, `extract_indicators`, dấu vết `strace` và canary; các mục này chưa triển khai.
 - Vướng mắc / bước tiếp: hoàn thiện các mục còn lại của tuần 3, sau đó thử trong VM/container có Docker Linux daemon.
 
+## Thử agent với A-TLM và A-SLM (2026-10-23)
+
+Đầu vào: `tests/fixtures/benign-package` (`postinstall.js` chỉ ghi marker cục bộ). Vòng lặp agent dùng `read_manifest`/`read_file`, Ollama cục bộ, tối đa 15 bước; không chạy install script.
+
+| Biến thể | Kết quả | Bằng chứng |
+| --- | --- | --- |
+| A-TLM (`qwen3.5:0.8b`) | FAIL: gọi công cụ được nhưng không tạo verdict hợp schema trong 15 bước | `evidence.lines` sai định dạng; không chấp nhận verdict |
+| A-SLM (`qwen3.5:4b`) | PASS: `benign`, `approve`, 3 bước | `postinstall.js:1-2`; JSON cục bộ ở `reports/A-SLM-benign-fixture.json` |
+
+Kiểm tra mã: `rtk python -m pytest -q` → 10 PASS; `rtk semgrep scan --error --quiet` → exit 0. Chưa phân tích mã của ba ứng viên advisory, nên chưa có đánh giá độ chính xác trên dữ liệu thật.
+
 ## Ảnh kết quả
 
 ![Các công cụ đọc đã kiểm thử của tuần 03](hinh-anh/tuan-03-ket-qua.svg)
