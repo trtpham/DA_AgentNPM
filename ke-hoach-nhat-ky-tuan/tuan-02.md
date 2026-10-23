@@ -18,6 +18,7 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 - Kiểm chứng: `rtk python -m pytest -q --tb=line --basetemp=.pytest_tmp` — PASS (8 test); test xác nhận lệnh `npm pack` không chạy script, chặn traversal/symlink và lệnh Docker có `--network none`.
 - NOT_RUN: tải gói npm thật và chạy sandbox thật; Docker Linux daemon không kết nối được tại `npipe:////./pipe/dockerDesktopLinuxEngine`.
 - BLOCKED: `rtk semgrep scan` lỗi `Unix.EACCES: socketpair` trong môi trường hiện tại; chưa có kết quả quét tĩnh Semgrep.
+- Bổ sung 2026-10-23: ghi 3 ứng viên gói có `postinstall` từ GitHub Advisory/OpenSSF vào `data/candidates.csv` (chỉ metadata, không tải gói). Các nhãn nguồn chưa được kiểm tra độc lập và chưa nhập vào `labels.csv`.
 - Vướng mắc / bước tiếp: `data/labels.csv` chỉ có header vì chưa có mẫu nguồn và người kiểm tra chéo; mốc dữ liệu v1 chưa đạt. Chạy fixture trong Docker khi daemon sẵn sàng, thu nguồn nhãn và kiểm tra chéo trước khi đánh dấu hoàn tất.
 
 ## Ảnh kết quả

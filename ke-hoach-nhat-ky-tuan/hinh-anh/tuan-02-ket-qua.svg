@@ -2,7 +2,7 @@
   <rect width="900" height="240" fill="#10212b"/>
   <text x="32" y="54" fill="#f4f8fa" font-family="Arial" font-size="26">Tuần 02 · Kết quả ngày 2026-10-23</text>
   <text x="32" y="103" fill="#8ff0b4" font-family="Consolas, monospace" font-size="22">pytest: 8 passed</text>
-  <text x="32" y="143" fill="#f4f8fa" font-family="Arial" font-size="19">Schema · npm pack an toàn · bộ nhãn · cấu hình Docker</text>
+  <text x="32" y="143" fill="#f4f8fa" font-family="Arial" font-size="19">3 ứng viên advisory; nhãn thật còn chờ kiểm tra chéo</text>
   <text x="32" y="185" fill="#ffd18a" font-family="Arial" font-size="19">Docker thực chạy: NOT_RUN (daemon chưa sẵn sàng)</text>
   <text x="32" y="218" fill="#9fb2be" font-family="Arial" font-size="14">Tổng hợp từ lệnh kiểm thử, không phải ảnh chụp container.</text>
 </svg>
