@@ -13,13 +13,14 @@ Agent trả verdict hợp lệ với công cụ giả; sandbox ghi dấu vết t
 
 ## Nhật ký
 
-- Ngày / người thực hiện / người kiểm tra: chưa cập nhật.
-- Đã làm: chưa cập nhật.
-- Kiểm chứng (lệnh và PASS/FAIL/NOT_RUN): chưa cập nhật.
-- Vướng mắc / bước tiếp: chưa cập nhật.
+- Ngày / người thực hiện / người kiểm tra: 2026-10-23 / Codex / chưa có người kiểm tra chéo.
+- Đã làm: phần đầu TV1-4 và TV1-5 (`read_manifest`, `read_file`) với bọc nội dung không tin cậy, giới hạn 256 KiB/file và 150 dòng/lần đọc, chặn đọc ngoài thư mục gói.
+- Kiểm chứng: `rtk python -m pytest -q --tb=line --basetemp=.pytest_tmp` — PASS (8 test), gồm đọc manifest và kiểm tra giới hạn đường dẫn/dòng.
+- NOT_RUN: vòng lặp agent, gọi Ollama, `extract_indicators`, dấu vết `strace` và canary; các mục này chưa triển khai.
+- Vướng mắc / bước tiếp: hoàn thiện các mục còn lại của tuần 3, sau đó thử trong VM/container có Docker Linux daemon.
 
 ## Ảnh kết quả
 
-![Chưa có ảnh kết quả tuần 03](hinh-anh/chua-co-anh.svg)
+![Các công cụ đọc đã kiểm thử của tuần 03](hinh-anh/tuan-03-ket-qua.svg)
 
-*Thay ảnh này bằng ảnh kết quả thật khi có bằng chứng.*
+*Ảnh SVG tổng hợp test của hai công cụ đọc; chưa có ảnh agent hoặc sandbox chạy thật.*

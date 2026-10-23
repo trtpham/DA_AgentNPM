@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220">
+  <rect width="900" height="220" fill="#10212b"/>
+  <text x="32" y="54" fill="#f4f8fa" font-family="Arial" font-size="26">Tuần 03 · Phần đã triển khai</text>
+  <text x="32" y="103" fill="#8ff0b4" font-family="Consolas, monospace" font-size="22">read_manifest + read_file: PASS</text>
+  <text x="32" y="145" fill="#f4f8fa" font-family="Arial" font-size="19">Có giới hạn file, dòng và đường dẫn; bọc dữ liệu untrusted.</text>
+  <text x="32" y="188" fill="#ffd18a" font-family="Arial" font-size="19">Agent, indicators, strace, canary: NOT_RUN</text>
+</svg>

@@ -1,0 +1,3 @@
+name: A-SLM
+model: qwen3.5:4b
+max_steps: 15
