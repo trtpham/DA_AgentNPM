@@ -35,3 +35,10 @@ Kiểm tra mã: `rtk python -m pytest -q` → 10 PASS; `rtk semgrep scan --error
 ![Các công cụ đọc đã kiểm thử của tuần 03](hinh-anh/tuan-03-ket-qua.svg)
 
 *Ảnh SVG tổng hợp test của hai công cụ đọc; chưa có ảnh agent hoặc sandbox chạy thật.*
+
+## Công cụ trực quan hóa agent (2026-10-23)
+
+- Thêm `tools/visualize_agent.py`: chạy A-TLM/A-SLM trên gói đã giải nén, ghi các bước thật (đọc manifest, gọi công cụ, kiểm tra verdict) và tạo `reports/agent-flow.html` để trình chiếu. Khi model thất bại, trang vẫn hiện luồng và lỗi, lệnh trả mã 1.
+- Thử trên fixture vô hại với A-SLM: PASS; trang HTML được tạo tại `reports/agent-flow.html`, có verdict `benign` và không chứa mã nguồn fixture hoặc prompt hệ thống.
+- Kiểm tra offline: `rtk python -m pytest -q --basetemp=.pytest_tmp` → 11 PASS; `rtk semgrep scan --error --quiet` → exit 0; `rtk git diff --check` → exit 0. Nhánh lỗi với đường dẫn gói không tồn tại tạo HTML và trả mã 1.
+- Chưa có ảnh chụp giao diện: trình duyệt tích hợp chặn URL `file:` theo chính sách bảo mật. Mở file HTML bằng trình duyệt trên máy để xem trực tiếp khi demo.

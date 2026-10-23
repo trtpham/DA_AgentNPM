@@ -53,3 +53,15 @@ EVIDENCE_REFERENCES: yêu cầu và phê duyệt trong chat ngày 2026-10-23; `k
 - Regression: 8 test hiện có tiếp tục PASS; Semgrep không finding.
 - Rollback: revert commit triển khai; không có migration hoặc dữ liệu cần khôi phục.
 - Dừng nếu tool yêu cầu đường dẫn ngoài gói, model không trả verdict hợp lệ, hoặc Ollama không sẵn sàng.
+
+## B0.5 — Trực quan hóa quy trình agent
+
+DECISION: APPROVED
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-10-23 Asia/Saigon
+EVIDENCE_REFERENCES: Yêu cầu trực tiếp trong chat: “làm thêm 1 tool để trực quan hóa quy trình hoạt động của agent”.
+
+- Owner: Codex. Reviewer/PO: Phạm Minh Triết.
+- Phạm vi: ghi trace tóm tắt các bước thực thi thật trong `agent/run.py`; thêm công cụ tạo trang HTML độc lập, test offline và hướng dẫn demo.
+- Trace không lưu nội dung file gói, prompt hoặc nội dung trả lời thô của model; giao diện chỉ hiển thị lệnh đọc, kết quả kiểm tra và verdict đã xác thực.
+- Không chạy script cài đặt npm, không thêm mẫu độc, không thay đổi schema verdict hoặc hợp đồng trả về của `analyze`.

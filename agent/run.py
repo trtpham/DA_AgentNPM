@@ -56,7 +56,7 @@ def _tool(package: str, name: str, arguments: dict) -> dict:
     return {"ok": False, "data": None, "error": "invalid tool call"}
 
 
-def analyze(package: str, model: str, max_steps: int = 15, chat=_chat) -> tuple[Verdict, int]:
+def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: list[dict] | None = None) -> tuple[Verdict, int]:
     if not 1 <= max_steps <= 15:
         raise ValueError("max_steps must be between 1 and 15")
     manifest = read_manifest(package)
@@ -68,6 +68,8 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat) -> tuple[
     if not isinstance(metadata, dict) or not all(isinstance(metadata.get(key), str) for key in ("name", "version")):
         raise ValueError("package.json needs a name and version")
     package_id = f"{metadata['name']}@{metadata['version']}"
+    if trace is not None:
+        trace.append({"step": 0, "kind": "manifest", "status": "ok", "detail": package_id})
     messages = [{"role": "system", "content": SYSTEM},
                 {"role": "user", "content": f"Analyze {package_id}. Manifest data: {json.dumps(manifest['data'])}. Call read_file to inspect its scripts before verdict."}]
     inspected = {"package.json"}
@@ -82,16 +84,23 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat) -> tuple[
                 function = call.get("function", {})
                 name, arguments = function.get("name"), function.get("arguments", {})
                 result = _tool(package, name, arguments)
+                content = json.dumps(result, ensure_ascii=False)
+                if len(content) > 16000:
+                    result = {"ok": False, "data": None, "error": "tool result too large; request fewer lines"}
+                    content = json.dumps(result)
+                if trace is not None:
+                    target = arguments.get("file", "package.json") if isinstance(arguments, dict) else "package.json"
+                    trace.append({"step": step, "kind": "tool", "status": "ok" if result["ok"] else "error",
+                                  "detail": f"{name}: {target}" if result["ok"] else result["error"]})
                 if name == "read_file" and result["ok"] and result["data"]["content"]:
                     inspected.add(arguments["file"])
                     inspected_source |= arguments["file"] != "package.json"
-                content = json.dumps(result, ensure_ascii=False)
-                if len(content) > 16000:
-                    content = json.dumps({"ok": False, "data": None, "error": "tool result too large; request fewer lines"})
                 messages.append({"role": "tool", "tool_name": str(name or "invalid"), "content": content})
             continue
         content = message.get("content", "")
         if not inspected_source:
+            if trace is not None:
+                trace.append({"step": step, "kind": "feedback", "status": "retry", "detail": "Chưa đọc mã nguồn"})
             messages.extend([message, {"role": "user", "content": "Call read_file on the script source before giving a verdict."}])
             continue
         try:
@@ -106,10 +115,17 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat) -> tuple[
                 excerpt = read_file(package, evidence.file, bounds[0], bounds[-1])
                 if not excerpt["ok"] or not excerpt["data"]["content"]:
                     raise ValueError(f"invalid evidence lines: {evidence.file}:{evidence.lines}")
+            if trace is not None:
+                trace.append({"step": step, "kind": "verdict", "status": "ok", "detail": verdict.label})
             return verdict, step
         except (ValidationError, ValueError) as error:
+            if trace is not None:
+                detail = "JSON verdict không hợp schema" if isinstance(error, ValidationError) else str(error)
+                trace.append({"step": step, "kind": "validation", "status": "retry", "detail": detail})
             final = True
             messages.extend([message, {"role": "user", "content": f"Invalid verdict: {str(error)[:300]}. Return one JSON object with every field required by the system prompt. Evidence lines must be a one-based string like '2', not an array or code. Use package {package_id} and inspected files {sorted(inspected)}."}])
+    if trace is not None:
+        trace.append({"step": max_steps, "kind": "verdict", "status": "error", "detail": "Hết giới hạn bước"})
     raise RuntimeError(f"no valid evidence-backed verdict within {max_steps} steps")
 
 

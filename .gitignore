@@ -5,3 +5,4 @@ __pycache__/
 data/samples/
 data/labels-prepared.csv
 reports/*.json
+reports/*.html

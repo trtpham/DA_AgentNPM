@@ -27,17 +27,21 @@ def test_agent_reads_source_and_validates_verdict():
         {"role": "assistant", "content": json.dumps(verdict)},
     ])
     final_flags = []
+    trace = []
 
     def chat(_model, _messages, final=False):
         final_flags.append(final)
         return next(replies)
 
-    result, steps = analyze(FIXTURE, "fake-model", chat=chat)
+    result, steps = analyze(FIXTURE, "fake-model", chat=chat, trace=trace)
 
     assert steps == 3
     assert final_flags == [False, False, True]
     assert result.label == "benign"
     assert result.behaviors[0].evidence.lines == "2"
+    assert [(item["step"], item["kind"], item["status"]) for item in trace] == [
+        (0, "manifest", "ok"), (1, "tool", "ok"), (2, "validation", "retry"), (3, "verdict", "ok")]
+    assert "local marker" not in str(trace)
 
 
 def test_agent_rejects_unread_evidence_and_path_escape():
