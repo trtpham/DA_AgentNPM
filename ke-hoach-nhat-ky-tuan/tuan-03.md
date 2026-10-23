@@ -38,7 +38,7 @@ Kiểm tra mã: `rtk python -m pytest -q` → 10 PASS; `rtk semgrep scan --error
 
 ## Công cụ trực quan hóa agent (2026-10-23)
 
-- Thêm `tools/visualize_agent.py`: chạy A-TLM/A-SLM trên gói đã giải nén, ghi các bước thật (đọc manifest, gọi công cụ, kiểm tra verdict) và tạo `reports/agent-flow.html` để trình chiếu. Khi model thất bại, trang vẫn hiện luồng và lỗi, lệnh trả mã 1.
-- Thử trên fixture vô hại với A-SLM: PASS; trang HTML được tạo tại `reports/agent-flow.html`, có verdict `benign` và không chứa mã nguồn fixture hoặc prompt hệ thống.
-- Kiểm tra offline: `rtk python -m pytest -q --basetemp=.pytest_tmp` → 11 PASS; `rtk semgrep scan --error --quiet` → exit 0; `rtk git diff --check` → exit 0. Nhánh lỗi với đường dẫn gói không tồn tại tạo HTML và trả mã 1.
-- Chưa có ảnh chụp giao diện: trình duyệt tích hợp chặn URL `file:` theo chính sách bảo mật. Mở file HTML bằng trình duyệt trên máy để xem trực tiếp khi demo.
+- Thêm `tools/visualize_agent.py`: chạy A-TLM/A-SLM trên gói đã giải nén, mở dashboard localhost trước khi gọi Ollama, cập nhật từng lượt model, lệnh đọc file và kiểm tra verdict trong lúc chạy. Bản cuối được lưu ở `reports/agent-flow.html`.
+- Thử trên fixture vô hại với A-SLM: API dashboard trả `running=True` cùng trace trước khi model hoàn tất; sau đó `running=False`, verdict `benign`, không có lỗi. Trang cuối không chứa mã nguồn fixture hoặc prompt hệ thống.
+- Kiểm tra offline: `rtk python -m pytest -q --basetemp=.pytest_tmp` → 11 PASS; `rtk semgrep scan --error --quiet` → exit 0; `rtk git diff --check` → exit 0. Nhánh lỗi với đường dẫn gói không tồn tại trả `running=False`, thông báo lỗi và trang theo dõi.
+- Chưa có ảnh chụp giao diện tự động: trình duyệt tích hợp chặn URL `file:` theo chính sách bảo mật trước đó. Dashboard HTTP chỉ được kiểm tra qua API và nội dung HTML; cần mở URL localhost trên máy để xem trực quan khi demo.

@@ -65,3 +65,14 @@ EVIDENCE_REFERENCES: Yêu cầu trực tiếp trong chat: “làm thêm 1 tool �
 - Phạm vi: ghi trace tóm tắt các bước thực thi thật trong `agent/run.py`; thêm công cụ tạo trang HTML độc lập, test offline và hướng dẫn demo.
 - Trace không lưu nội dung file gói, prompt hoặc nội dung trả lời thô của model; giao diện chỉ hiển thị lệnh đọc, kết quả kiểm tra và verdict đã xác thực.
 - Không chạy script cài đặt npm, không thêm mẫu độc, không thay đổi schema verdict hoặc hợp đồng trả về của `analyze`.
+
+## B0.6 — Cập nhật trực tiếp khi model chạy
+
+DECISION: APPROVED
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-10-23 Asia/Saigon
+EVIDENCE_REFERENCES: Người dùng làm rõ trong chat: “ý tôi là tool realtime trong trình chạy các mô hình cơ mà”.
+
+- Owner: Codex. Reviewer/PO: Phạm Minh Triết.
+- Phạm vi: thay báo cáo chỉ có sau khi chạy bằng dashboard HTTP chỉ lắng nghe `127.0.0.1`, cập nhật trace và verdict theo thời gian thực trong lúc A-TLM/A-SLM chạy; giữ bản HTML cuối để xem lại.
+- Không mở server ra LAN, không chạy mã npm, không chuyển nội dung file/prompt/phản hồi thô qua dashboard.

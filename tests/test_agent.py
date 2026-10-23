@@ -30,6 +30,7 @@ def test_agent_reads_source_and_validates_verdict():
     trace = []
 
     def chat(_model, _messages, final=False):
+        assert trace[-1]["kind"] == "model"
         final_flags.append(final)
         return next(replies)
 
@@ -40,7 +41,9 @@ def test_agent_reads_source_and_validates_verdict():
     assert result.label == "benign"
     assert result.behaviors[0].evidence.lines == "2"
     assert [(item["step"], item["kind"], item["status"]) for item in trace] == [
-        (0, "manifest", "ok"), (1, "tool", "ok"), (2, "validation", "retry"), (3, "verdict", "ok")]
+        (0, "manifest", "ok"), (1, "model", "info"), (1, "tool", "ok"),
+        (2, "model", "info"), (2, "validation", "retry"),
+        (3, "model", "info"), (3, "verdict", "ok")]
     assert "local marker" not in str(trace)
 
 

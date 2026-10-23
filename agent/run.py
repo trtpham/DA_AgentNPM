@@ -76,6 +76,9 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
     inspected_source = False
     final = False
     for step in range(1, max_steps + 1):
+        if trace is not None:
+            trace.append({"step": step, "kind": "model", "status": "info",
+                          "detail": "Gửi yêu cầu verdict JSON tới Ollama" if final else "Gửi yêu cầu tool calling tới Ollama"})
         message = chat(model, messages, final=True) if final else chat(model, messages)
         calls = message.get("tool_calls") or []
         if calls:

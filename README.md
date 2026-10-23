@@ -27,10 +27,10 @@ Agent gọi Ollama cục bộ, dùng `read_manifest`/`read_file`, giới hạn 1
 
 ## Trực quan hóa quy trình agent
 
-Chạy Ollama và tạo trang HTML từ các bước agent thực sự thực hiện trên fixture vô hại:
+Chạy Ollama rồi khởi động bảng theo dõi trong lúc agent phân tích fixture vô hại:
 
 ```powershell
 rtk python -m tools.visualize_agent tests/fixtures/benign-package A-SLM
 ```
 
-Mở `reports/agent-flow.html` bằng trình duyệt để trình chiếu. Có thể thay `A-SLM` bằng `A-TLM`. Nếu model không tạo được verdict hợp lệ, trang vẫn ghi các bước và lý do lỗi; lệnh trả mã 1. Trang không chứa mã nguồn gói, prompt hay phản hồi thô của model. File HTML sinh ra được Git ignore.
+Mở URL `http://127.0.0.1:<port>/` mà lệnh in ra ngay khi bắt đầu; các bước cập nhật trong lúc model chạy. Sau khi xem xong, nhấn Ctrl+C để dừng server. Bản HTML cuối được lưu ở `reports/agent-flow.html`. Có thể thay `A-SLM` bằng `A-TLM`. Nếu model không tạo được verdict hợp lệ, trang vẫn ghi các bước và lý do lỗi. Trang không chứa mã nguồn gói, prompt hay phản hồi thô của model. File HTML sinh ra được Git ignore.
