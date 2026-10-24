@@ -121,3 +121,15 @@ EVIDENCE_REFERENCES: yêu cầu trực tiếp trong chat về hiển thị việ
 - Phạm vi: bổ sung thông tin giải thích và đoạn mã đã được `read_file` đọc vào trace phục vụ dashboard cục bộ; hiển thị số dòng, file, kết quả, giới hạn hiển thị rõ ràng trong replay/live.
 - Giới hạn: chỉ hiển thị văn bản đã đọc từ fixture/gói được chọn, không chạy mã npm, không đọc `data/samples/`, không gửi trace ra mạng ngoài. Mã gói và lời mô hình là dữ liệu không tin cậy, phải escape hoặc dùng `textContent`.
 - Owner: Codex. Reviewer agent: TV2; Reviewer/PO giao diện: Phạm Minh Triết.
+
+## Gate B0 — sửa các lỗi điều tra gói theo tài liệu 5 vấn đề (2026-10-24)
+
+DECISION: APPROVED FOR INCREMENTAL IMPLEMENTATION
+PO: Phạm Minh Triết
+EVIDENCE_REFERENCES: Yêu cầu trực tiếp trong chat “fix từng cái, ko cần sửa hết đâu, sửa được bao nhiêu thì cứ sửa”; tài liệu đính kèm “Hướng dẫn xử lý 5 vấn đề nghiêm trọng của DA_AgentNPM”.
+
+- AS-IS: `main` sạch tại `ff9873d`; `read_manifest` đọc đủ file nhưng `agent/run.py` đọc lại 150 dòng đầu, bỏ qua manifest dài; vòng lặp buộc đọc file ngoài `package.json` cả khi script viết thẳng; dòng minify có thể vượt giới hạn kết quả; `labels.csv` chưa có nhãn kiểm tra chéo.
+- Phạm vi được làm từng phần: sửa đọc manifest, xác định script/file đích, xử lý dòng dài ở công cụ đọc, chia dev/test theo nhãn và cụm, thêm kiểm soát quyết định nếu có đủ dữ liệu đầu vào; thêm fixture vô hại và test tương ứng.
+- Giới hạn: không chạy install script, không tải/giải nén gói độc trên host, không tự gán nhãn thật, không tự duyệt gói chỉ vì thiếu lifecycle script, không ghi `package.json` hoặc gọi lệnh approve/deny thật. Các mục cần VM, dữ liệu nhãn và tích hợp OSV/canary được báo chưa hoàn tất.
+- Owner: Codex. Reviewer agent/dữ liệu: TV2 (Phạm Minh Triết); kiểm tra chéo code và nhãn trước khi công bố kết quả thực nghiệm.
+- Regression: giữ hợp đồng `Verdict` và đầu ra công cụ đang dùng; chạy pytest, semgrep và `git diff --check`. Rollback bằng hoàn tác commit sửa lỗi; không có migration dữ liệu.

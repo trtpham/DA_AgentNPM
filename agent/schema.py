@@ -43,4 +43,7 @@ class Verdict(BaseModel):
     def require_evidence_and_remediation(self):
         if self.label != "benign" and (not self.behaviors or not self.remediation):
             raise ValueError("non-benign verdict requires behaviors and remediation")
+        if (self.label == "benign" and self.action == "deny"
+                or self.label in ("malicious", "suspicious") and self.action == "approve"):
+            raise ValueError("inconsistent action for verdict label")
         return self
