@@ -12,7 +12,7 @@ EVENT_FIELDS = {
     "tool_call": ("tool", "args"),
     "tool_result": ("tool", "ok", "summary", "data_preview", "untrusted", "duration_ms"),
     "verdict": ("verdict", "valid", "validation_errors"),
-    "decision": ("threshold", "evidence_checks", "final_label", "final_action", "dry_run"),
+    "decision": ("threshold", "evidence_checks", "final_label", "final_action", "dry_run", "rule", "reasons"),
     "error": ("kind", "message"),
     "limit": ("reason",),
     "run_end": ("elapsed_s", "steps", "tokens_per_s"),

@@ -24,7 +24,15 @@ rtk python -m agent.run tests/fixtures/benign-package A-TLM
 rtk python -m agent.run tests/fixtures/benign-package A-SLM
 ```
 
-Agent gọi Ollama cục bộ, dùng `read_manifest`/`read_file`, giới hạn 15 bước và chỉ in verdict JSON khi schema cùng dòng bằng chứng hợp lệ. Nếu model không đạt, lệnh trả lỗi; đó là kết quả FAIL của model, không phải nhãn dữ liệu.
+Agent gọi Ollama cục bộ, dùng `read_manifest`, `read_file`, `deobfuscate` và `extract_indicators`, giới hạn 15 bước. Mã gói chỉ được đọc; `#pretty` là bản xem theo dòng ảo, không chạy JavaScript. Luật trong `agent/decide.py` kiểm tra bằng chứng và ngưỡng 0.8 trước khi trả hành động cuối; gói không có lifecycle hook hoặc `binding.gyp` vẫn cần `review`. Mọi hành động hiện là **dry-run**, không gọi `npm approve-scripts` hoặc `deny-scripts`. Nếu model không đạt, lệnh trả lỗi; đó là kết quả FAIL của model, không phải nhãn dữ liệu.
+
+Bộ lọc Datadog chỉ chạy **trong VM cách ly** sau khi bộ dữ liệu được clone tại đó. Không clone hoặc giải nén mẫu trên máy host. Lệnh trong VM:
+
+```bash
+python -m data.filter_datadog /path/to/datadog-dataset /path/to/candidates.csv
+```
+
+Script chỉ đọc ZIP/tarball, giữ gói có lifecycle hook hoặc `binding.gyp`, khử trùng lặp theo cụm và xuất SHA-256 cùng số mẫu trước/sau lọc. CSV này là **ứng viên**, chưa phải nhãn đã kiểm tra chéo. Hiện chưa chạy script trên bộ Datadog thật.
 
 ## Trực quan hóa quy trình agent
 

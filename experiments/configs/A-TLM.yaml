@@ -1,3 +1,5 @@
 name: A-TLM
 model: qwen3.5:0.8b
 max_steps: 15
+deny_threshold: 0.8
+approve_threshold: 0.8

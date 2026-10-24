@@ -1,6 +1,27 @@
 import json
+import base64
+import time
 
-from tools.static import read_file, read_manifest
+from tools.static import deobfuscate, extract_indicators, read_file, read_manifest
+
+
+def test_minified_pretty_view_and_indicators(tmp_path):
+    payload = base64.b64encode(b"safe decoded preview for a synthetic fixture").decode()
+    source = "const a=1;" * 5000 + f'eval(atob("{payload}"));'
+    (tmp_path / "minified.js").write_text(source, encoding="utf-8")
+    assert deobfuscate(str(tmp_path), "minified.js")["ok"]
+    started = time.monotonic()
+    result = deobfuscate(str(tmp_path), "minified.js")
+    assert time.monotonic() - started < 1
+    assert result["ok"] and result["data"]["lines"] > 100
+    assert any("safe decoded preview" in item["preview"] for item in result["data"]["decoded"])
+    last = result["data"]["lines"]
+    excerpt = read_file(str(tmp_path), "minified.js#pretty", last, last)
+    assert excerpt["ok"] and "eval(atob" in excerpt["data"]["content"]
+    indicators = extract_indicators(str(tmp_path))
+    assert indicators["ok"] and any(item["kind"] == "eval" for item in indicators["data"]["indicators"])
+    (tmp_path / "oversized.js").write_text("x" * (256 * 1024 + 1), encoding="utf-8")
+    assert extract_indicators(str(tmp_path))["data"]["truncated"] is True
 
 
 def test_read_tools_bound_content_and_paths(tmp_path):

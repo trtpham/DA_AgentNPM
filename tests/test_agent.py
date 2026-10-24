@@ -4,6 +4,77 @@ from pathlib import Path
 import pytest
 
 from agent.run import analyze, script_targets, _tool
+from agent.trace import TraceWriter
+
+
+def test_package_without_install_hook_requires_review(tmp_path):
+    package = tmp_path / "plain-package"
+    package.mkdir()
+    (package / "package.json").write_text(
+        json.dumps({"name": "plain-package", "version": "1.0.0"}), encoding="utf-8"
+    )
+    (package / "index.js").write_text("module.exports = 1;\n", encoding="utf-8")
+    proposed = {
+        "package": "plain-package@1.0.0", "label": "benign", "confidence": 0.95,
+        "description": "The inspected fixture exports a constant and has no install hook",
+        "behaviors": [{"behavior": "Exports a constant", "technique": "module export",
+                       "severity": "low", "evidence": {"file": "index.js", "lines": "1"},
+                       "analysis": "The inspected line exports a constant.",
+                       "impact": "No install behavior was observed."}],
+        "action": "approve", "remediation": [],
+    }
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {
+            "name": "read_file", "arguments": {"file": "index.js"}}}]},
+        {"role": "assistant", "content": json.dumps(proposed)},
+    ])
+    writer = TraceWriter(tmp_path / "reports" / "run-1", "plain-package@1.0.0")
+    result, steps = analyze(str(package), "fake-model", chat=lambda *_args, **_kwargs: next(replies), trace=writer)
+
+    events = [json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()]
+    decision = next(event for event in events if event["type"] == "decision")
+    assert (result.label, result.action, steps) == ("benign", "review", 2)
+    assert (decision["final_action"], decision["dry_run"], decision["rule"]) == ("review", True, "R7_review")
+
+
+def test_gyp_only_requires_inspection_and_explains_implicit_install(tmp_path):
+    (tmp_path / "package.json").write_text(json.dumps({"name": "gyp-fixture", "version": "1.0.0"}), encoding="utf-8")
+    (tmp_path / "binding.gyp").write_text('{"targets": []}\n', encoding="utf-8")
+    verdict = {"package": "gyp-fixture@1.0.0", "label": "benign", "confidence": 0.9,
+               "description": "Native build manifest contains no executable target commands",
+               "behaviors": [{"behavior": "Native build manifest", "technique": "native build", "severity": "low",
+                              "evidence": {"file": "binding.gyp", "lines": "1"},
+                              "analysis": "The manifest has an empty target list.", "impact": "No target is built."}],
+               "action": "approve", "remediation": []}
+    calls = []
+
+    def chat(_model, messages, final=False):
+        calls.append(final)
+        if len(calls) == 1:
+            assert "node-gyp rebuild (binding.gyp)" in messages[1]["content"]
+            return {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "binding.gyp"}}}]}
+        return {"role": "assistant", "content": json.dumps(verdict)}
+
+    result, steps = analyze(str(tmp_path), "fake", chat=chat)
+    assert (result.label, steps, calls) == ("benign", 2, [False, False])
+
+
+def test_agent_accepts_evidence_from_pretty_view(tmp_path):
+    (tmp_path / "package.json").write_text(json.dumps({"name": "pretty-fixture", "version": "1.0.0",
+                                                      "scripts": {"install": "node minified.js"}}), encoding="utf-8")
+    (tmp_path / "minified.js").write_text('const a=1;eval("safe fixture");', encoding="utf-8")
+    verdict = {"package": "pretty-fixture@1.0.0", "label": "malicious", "confidence": 0.9,
+               "description": "Install script evaluates a synthetic string during setup",
+               "behaviors": [{"behavior": "Evaluates string", "technique": "dynamic execution", "severity": "high",
+                              "evidence": {"file": "minified.js#pretty", "lines": "2"},
+                              "analysis": "The source calls eval.", "impact": "May run dynamic code."}],
+               "action": "deny", "remediation": ["Review the install script"]}
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "deobfuscate", "arguments": {"file": "minified.js"}}}]},
+        {"role": "assistant", "content": json.dumps(verdict)},
+    ])
+    result, steps = analyze(str(tmp_path), "fake", chat=lambda *_args, **_kwargs: next(replies))
+    assert steps == 2 and result.behaviors[0].evidence.file == "minified.js#pretty"
 
 
 FIXTURE = str(Path(__file__).parent / "fixtures" / "benign-package")

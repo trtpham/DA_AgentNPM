@@ -133,3 +133,13 @@ EVIDENCE_REFERENCES: Yêu cầu trực tiếp trong chat “fix từng cái, ko 
 - Giới hạn: không chạy install script, không tải/giải nén gói độc trên host, không tự gán nhãn thật, không tự duyệt gói chỉ vì thiếu lifecycle script, không ghi `package.json` hoặc gọi lệnh approve/deny thật. Các mục cần VM, dữ liệu nhãn và tích hợp OSV/canary được báo chưa hoàn tất.
 - Owner: Codex. Reviewer agent/dữ liệu: TV2 (Phạm Minh Triết); kiểm tra chéo code và nhãn trước khi công bố kết quả thực nghiệm.
 - Regression: giữ hợp đồng `Verdict` và đầu ra công cụ đang dùng; chạy pytest, semgrep và `git diff --check`. Rollback bằng hoàn tác commit sửa lỗi; không có migration dữ liệu.
+
+## Gate B0 — tiếp tục xử lý an toàn 5 vấn đề (2026-10-24)
+
+DECISION: APPROVED FOR SAFE CONTINUATION
+PO: Phạm Minh Triết
+EVIDENCE_REFERENCES: Yêu cầu trực tiếp trong chat “tiếp tục fix nốt các vấn đề”.
+
+- Phạm vi: bổ sung script lọc dữ liệu để **chạy trong VM**, công cụ đọc và phân tích tĩnh, fixture vô hại, luật quyết định với ngưỡng và nhật ký dry-run; bảo toàn hợp đồng verdict hiện tại.
+- Giới hạn an toàn tiếp tục áp dụng: không tải/giải nén mẫu độc trên host, không chạy install script, không ghi `package.json`, không gọi npm approve/deny thật và không tự gán nhãn.
+- Owner: Codex; Reviewer: TV2/Phạm Minh Triết trước khi dùng kết quả thực nghiệm.

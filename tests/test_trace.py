@@ -1,4 +1,5 @@
 import json
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -56,7 +57,10 @@ def test_agent_writes_read_only_trace_for_fixture(tmp_path):
     assert [event["seq"] for event in events] == list(range(len(events)))
     assert {event["type"] for event in events} >= {
         "run_start", "thought", "tool_call", "tool_result", "verdict", "decision", "run_end"}
-    assert next(event for event in events if event["type"] == "decision")["final_action"] is None
+    decision = next(event for event in events if event["type"] == "decision")
+    assert (decision["final_action"], decision["rule"], decision["dry_run"]) == ("approve", "R7", True)
+    with sqlite3.connect(tmp_path / "decisions.sqlite") as connection:
+        assert connection.execute("SELECT final_action, rule FROM decisions LIMIT 1").fetchone() == ("approve", "R7")
     assert any(event["type"] == "tool_result" and event["untrusted"] for event in events)
 
 
@@ -80,5 +84,6 @@ def test_step_limit_closes_trace(tmp_path):
         analyze(package_dir, "fake-model", max_steps=1,
                 chat=lambda *_args, **_kwargs: {"role": "assistant", "content": "No tool call"}, trace=writer)
     events = [json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()]
-    assert events[-2]["type"] == "limit" and events[-2]["reason"] == "max_steps"
+    assert events[-3]["type"] == "limit" and events[-3]["reason"] == "max_steps"
+    assert (events[-2]["type"], events[-2]["rule"], events[-2]["final_action"]) == ("decision", "R2", "review")
     assert events[-1]["type"] == "run_end" and events[-1]["steps"] == 1

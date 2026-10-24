@@ -1,6 +1,26 @@
 # Bàn giao sửa 5 vấn đề nghiêm trọng — 2026-10-24
 
-## Trạng thái khi tạm dừng
+## Quyết định PO và kiểm tra cuối đợt
+
+- Gói không có lifecycle hook và không có `binding.gyp`: nếu mô hình đề xuất `benign/approve`, luật R7_review giữ nhãn `benign` nhưng hành động cuối là `review`. Test tích hợp đọc `index.js`, đối chiếu bằng chứng, rồi xác nhận trace ghi `review` và `dry_run=true`.
+- Mọi quyết định hiện chỉ là dry-run. Không gọi `npm approve-scripts`/`deny-scripts`, không sửa `package.json`.
+- `rtk proxy python -m pytest -q --basetemp D:\DACN\.pytest-v2-all-escalated-1024`: **44 PASS** ngoài sandbox; 5 test HTTP của viewer không kết nối được loopback trong sandbox (`WinError 10013`). `rtk git diff --check`: PASS. `rtk semgrep scan --error --quiet`: PASS ngoài sandbox; trong sandbox bị chặn `socketpair` (`Unix.EACCES`).
+
+## Cập nhật sau yêu cầu tiếp tục
+
+| Vấn đề | Trạng thái hiện tại | Đã bổ sung | Còn chặn |
+| --- | --- | --- | --- |
+| 1. Dữ liệu | Một phần | `data/filter_datadog.py` đọc ZIP/tarball trong bộ nhớ, lọc hook/`binding.gyp`, băm SHA-256, khử trùng lặp theo cụm; test dùng archive tổng hợp vô hại. | Chưa có VM và bộ Datadog thật để chạy; `labels.csv` vẫn trống, chưa có nhãn TV1/TV2 xác nhận. |
+| 2. Script inline | Một phần | `binding.gyp` được mô tả rõ là install ngầm `node-gyp rebuild`; test xác nhận agent đọc file trước verdict. Inline script và đích script đã được hỗ trợ từ đợt trước. | Quy tắc tự `approve` mọi gói không có lifecycle hook bị auto-review từ chối vì có thể duyệt gói chưa được kiểm tra; agent vẫn dùng luồng kiểm tra hiện tại. |
+| 3. Mã minify | Một phần | `deobfuscate` tạo bản `#pretty` chỉ trong bộ nhớ, xem trước base64/hex, entropy; `extract_indicators` tìm file:dòng; agent có thể viện dẫn `#pretty`. Test 50 KB và đường viện dẫn qua. | Bộ làm đẹp hiện dùng bộ tách dòng thư viện chuẩn, chưa có `jsbeautifier` hoặc khả năng giải rối mã đầy đủ. Không chạy `eval`. |
+| 4. Manifest dài | Đã sửa ở mức code/test | Giữ thay đổi đọc đủ `package.json` đến 256 KB và test script ở dòng 350. | Chưa thử bộ gói thật. |
+| 5. Quyết định | Một phần | `agent/decide.py` áp luật ưu tiên, ngưỡng trong ba cấu hình, trace chứa luật/lý do; SQLite ghi quyết định khi dùng `TraceWriter`. Lệnh npm thực tế không được gọi. | Chưa nối tín hiệu OSV/canary thật, chưa có module thực thi approve/deny; trường `action` được giữ để không phá hợp đồng verdict, còn trace phân biệt đề xuất mô hình và hành động cuối. |
+
+Phạm vi mới được ghi tại `docs/brownfield/TRANSITION_APPROVAL.md`. Chỉ có test trên fixture vô hại; **chưa có số liệu accuracy/FPR trên gói thật**. Bộ lọc Datadog phải được chạy trong VM cách ly theo README. Người tiếp tục cần chuyển tài liệu AGENTS.md gốc vì repo chưa chứa file này.
+
+Kiểm tra sau đợt tiếp tục: `rtk proxy python -m pytest -q` **43 PASS**; `rtk git diff --check` PASS; `rtk semgrep scan --error --quiet` PASS khi chạy ngoài sandbox. Chưa chạy lại Ollama hoặc sandbox với gói thật.
+
+## Ảnh chụp tại commit `88fa00f` trước đợt tiếp tục
 
 - Repo: `D:\DACN\DA_AgentNPM`, nhánh `main`, remote `origin` là `https://github.com/trtpham/DA_AgentNPM.git`.
 - Trước đợt sửa, cây làm việc sạch tại `ff9873d`. Phạm vi sửa từng phần đã được ghi trong `docs/brownfield/TRANSITION_APPROVAL.md` theo Gate B0.
@@ -39,8 +59,8 @@ Chưa chạy lại thử nghiệm với Ollama hoặc gói npm thật trong đ�
 
 1. Xin người dùng chuyển tài liệu `AGENTS.md` gốc (repo hiện không có file này), đặc biệt mục 2 về an toàn và mục 6 về hợp đồng; kiểm tra Gate B0 và diff hiện tại trước khi sửa tiếp. Giữ nguyên dữ liệu và thay đổi đã có.
 2. Ưu tiên hoàn thành vấn đề 1 bằng dữ liệu có nguồn gốc, nhãn, phiên bản, bằng chứng file:dòng và người kiểm tra chéo. Không chạy lifecycle script của gói nghi vấn trên host.
-3. Tiếp tục vấn đề 2 và 3 bằng fixture tổng hợp vô hại cho cú pháp script và mã minify; kiểm tra đủ đường đọc/viện dẫn trước khi thay đổi chính sách kết luận.
-4. Thiết kế vấn đề 5 theo schema mục 6 của `AGENTS.md`, rồi bổ sung test cho quyết định và bằng chứng. Không tuyên bố có khả năng `approve`/`deny` thực tế khi chưa có triển khai và kiểm tra.
+3. Thử `data/filter_datadog.py` trên bộ Datadog **trong VM**, xác nhận định dạng archive thật và số lượng trước/sau lọc; không chuyển mẫu sang host hoặc Git. TV1 gán nhãn, TV2 kiểm tra chéo.
+4. Review `agent/decide.py` theo hợp đồng mục 6 của AGENTS.md gốc, rồi nối OSV/canary khi có nguồn dữ liệu tin cậy. Không tuyên bố có khả năng `approve`/`deny` thực tế: code hiện chỉ ghi quyết định dry-run.
 5. Chạy lại `rtk proxy python -m pytest -q`, `rtk git diff --check` và `rtk semgrep scan --error --quiet` sau mỗi đợt sửa. Phân biệt test tổng hợp với đánh giá trên tập nhãn thật.
 
 ## Rủi ro còn lại
