@@ -88,3 +88,36 @@ EVIDENCE_REFERENCES: Yêu cầu trực tiếp trong chat: “TLM với LLM chạ
 - Phạm vi: mở lựa chọn A-LLM từ cấu hình `qwen3.5:9b` đã có; chạy A-TLM và A-LLM trên fixture vô hại qua dashboard localhost, ghi kết quả và giới hạn thật.
 - Không chạy install script npm, không dùng mẫu độc hoặc nhận kết quả model làm nhãn dữ liệu.
 - Kết quả kiểm chứng: A-TLM (`qwen3.5:0.8b`) FAIL sau 15 bước vì verdict không hợp schema; A-LLM (`qwen3.5:9b`) PASS sau 3 bước với verdict `benign`, `approve`, bằng chứng `postinstall.js:2` trên fixture vô hại.
+
+## Gate B0 — VIZ-1 (2026-10-23)
+
+DECISION: APPROVED
+PO: Phạm Minh Triết
+EVIDENCE_REFERENCES: Yêu cầu VIZ-1 và trả lời trực tiếp trong chat cho phép nối trace vào `agent/run.py`, tạo/cập nhật `AGENTS.md` và `README.md`, và ghi mục phê duyệt này.
+
+- Owner: Codex. Reviewer/PO: Phạm Minh Triết; duyệt riêng sau mỗi giai đoạn G1–G4.
+- Phạm vi: trace JSONL, server localhost chỉ đọc, giao diện replay/live và test; chỉ dùng trace tổng hợp vô hại để phát triển.
+- Giới hạn: không đọc `data/samples/`, không chạy mã gói npm, không sửa `package.json`, không phát lệnh từ viewer, không tải thư viện ngoài.
+- Cơ sở: repo sạch trước khi sửa; `agent/run.py` có trace dạng danh sách cho test; chưa có `agent/loop.py`, `tools/actions.py`, `AGENTS.md` hoặc chỉ mục CodeGraph.
+
+## Gate B0 — bổ sung phạm vi dữ liệu tuần 2
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-10-24 Asia/Saigon
+EVIDENCE_REFERENCES: yêu cầu trực tiếp trong chat “Hoàn thiện công việc tuần 2”.
+
+- AS-IS: `labels.csv` chỉ có header 7 cột, lệch hợp đồng 11 cột của AGENTS gốc; `prepare_labels.py` chưa có bộ đọc `experiments/dataset.py`; ba ứng viên malware chưa được TV2 kiểm tra. Các thay đổi VIZ-1 đang uncommitted được giữ nguyên.
+- Phạm vi: đồng bộ hợp đồng CSV và test, bổ sung metadata ứng viên lành cùng hồ sơ kiểm tra; sửa đường gọi `npm.cmd` để `fetch_package` chạy trên Windows. Không thực thi install hook, không tải gói độc, không tự nhận đã kiểm tra chéo.
+- Owner: Codex. Reviewer nhãn/PO: Phạm Minh Triết. Mốc dữ liệu v1 chỉ đạt sau khi TV2 xác nhận từng nhãn và bằng chứng file:dòng.
+- Rollback: hoàn tác các thay đổi dữ liệu/code tuần 2; không có dữ liệu nhãn thật để di trú.
+
+## Gate B0 — Dashboard giải thích từng bước (2026-10-24)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+EVIDENCE_REFERENCES: yêu cầu trực tiếp trong chat về hiển thị việc agent đang làm, cách đọc từng đoạn mã và kiểm chứng ở mỗi bước.
+
+- Phạm vi: bổ sung thông tin giải thích và đoạn mã đã được `read_file` đọc vào trace phục vụ dashboard cục bộ; hiển thị số dòng, file, kết quả, giới hạn hiển thị rõ ràng trong replay/live.
+- Giới hạn: chỉ hiển thị văn bản đã đọc từ fixture/gói được chọn, không chạy mã npm, không đọc `data/samples/`, không gửi trace ra mạng ngoài. Mã gói và lời mô hình là dữ liệu không tin cậy, phải escape hoặc dùng `textContent`.
+- Owner: Codex. Reviewer agent: TV2; Reviewer/PO giao diện: Phạm Minh Triết.

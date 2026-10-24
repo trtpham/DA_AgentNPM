@@ -54,7 +54,7 @@ def fetch_package(name: str, version: str) -> dict:
     directory = Path(tempfile.mkdtemp(prefix="npm-agent-"))
     try:
         result = subprocess.run(
-            ["npm", "pack", f"{name}@{version}", "--ignore-scripts", "--json", "--pack-destination", str(directory)],
+            [shutil.which("npm") or "npm", "pack", f"{name}@{version}", "--ignore-scripts", "--json", "--pack-destination", str(directory)],
             capture_output=True, text=True, timeout=120, check=True,
         )
         filename = json.loads(result.stdout)[0]["filename"]

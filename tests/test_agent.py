@@ -41,10 +41,16 @@ def test_agent_reads_source_and_validates_verdict():
     assert result.label == "benign"
     assert result.behaviors[0].evidence.lines == "2"
     assert [(item["step"], item["kind"], item["status"]) for item in trace] == [
-        (0, "manifest", "ok"), (1, "model", "info"), (1, "tool", "ok"),
-        (2, "model", "info"), (2, "validation", "retry"),
-        (3, "model", "info"), (3, "verdict", "ok")]
-    assert "local marker" not in str(trace)
+        (0, "manifest", "ok"), (1, "model", "info"), (1, "model_reply", "info"), (1, "tool", "ok"),
+        (2, "model", "info"), (2, "model_reply", "info"), (2, "validation", "retry"),
+        (3, "model", "info"), (3, "model_reply", "info"),
+        (3, "validation", "ok"), (3, "verdict", "ok")]
+    source = next(item for item in trace if item["kind"] == "tool")["sources"][0]
+    assert (source["file"], source["start"]) == ("postinstall.js", 1)
+    assert "benign fixture ran" in source["content"]
+    assert trace[-2]["sources"][0]["start"] == 2
+    assert trace[-2]["sources"][0]["claim"] == "The script writes fixed text to a local file."
+    assert "postinstall.js:2" in trace[-2]["found"]
 
 
 def test_agent_rejects_unread_evidence_and_path_escape():

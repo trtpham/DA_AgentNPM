@@ -1,5 +1,7 @@
 # Tuần 03 — Công cụ đọc, agent và sandbox cơ bản
 
+[Báo cáo chi tiết và kịch bản demo ngày 24/10/2026](bao-cao-tuan-03-2026-10-24.md)
+
 ## Kế hoạch
 
 - [ ] Hoàn thành `read_manifest`, `read_file`, `extract_indicators` và test giới hạn file/dòng (TV1-4 đến TV1-6).

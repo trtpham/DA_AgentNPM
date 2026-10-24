@@ -9,7 +9,7 @@ from tools.fetch import fetch_package
 
 def test_fetch_uses_pack_without_scripts_and_rejects_traversal(tmp_path):
     def fake_run(command, **kwargs):
-        assert command[:4] == ["npm", "pack", "example@1.0.0", "--ignore-scripts"]
+        assert command[:4] == ["npm.cmd", "pack", "example@1.0.0", "--ignore-scripts"]
         tarball = tmp_path / "example-1.0.0.tgz"
         with tarfile.open(tarball, "w:gz") as archive:
             payload = b"{}"
@@ -24,7 +24,7 @@ def test_fetch_uses_pack_without_scripts_and_rejects_traversal(tmp_path):
 
     download = tmp_path / "download"
     download.mkdir()
-    with patch("tools.fetch.tempfile.mkdtemp", return_value=str(download)), patch("tools.fetch.subprocess.run", side_effect=fake_run):
+    with patch("tools.fetch.tempfile.mkdtemp", return_value=str(download)), patch("tools.fetch.shutil.which", return_value="npm.cmd"), patch("tools.fetch.subprocess.run", side_effect=fake_run):
         result = fetch_package("example", "1.0.0")
     assert result["ok"] is False
     assert "unsafe tar path" in result["error"]

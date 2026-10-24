@@ -3,6 +3,8 @@ __pycache__/
 .pytest_tmp/
 *.pyc
 data/samples/
+*.tgz
+sandbox/out/
 data/labels-prepared.csv
 reports/*.json
 reports/*.html

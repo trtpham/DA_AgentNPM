@@ -2,3 +2,5 @@ package,version,source_label,install_hook,advisory_url,osv_url,review_status
 greensaver,1.2.3,malicious,postinstall,https://github.com/advisories/GHSA-jfw2-6254-9cwg,https://github.com/ossf/malicious-packages/blob/f128a26926ba435054707f5af00821644544b030/osv/malicious/npm/greensaver/MAL-2026-16138.json,needs_independent_review
 merge-grid-stats,1.5.0,malicious,postinstall,https://github.com/advisories/GHSA-vqp7-j6jf-34qm,https://github.com/ossf/malicious-packages/blob/f8d6dbca88029f7084e1904bf07393368dc9681e/osv/malicious/npm/merge-grid-stats/MAL-2026-13484.json,needs_independent_review
 carbon-monorepo,20.1.1,malicious,postinstall,https://github.com/advisories/GHSA-qqpg-vxw2-32f8,https://github.com/ossf/malicious-packages/blob/4f8382c22379fc0093ad418cb40f30e203d946ed/osv/malicious/npm/carbon-monorepo/MAL-2026-14229.json,needs_independent_review
+esbuild,0.24.0,unlabeled,postinstall,,,needs_independent_review
+@swc/core,1.7.36,unlabeled,postinstall,,,needs_independent_review

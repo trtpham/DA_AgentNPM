@@ -23,6 +23,14 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 - Bổ sung 2026-10-23: ghi 3 ứng viên gói có `postinstall` từ GitHub Advisory/OpenSSF vào `data/candidates.csv` (chỉ metadata, không tải gói). Các nhãn nguồn chưa được kiểm tra độc lập và chưa nhập vào `labels.csv`.
 - Vướng mắc / bước tiếp: `data/labels.csv` chỉ có header; 3 ứng viên advisory chưa được TV2 kiểm tra độc lập và chưa có ứng viên benign đã đánh giá. Mốc dữ liệu v1 chưa đạt.
 
+### Bổ sung ngày 2026-10-24
+
+- Đã đồng bộ `labels.csv` và `experiments/dataset.py` với hợp đồng 11 cột ở AGENTS gốc; `prepare_labels` kiểm tra nhãn, bằng chứng, bản trùng rồi gán split ổn định theo tên gói. Test dùng dữ liệu giả; bảng nhãn thật vẫn chỉ có header.
+- Đã thêm hai ứng viên lành có install hook (`esbuild@0.24.0`, `@swc/core@1.7.36`) và [hồ sơ bằng chứng cần TV2 kiểm tra](../data/REVIEW_WEEK2.md). Chỉ `npm pack --ignore-scripts` và đọc tĩnh; hai tarball khớp integrity của npm. Ba gói nghi vấn đã bị gỡ khỏi registry, nên chỉ có báo cáo nguồn và chưa có bằng chứng file:dòng được kiểm tra độc lập.
+- Sửa `fetch_package` để gọi đúng `npm.cmd` trên Windows. PASS: `fetch_package('esbuild', '0.24.0')` đọc 7 file và `read_manifest` thấy `postinstall: node install.js`; không chạy hook.
+- PASS: 9 test trọng tâm tuần 2; PASS: toàn bộ 23 test khi cho phép kết nối loopback cục bộ; PASS: `git diff --check`; PASS: `rtk semgrep scan --error --quiet` (exit 0). Lần pytest thường bị WinError 10013 do sandbox chặn socket loopback của test viewer, không phải lỗi code tuần 2.
+- Mốc còn thiếu: Phạm Minh Triết (TV2) xác nhận từng nhãn, nguồn độc lập, `file:lines` và ngày kiểm tra trong hồ sơ. Chưa đưa ứng viên vào `labels.csv` và chưa đánh dấu TV1-2 hoàn tất về dữ liệu.
+
 ## Ảnh kết quả
 
 ![Tổng hợp kết quả kiểm thử tuần 02](hinh-anh/tuan-02-ket-qua.svg)
