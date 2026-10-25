@@ -2,6 +2,8 @@
 
 **Đề tài:** AI Agent kiểm tra gói npm
 
+**Thành viên:** Lê Đặng Thiên Phước · Phạm Minh Triết · Nguyễn Đình Thiên
+
 **Ngày cập nhật:** 25/10/2026
 
 ## 1. Nội dung buổi báo cáo tuần
