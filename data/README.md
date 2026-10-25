@@ -11,7 +11,13 @@ Với mỗi ứng viên trong `candidates.csv`, người kiểm tra chéo ghi: `
 Hai ứng viên lành có install hook đã được thêm để TV2 xem xét. Việc không có advisory không đủ để kết luận benign.
 
 ```powershell
-rtk python -c "from pathlib import Path; from data.prepare_labels import prepare_labels; print(prepare_labels(Path('data/labels.csv'), Path('data/labels-prepared.csv')))"
+rtk proxy python -c "from pathlib import Path; from data.prepare_labels import prepare_labels; print(prepare_labels(Path('data/labels.csv'), Path('data/labels-prepared.csv')))"
 ```
 
 Không chạy lệnh trên nếu đích đã chứa nhãn thủ công cần giữ; hàm ghi đè file đích.
+
+## Kho 450 ứng viên metadata công khai
+
+[`public_candidates_450.csv`](public_candidates_450.csv) chứa 450 tên gói npm duy nhất cùng phiên bản tại thời điểm tra cứu (2026-10-25 UTC). `collect_public_candidates.py` có các từ khóa dự phòng nhưng lần này đã đủ 450 ứng viên từ tìm kiếm `postinstall`; chỉ giữ manifest npm Registry có `preinstall`, `install` hoặc `postinstall`. Có 442 bản ghi với `postinstall`, 13 với `preinstall`, 8 với `install` (một gói có thể có nhiều hook); 236 tên gói có scope. `source_url` trỏ thẳng tới manifest phiên bản đã đối chiếu. Bộ thu thập chỉ gọi API metadata, không tải tarball hoặc chạy mã gói.
+
+Toàn bộ dòng có `source_label=unlabeled` và `review_status=needs_independent_review`. Một lifecycle hook **không chứng minh gói độc hoặc lành**. Mẫu chọn theo từ khóa và xếp hạng tìm kiếm của npm, nên không đại diện thống kê cho toàn bộ hệ sinh thái. Không đưa file này vào thí nghiệm accuracy hay `labels.csv` trước khi TV2 xác minh nhãn, phiên bản, bằng chứng và phân chia tập. File `candidates.csv` 5 dòng cũ là ghi chú cục bộ bị Git ignore; không cộng tự động vào kho 450.

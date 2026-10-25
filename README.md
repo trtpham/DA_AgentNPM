@@ -11,6 +11,7 @@
 - `sandbox/`: chạy install script trong Docker cách ly.
 - `data/`: hợp đồng nhãn và xử lý tập dữ liệu.
 - Hồ sơ nhãn tuần 2: [`data/REVIEW_WEEK2.md`](data/REVIEW_WEEK2.md). `labels.csv` đang chờ TV2 kiểm tra chéo từng gói trước khi dùng làm ground truth.
+- Kho 450 ứng viên chỉ có metadata: [`data/public_candidates_450.csv`](data/public_candidates_450.csv); cách thu thập và giới hạn ở [`data/README.md`](data/README.md). Các ứng viên chưa phải nhãn thật.
 - `tests/`: test và gói mô phỏng vô hại.
 - `experiments/configs/`: cấu hình ba model Ollama.
 - `reports/`: đầu ra phân tích (JSON bị ignore).

@@ -154,3 +154,13 @@ EVIDENCE_REFERENCES: yêu cầu trực tiếp trong chat ngày 2026-10-25 “ho�
 - Giới hạn: chỉ dùng fixture vô hại để test; không đọc `data/samples/`, không chạy gói npm thật trên host, không tự gán nhãn chưa kiểm tra, không cho agent gọi mạng ngoài, không gọi approve/deny thật. Nếu Ollama/Docker không sẵn sàng, báo NOT_RUN với bằng chứng.
 - Owner: Codex. Reviewer agent/dữ liệu: Phạm Minh Triết (TV2). Reviewer sandbox: TV3/TV1 trước khi dùng với mẫu thật.
 - Acceptance: test offline cho chức năng mới, pytest và Semgrep PASS; mốc nào cần bộ nhãn thật hoặc VM được ghi BLOCKED, không đánh dấu hoàn tất. Rollback bằng revert commit của đợt này; không có migration dữ liệu.
+
+## Gate B0 — mở rộng kho ứng viên metadata (2026-10-25)
+
+DECISION: APPROVED FOR METADATA-ONLY COLLECTION
+PO: Phạm Minh Triết
+EVIDENCE_REFERENCES: yêu cầu trong chat “enrich data, quá ít data, tôi cần 400-500 gói/mẫu (chỉ tìm, tổng hợp và thêm vào, ko chạy test tất cả các gói)”.
+
+- Phạm vi: thu thập tên, phiên bản, lifecycle hook và URL nguồn công khai cho 400–500 ứng viên npm; ghi nguồn/phương pháp và kiểm tra cấu trúc, trùng lặp của CSV.
+- Giới hạn: không tải tarball, không chạy gói, không đọc `data/samples/`, không chuyển `source_label` thành nhãn ground truth trong `labels.csv`; các dòng chưa có kiểm tra chéo giữ trạng thái ứng viên.
+- Owner: Codex. Reviewer nhãn và tính đại diện: Phạm Minh Triết (TV2) trước khi dùng cho thực nghiệm.

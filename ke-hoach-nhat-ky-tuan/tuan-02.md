@@ -41,4 +41,9 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 - **BLOCKED — dữ liệu v1:** `labels.csv` chưa có nhãn đã kiểm tra chéo. Ba ứng viên nghi vấn đã bị gỡ khỏi npm, chưa có tarball để TV2 xác minh `file:lines`, nguồn độc lập và ngày kiểm tra. Giữ nhãn ở trạng thái chờ kiểm tra theo quyết định của Phạm Minh Triết; không dùng ứng viên làm ground truth hoặc tính accuracy.
 - **Bước tiếp:** TV2 ghi nhãn cuối, bằng chứng `file:lines`, nguồn đối chiếu, tên và ngày vào `data/REVIEW_WEEK2.md`; sau kiểm tra chéo mới chuyển sang `labels.csv` và tách tập dev/test. Mốc dữ liệu tuần 2 **chưa hoàn tất**.
 
+### Bổ sung kho ứng viên ngày 2026-10-25
+
+- **PASS — thu thập metadata:** Thêm `data/public_candidates_450.csv` với 450 tên gói npm duy nhất, 450 cặp tên/phiên bản, URL manifest và hook cài đặt được xác nhận qua metadata Registry. Có 236 gói scoped; 442 `postinstall`, 13 `preinstall`, 8 `install` (các nhóm hook có thể chồng nhau). Đã kiểm tra cấu trúc CSV, số dòng, trùng tên và URL nguồn; unit test bộ thu thập PASS. Không tải tarball hoặc chạy/test mã của 450 gói.
+- **Giới hạn:** Cả 450 dòng là `unlabeled`, cần kiểm tra độc lập. Nguồn tìm kiếm `postinstall` theo xếp hạng npm nên bộ này lệch về gói có hook và chưa cân bằng malicious/benign. `labels.csv` vẫn 0 dòng nhãn thật; mốc dữ liệu v1 tiếp tục **BLOCKED** cho tới khi TV2 duyệt.
+
 *Ảnh SVG tổng hợp kết quả lệnh test và lần chạy fixture trong Docker ngày 2026-10-23; không phải ảnh chụp màn hình container.*
