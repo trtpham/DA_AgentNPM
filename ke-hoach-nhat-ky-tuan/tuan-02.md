@@ -1,6 +1,6 @@
 # Tuần 02 — Dữ liệu và hợp đồng công cụ
 
-[Báo cáo tiến độ chi tiết ngày 25/10/2026](bao-cao-tuan-02-2026-10-25.md)
+[Báo cáo tuần 02](noi-dung-lms-tuan-02-2026-10-25.md)
 
 ## Kế hoạch
 

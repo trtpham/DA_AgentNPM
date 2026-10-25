@@ -34,4 +34,4 @@ Nhóm quên chụp ảnh trong buổi báo cáo nên **không có ảnh chụp t
 
 **Tuần 4:** Khi đã có một nhóm dữ liệu đáng tin, nhóm mới dùng chúng để đánh giá cách hệ thống phân tích và so sánh ba mô hình. Nhóm sẽ bổ sung công cụ hỗ trợ và ghi lại các trường hợp hệ thống nhận định sai để điều chỉnh. Việc thử nghiệm vẫn ưu tiên môi trường an toàn và chưa chạy hàng loạt trên 450 gói.
 
-**Định hướng chung:** Ưu tiên **dữ liệu đúng và có thể kiểm tra lại** hơn là chỉ tăng số lượng. Mục tiêu tiếp theo là biến danh sách ứng viên thành bộ dữ liệu có nhãn rõ ràng, sau đó mới đo kết quả và mở rộng quy mô. Mã nguồn, dữ liệu và [báo cáo chi tiết](bao-cao-tuan-02-2026-10-25.md) đã được cập nhật trên GitHub.
+**Định hướng chung:** Ưu tiên **dữ liệu đúng và có thể kiểm tra lại** hơn là chỉ tăng số lượng. Mục tiêu tiếp theo là biến danh sách ứng viên thành bộ dữ liệu có nhãn rõ ràng, sau đó mới đo kết quả và mở rộng quy mô. Mã nguồn, dữ liệu và báo cáo tuần 02 đã được cập nhật trên GitHub.
