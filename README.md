@@ -15,13 +15,17 @@
 - `experiments/configs/`: cấu hình ba model Ollama.
 - `reports/`: đầu ra phân tích (JSON bị ignore).
 
-Chạy kiểm tra: `rtk python -m pytest -q --basetemp=.pytest_tmp`. Docker daemon cần hoạt động để thử sandbox thật; test hiện chỉ kiểm tra lệnh Docker được tạo.
+Chạy kiểm tra: `rtk proxy python -m pytest -q --basetemp=.pytest_tmp`. Một số test HTTP cần quyền bind loopback. Kiểm tra bảo mật: `rtk semgrep scan --config auto --error`.
+
+Probe 20 lượt với công cụ giả, không dùng mã gói: `rtk proxy python -m experiments.model_probe --attempts 20`. Kết quả probe không thay thế phép đo accuracy trên nhãn thật.
+
+Sandbox Docker chỉ dùng fixture vô hại: xem [hướng dẫn sandbox](sandbox/README.md). Lệnh build và ba lệnh chạy mẫu nằm trong đó; không thực thi install script trên host. Quyết định agent hiện là dry-run.
 
 Chạy agent đọc gói mẫu, không thực thi `postinstall`:
 
 ```powershell
-rtk python -m agent.run tests/fixtures/benign-package A-TLM
-rtk python -m agent.run tests/fixtures/benign-package A-SLM
+rtk proxy python -m agent.run tests/fixtures/benign-package A-TLM
+rtk proxy python -m agent.run tests/fixtures/benign-package A-SLM
 ```
 
 Agent gọi Ollama cục bộ, dùng `read_manifest`, `read_file`, `deobfuscate` và `extract_indicators`, giới hạn 15 bước. Mã gói chỉ được đọc; `#pretty` là bản xem theo dòng ảo, không chạy JavaScript. Luật trong `agent/decide.py` kiểm tra bằng chứng và ngưỡng 0.8 trước khi trả hành động cuối; gói không có lifecycle hook hoặc `binding.gyp` vẫn cần `review`. Mọi hành động hiện là **dry-run**, không gọi `npm approve-scripts` hoặc `deny-scripts`. Nếu model không đạt, lệnh trả lỗi; đó là kết quả FAIL của model, không phải nhãn dữ liệu.
@@ -39,7 +43,7 @@ Script chỉ đọc ZIP/tarball, giữ gói có lifecycle hook hoặc `binding.g
 Chạy Ollama rồi khởi động bảng theo dõi trong lúc agent phân tích fixture vô hại:
 
 ```powershell
-rtk python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-SLM
+rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-SLM
 ```
 
 Dashboard hiển thị bốn giai đoạn, bước đang xử lý và bằng chứng file:dòng. Sau khi chạy xong, dùng **Phát lại**, **Bước trước**, **Bước tiếp** và chọn tốc độ 1×/2×/4× để trình bày từng bước.
@@ -49,6 +53,6 @@ Mở URL `http://127.0.0.1:<port>/` mà lệnh in ra ngay khi bắt đầu; các
 Chạy lần lượt hai biến thể TLM và LLM, mỗi lệnh mở một URL dashboard riêng:
 
 ```powershell
-rtk python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-TLM --output reports/A-TLM-agent-flow.html
-rtk python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-LLM --output reports/A-LLM-agent-flow.html
+rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-TLM --output reports/A-TLM-agent-flow.html
+rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-LLM --output reports/A-LLM-agent-flow.html
 ```

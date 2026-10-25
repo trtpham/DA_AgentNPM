@@ -35,4 +35,10 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 
 ![Tổng hợp kết quả kiểm thử tuần 02](hinh-anh/tuan-02-ket-qua.svg)
 
+## Trạng thái chốt 2026-10-25
+
+- **PASS — công cụ:** Schema verdict, `fetch_package` và sandbox Docker cơ bản đã có test. Bộ test toàn repo: 50 PASS khi chạy ngoài sandbox hệ thống; Semgrep `--config auto --error` exit 0.
+- **BLOCKED — dữ liệu v1:** `labels.csv` chưa có nhãn đã kiểm tra chéo. Ba ứng viên nghi vấn đã bị gỡ khỏi npm, chưa có tarball để TV2 xác minh `file:lines`, nguồn độc lập và ngày kiểm tra. Giữ nhãn ở trạng thái chờ kiểm tra theo quyết định của Phạm Minh Triết; không dùng ứng viên làm ground truth hoặc tính accuracy.
+- **Bước tiếp:** TV2 ghi nhãn cuối, bằng chứng `file:lines`, nguồn đối chiếu, tên và ngày vào `data/REVIEW_WEEK2.md`; sau kiểm tra chéo mới chuyển sang `labels.csv` và tách tập dev/test. Mốc dữ liệu tuần 2 **chưa hoàn tất**.
+
 *Ảnh SVG tổng hợp kết quả lệnh test và lần chạy fixture trong Docker ngày 2026-10-23; không phải ảnh chụp màn hình container.*

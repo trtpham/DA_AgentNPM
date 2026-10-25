@@ -7,11 +7,63 @@ from collections import Counter
 import io
 import math
 import re
+import shlex
 from pathlib import Path
 
 MAX_FILE_BYTES = 256 * 1024
 MAX_LINES = 150
 MAX_LINE_CHARS = 1000
+LIFECYCLE = ("preinstall", "install", "postinstall", "prepare")
+
+
+def script_targets(scripts: dict) -> set[str]:
+    targets = set()
+    pending = list(LIFECYCLE)
+    seen = set()
+    while pending:
+        hook = pending.pop()
+        if hook in seen:
+            continue
+        seen.add(hook)
+        lexer = shlex.shlex(scripts.get(hook, "").replace("\r\n", "\n").replace("\n", ";"),
+                            posix=True, punctuation_chars=";&|")
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        commands = [[]]
+        for token in lexer:
+            if token and set(token) <= set(";&|"):
+                commands.append([])
+            else:
+                commands[-1].append(token)
+        for command in commands:
+            while command and re.fullmatch(r"[A-Za-z_]\w*=.*", command[0]):
+                command.pop(0)
+            if not command:
+                continue
+            if command[0].startswith("./"):
+                targets.add(command[0].removeprefix("./"))
+            if command[0] in ("npm", "pnpm", "yarn") and len(command) > 2 and command[1] in ("run", "run-script"):
+                if command[2] in scripts:
+                    pending.append(command[2])
+            if command[0] not in ("node", "sh", "bash"):
+                continue
+            index = 1
+            while index < len(command):
+                argument = command[index]
+                if argument in (("-e", "--eval") if command[0] == "node" else ("-c", "-lc")):
+                    break
+                if command[0] == "node" and argument in ("-r", "--require", "--import", "--loader"):
+                    if index + 1 < len(command):
+                        targets.add(command[index + 1].removeprefix("./"))
+                    index += 2
+                    continue
+                if command[0] == "node" and argument.startswith(("--require=", "--import=", "--loader=")):
+                    targets.add(argument.split("=", 1)[1].removeprefix("./"))
+                elif not argument.startswith("-"):
+                    targets.add(argument.removeprefix("./"))
+                    break
+                index += 1
+    return targets
 
 
 def _pretty_source(package: str, file: str) -> str:
@@ -118,39 +170,63 @@ INDICATORS = {
     "new_function": re.compile(r"\bnew\s+Function\b"),
     "sensitive_path": re.compile(r"(?:~/|/home/[^/]+/)(?:\.npmrc|\.ssh|\.aws)\b"),
     "environment": re.compile(r"\bprocess\.env\b"),
+    "hex": re.compile(r"\b(?:[0-9a-fA-F]{2}){20,}\b"),
+    "base64": re.compile(r"\b[A-Za-z0-9+/]{40,}={0,2}\b"),
 }
+
+RELATIVE_REQUIRE = re.compile(r"\brequire\s*\(\s*['\"](\.{1,2}/[^'\"]+)['\"]\s*\)")
 
 
 def extract_indicators(package: str) -> dict:
     try:
-        root = Path(package).resolve(strict=True)
+        manifest = read_manifest(package)
+        if not manifest["ok"]:
+            raise ValueError(manifest["error"])
+        scripts = manifest["data"]["scripts"]["content"]
         found = []
-        files = 0
         truncated = False
-        for path in root.rglob("*"):
-            if path.suffix not in (".js", ".cjs", ".mjs", ".json", ".sh") or path.is_symlink():
+        for hook in LIFECYCLE:
+            if hook not in scripts:
                 continue
-            if "node_modules" in path.relative_to(root).parts:
+            for kind, pattern in INDICATORS.items():
+                if pattern.search(scripts[hook]):
+                    found.append({"type": kind, "file": "package.json",
+                                  "line": manifest["data"]["script_lines"].get(hook),
+                                  "snippet": scripts[hook][:120]})
+        pending = [(file, 0) for file in sorted(script_targets(scripts))]
+        if manifest["data"]["has_binding_gyp"] and "install" not in scripts:
+            pending.append(("binding.gyp", 0))
+        seen = set()
+        while pending and len(seen) < 100 and len(found) < 30:
+            relative, depth = pending.pop(0)
+            if relative in seen or "node_modules" in Path(relative).parts:
                 continue
-            if path.stat().st_size > MAX_FILE_BYTES:
+            seen.add(relative)
+            try:
+                safe = _safe_file(package, relative)
+            except (OSError, ValueError):
                 truncated = True
                 continue
-            relative = path.relative_to(root).as_posix()
-            safe = _safe_file(package, relative)
-            files += 1
-            if files > 100:
-                break
+            if safe.suffix not in (".js", ".cjs", ".mjs", ".json", ".sh", ".gyp"):
+                continue
             for number, line in enumerate(safe.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
                 for kind, pattern in INDICATORS.items():
                     if pattern.search(line):
-                        found.append({"kind": kind, "file": relative, "lines": str(number),
-                                      "preview": line[:120]})
+                        found.append({"type": kind, "file": relative, "line": number,
+                                      "snippet": line[:120]})
+                if safe.suffix in (".js", ".cjs", ".mjs"):
+                    for required in RELATIVE_REQUIRE.findall(line):
+                        if depth == 2:
+                            truncated = True
+                            continue
+                        target = (Path(relative).parent / required).as_posix()
+                        if not Path(target).suffix:
+                            target += ".js"
+                        pending.append((target, depth + 1))
                 if len(found) >= 30:
                     break
-            if len(found) >= 30:
-                break
         return {"ok": True, "data": {"untrusted": True, "indicators": found,
-                                      "truncated": truncated or files > 100 or len(found) >= 30}, "error": None}
+                                      "truncated": truncated or bool(pending) or len(found) >= 30}, "error": None}
     except (OSError, ValueError) as error:
         return {"ok": False, "data": None, "error": str(error)[:300]}
 

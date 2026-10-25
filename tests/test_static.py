@@ -6,6 +6,8 @@ from tools.static import deobfuscate, extract_indicators, read_file, read_manife
 
 
 def test_minified_pretty_view_and_indicators(tmp_path):
+    (tmp_path / "package.json").write_text(json.dumps({"name": "minified-fixture", "version": "1.0.0",
+                                                      "scripts": {"install": "node minified.js"}}), encoding="utf-8")
     payload = base64.b64encode(b"safe decoded preview for a synthetic fixture").decode()
     source = "const a=1;" * 5000 + f'eval(atob("{payload}"));'
     (tmp_path / "minified.js").write_text(source, encoding="utf-8")
@@ -19,9 +21,30 @@ def test_minified_pretty_view_and_indicators(tmp_path):
     excerpt = read_file(str(tmp_path), "minified.js#pretty", last, last)
     assert excerpt["ok"] and "eval(atob" in excerpt["data"]["content"]
     indicators = extract_indicators(str(tmp_path))
-    assert indicators["ok"] and any(item["kind"] == "eval" for item in indicators["data"]["indicators"])
+    assert indicators["ok"] and any(item["type"] == "eval" for item in indicators["data"]["indicators"])
     (tmp_path / "oversized.js").write_text("x" * (256 * 1024 + 1), encoding="utf-8")
+    (tmp_path / "package.json").write_text(json.dumps({"name": "minified-fixture", "version": "1.0.0",
+                                                      "scripts": {"install": "node minified.js",
+                                                                  "postinstall": "node oversized.js"}}), encoding="utf-8")
     assert extract_indicators(str(tmp_path))["data"]["truncated"] is True
+
+
+def test_indicators_follow_only_install_source_and_two_relative_requires(tmp_path):
+    (tmp_path / "package.json").write_text(json.dumps({"name": "scope-fixture", "version": "1.0.0",
+                                                      "scripts": {"postinstall": "node entry.js"}}), encoding="utf-8")
+    (tmp_path / "entry.js").write_text("require('./helper');\n", encoding="utf-8")
+    (tmp_path / "helper.js").write_text("process.env.TEST; const url='https://example.invalid'; require('./leaf');\n", encoding="utf-8")
+    (tmp_path / "leaf.js").write_text("eval('fixture'); require('./depth3');\n", encoding="utf-8")
+    (tmp_path / "depth3.js").write_text("child_process;\n", encoding="utf-8")
+    (tmp_path / "unrelated.js").write_text("eval('unrelated');\n", encoding="utf-8")
+
+    result = extract_indicators(str(tmp_path))
+    assert result["ok"]
+    indicators = result["data"]["indicators"]
+    assert {(item["type"], item["file"], item["line"]) for item in indicators} >= {
+        ("environment", "helper.js", 1), ("url", "helper.js", 1), ("eval", "leaf.js", 1)}
+    assert not {item["file"] for item in indicators} & {"unrelated.js", "depth3.js"}
+    assert result["data"]["truncated"] is True
 
 
 def test_read_tools_bound_content_and_paths(tmp_path):

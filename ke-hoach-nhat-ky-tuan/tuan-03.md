@@ -4,10 +4,10 @@
 
 ## Kế hoạch
 
-- [ ] Hoàn thành `read_manifest`, `read_file`, `extract_indicators` và test giới hạn file/dòng (TV1-4 đến TV1-6).
-- [ ] Bọc Ollama bằng cấu hình, giới hạn thời gian, retry; chạy vòng lặp agent tối đa 15 bước (TV2-2, TV2-4).
-- [ ] Viết prompt phân tích hành vi theo nguồn–hành động–đích (TV2-5).
-- [ ] Ghi dấu vết sandbox và dùng canary giả; chưa nối sandbox vào agent (TV3-1 đến TV3-3).
+- [x] Hoàn thành `read_manifest`, `read_file`, `extract_indicators` và test giới hạn file/dòng (TV1-4 đến TV1-6).
+- [x] Bọc Ollama bằng cấu hình, giới hạn thời gian, retry; chạy vòng lặp agent tối đa 15 bước (TV2-2, TV2-4).
+- [x] Viết prompt phân tích hành vi theo nguồn–hành động–đích (TV2-5).
+- [x] Ghi dấu vết sandbox và dùng canary giả; chưa nối sandbox vào agent (TV3-1 đến TV3-3).
 
 ## Mốc nghiệm thu
 
@@ -55,3 +55,11 @@ Kiểm tra mã: `rtk python -m pytest -q` → 10 PASS; `rtk semgrep scan --error
 | A-LLM (`qwen3.5:9b`) | PASS: 3 bước, `benign`, `approve`, confidence `0.95`, bằng chứng `postinstall.js:2` | `reports/A-LLM-agent-flow.html` |
 
 Kết quả này chỉ chứng minh luồng agent trên một fixture vô hại; chưa đo độ chính xác trên bộ dữ liệu nhãn thật.
+
+## Cập nhật tích hợp 2026-10-25
+
+- **PASS — đọc/quét:** `script_targets` chuyển vào `tools/static.py`; `extract_indicators` chỉ theo đường cài đặt và tối đa hai cấp `require` tương đối. Agent quét tĩnh trước vòng lặp; nếu quét không đủ thì quyết định an toàn là `review`.
+- **PASS — mô hình trên fixture lành:** A-LLM 4 bước, A-SLM 5 bước, A-TLM 4 bước, đều tạo verdict hợp lệ ở lượt chạy cuối. A-TLM từng FAIL nhiều lần như bảng lịch sử phía trên; một lượt PASS không đủ kết luận ổn định. `approve` ở đây chỉ là dry-run.
+- **PASS — sandbox:** Image `agent-npm-sandbox:local` chạy ba fixture vô hại trong Docker offline. Fixture lành và không có hook không chạm canary; fixture canary ghi nhận truy cập `ssh` và biến môi trường giả. Log `strace` đầy đủ trong ba lượt này. Không dùng mẫu độc thật.
+- **PASS — hồi quy:** 50 test pytest PASS khi chạy ngoài sandbox hệ thống; Semgrep `--config auto --error` exit 0; `git diff --check` exit 0.
+- **Còn thiếu:** Chưa nối sandbox vào vòng lặp agent; chưa có benchmark nhiều lượt trên gói thật hoặc nhãn được kiểm tra chéo. Reviewer TV2 cần xem lại `agent/run.py` trước khi chốt code.

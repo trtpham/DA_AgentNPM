@@ -36,7 +36,7 @@ def decide(verdict: Verdict | None, evidence_checks: list[dict], *, canary_touch
         return result("malicious", "deny", "R6", "Verified malicious behavior meets deny threshold")
     if verdict.label == "benign" and verdict.confidence >= approve_threshold and valid:
         if not auto_approve_allowed:
-            return result("benign", "review", "R7_review", "No install hook; human review required before approval")
+            return result("benign", "review", "R7_review", "Install path not fully reviewed; human review required")
         return result("benign", "approve", "R7", "Verified benign evidence meets approve threshold")
     return result(verdict.label, "review", "R8", "Decision requires human review")
 

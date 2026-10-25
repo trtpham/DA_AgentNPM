@@ -13,3 +13,4 @@ data/labels-prepared.csv
 reports/*.json
 reports/*.html
 reports/*.sqlite
+reports/**/*.trace.jsonl

@@ -143,3 +143,14 @@ EVIDENCE_REFERENCES: Yêu cầu trực tiếp trong chat “tiếp tục fix n�
 - Phạm vi: bổ sung script lọc dữ liệu để **chạy trong VM**, công cụ đọc và phân tích tĩnh, fixture vô hại, luật quyết định với ngưỡng và nhật ký dry-run; bảo toàn hợp đồng verdict hiện tại.
 - Giới hạn an toàn tiếp tục áp dụng: không tải/giải nén mẫu độc trên host, không chạy install script, không ghi `package.json`, không gọi npm approve/deny thật và không tự gán nhãn.
 - Owner: Codex; Reviewer: TV2/Phạm Minh Triết trước khi dùng kết quả thực nghiệm.
+
+## Gate B0 — hoàn thiện tuần 1–3 và phần đầu tuần 4 (2026-10-25)
+
+DECISION: APPROVED FOR SAFE IMPLEMENTATION
+PO: Phạm Minh Triết
+EVIDENCE_REFERENCES: yêu cầu trực tiếp trong chat ngày 2026-10-25 “hoàn thiện tất cả công việc còn tồn đọng ở tuần 1 - 2 - 3 và 1 nửa việc cho tuần 4”.
+
+- Phạm vi: hoàn thiện probe model, hợp đồng công cụ và kiểm thử dữ liệu tuần 1–2; giới hạn quét tĩnh theo đường install, dấu vết sandbox và canary giả tuần 3; tích hợp công cụ tĩnh vào agent và phần bối cảnh chỉ đọc của tuần 4.
+- Giới hạn: chỉ dùng fixture vô hại để test; không đọc `data/samples/`, không chạy gói npm thật trên host, không tự gán nhãn chưa kiểm tra, không cho agent gọi mạng ngoài, không gọi approve/deny thật. Nếu Ollama/Docker không sẵn sàng, báo NOT_RUN với bằng chứng.
+- Owner: Codex. Reviewer agent/dữ liệu: Phạm Minh Triết (TV2). Reviewer sandbox: TV3/TV1 trước khi dùng với mẫu thật.
+- Acceptance: test offline cho chức năng mới, pytest và Semgrep PASS; mốc nào cần bộ nhãn thật hoặc VM được ghi BLOCKED, không đánh dấu hoàn tất. Rollback bằng revert commit của đợt này; không có migration dữ liệu.

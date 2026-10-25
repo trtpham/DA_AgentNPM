@@ -1,0 +1,7 @@
+{
+  "name": "canary-fixture",
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "node inspect.js"
+  }
+}
