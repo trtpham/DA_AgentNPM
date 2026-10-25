@@ -2,6 +2,8 @@
 
 [Kế hoạch tổng thể](../KE_HOACH.md)
 
+[Báo cáo tiến độ tuần 02 (25/10/2026)](bao-cao-tuan-02-2026-10-25.md)
+
 | Tuần | Trọng tâm | Nhật ký |
 | --- | --- | --- |
 | 01 | Nền tảng và model | [tuan-01.md](tuan-01.md) |

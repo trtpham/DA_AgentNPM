@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="430" viewBox="0 0 1100 430" role="img" aria-labelledby="title desc">
+  <title id="title">Tuần 2: 450 ứng viên npm, 0 nhãn đã kiểm tra chéo</title>
+  <desc id="desc">Hình tổng hợp từ CSV ngày 25 tháng 10 năm 2026. Có 450 gói duy nhất, 236 gói scoped, 442 có postinstall, 13 có preinstall và 8 có install. Các nhóm hook có thể chồng nhau.</desc>
+  <rect width="1100" height="430" rx="22" fill="#10202a"/>
+  <text x="42" y="55" fill="#f3f8fb" font-family="Arial,sans-serif" font-size="30" font-weight="bold">TUẦN 02 · KHO ỨNG VIÊN NPM</text>
+  <text x="42" y="83" fill="#a8c0cc" font-family="Arial,sans-serif" font-size="17">Metadata từ npm Registry · cập nhật 25/10/2026</text>
+  <rect x="42" y="110" width="310" height="165" rx="16" fill="#1d4653"/>
+  <text x="64" y="159" fill="#bce7ed" font-family="Arial,sans-serif" font-size="19">Gói / phiên bản duy nhất</text>
+  <text x="62" y="237" fill="#ffffff" font-family="Arial,sans-serif" font-size="88" font-weight="bold">450</text>
+  <rect x="380" y="110" width="310" height="165" rx="16" fill="#5a4024"/>
+  <text x="402" y="159" fill="#ffe0a3" font-family="Arial,sans-serif" font-size="19">Nhãn kiểm tra chéo</text>
+  <text x="400" y="237" fill="#ffffff" font-family="Arial,sans-serif" font-size="88" font-weight="bold">0</text>
+  <rect x="718" y="110" width="340" height="165" rx="16" fill="#24425d"/>
+  <text x="740" y="159" fill="#bfdbfe" font-family="Arial,sans-serif" font-size="19">Gói có scope</text>
+  <text x="738" y="237" fill="#ffffff" font-family="Arial,sans-serif" font-size="88" font-weight="bold">236</text>
+  <text x="42" y="320" fill="#e6f2f5" font-family="Arial,sans-serif" font-size="21">Hook trong manifest:</text>
+  <text x="245" y="320" fill="#7ee7c2" font-family="Arial,sans-serif" font-size="21" font-weight="bold">postinstall 442</text>
+  <text x="475" y="320" fill="#a8d5ff" font-family="Arial,sans-serif" font-size="21" font-weight="bold">preinstall 13</text>
+  <text x="680" y="320" fill="#f6d28b" font-family="Arial,sans-serif" font-size="21" font-weight="bold">install 8</text>
+  <text x="42" y="365" fill="#a8c0cc" font-family="Arial,sans-serif" font-size="17">Một gói có thể có nhiều hook. Tất cả 450 dòng vẫn là unlabeled.</text>
+  <text x="42" y="396" fill="#f6d28b" font-family="Arial,sans-serif" font-size="17">Hình tổng hợp số liệu · không phải ảnh chụp hoặc kết quả AI scan</text>
+</svg>
