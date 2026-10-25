@@ -16,10 +16,9 @@ Trong tuần 2, nhóm tập trung chuẩn bị dữ liệu và xây dựng nhữ
 
 Nhóm có thể trình bày khoảng **75% nội dung dự kiến của tuần 2**: cho xem danh sách gói đã tìm được, cách hệ thống đọc một gói mẫu mà không chạy mã gói trên máy, và kết quả thử trong môi trường cách ly. Phần chưa thể demo như một kết quả hoàn chỉnh là đánh giá đúng/sai trên bộ dữ liệu đã được kiểm tra nhãn. Con số 75% chỉ tính trong phạm vi tuần 2, không phải tiến độ toàn đồ án.
 
-![Hình 1 — danh sách 450 ứng viên, chưa có nhãn được kiểm tra chéo]![Uploading image.png…]()
+![Hình 1 — danh sách ứng viên trong VS Code, các gói chưa có nhãn được kiểm tra chéo](hinh-anh/tuan-02-ung-vien-vscode.png)
 
-
-*Hình 1 tổng hợp số liệu nhóm đã tìm được. Đây không phải ảnh chụp lúc báo cáo.*
+*Hình 1: Màn hình VS Code khi nhóm mở `public_candidates_450.csv`. Các dòng đang hiển thị vẫn là `unlabeled`; đây là ảnh kết quả làm việc, không phải ảnh chụp lúc báo cáo.*
 
 ![Hình 2 — kết quả thử các phần đã xây dựng](hinh-anh/tuan-02-ket-qua.svg)
 
@@ -27,7 +26,7 @@ Nhóm có thể trình bày khoảng **75% nội dung dự kiến của tuần 2
 
 ## 3. Ảnh chụp lúc báo cáo
 
-Nhóm quên chụp ảnh trong buổi báo cáo nên **không có ảnh chụp thực tế** để đính kèm. Nhóm có file ghi âm buổi trao đổi và có thể cung cấp khi cần. Hai hình ở mục 2 chỉ minh họa kết quả làm việc, không được xem là ảnh chụp buổi gặp.
+Nhóm quên chụp ảnh trong buổi báo cáo nên **không có ảnh chụp thực tế** để đính kèm. Nhóm có file ghi âm buổi trao đổi và có thể cung cấp khi cần. Ảnh màn hình và hình tổng hợp ở mục 2 chỉ minh họa kết quả làm việc, không được xem là ảnh chụp buổi gặp.
 
 ## 4. Đề xuất tuần 3 và 4, cách giải quyết và định hướng
 
