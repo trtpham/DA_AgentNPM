@@ -16,7 +16,8 @@ Trong tuần 2, nhóm tập trung chuẩn bị dữ liệu và xây dựng nhữ
 
 Nhóm có thể trình bày khoảng **75% nội dung dự kiến của tuần 2**: cho xem danh sách gói đã tìm được, cách hệ thống đọc một gói mẫu mà không chạy mã gói trên máy, và kết quả thử trong môi trường cách ly. Phần chưa thể demo như một kết quả hoàn chỉnh là đánh giá đúng/sai trên bộ dữ liệu đã được kiểm tra nhãn. Con số 75% chỉ tính trong phạm vi tuần 2, không phải tiến độ toàn đồ án.
 
-![Hình 1 — danh sách 450 ứng viên, chưa có nhãn được kiểm tra chéo](hinh-anh/tuan-02-kho-ung-vien-450.svg)
+![Hình 1 — danh sách 450 ứng viên, chưa có nhãn được kiểm tra chéo]![Uploading image.png…]()
+
 
 *Hình 1 tổng hợp số liệu nhóm đã tìm được. Đây không phải ảnh chụp lúc báo cáo.*
 
