@@ -20,13 +20,10 @@ Nhóm có thể trình bày khoảng **75% nội dung dự kiến của tuần 2
 
 *Hình 1: Màn hình VS Code khi nhóm mở `public_candidates_450.csv`. Các dòng đang hiển thị vẫn là `unlabeled`; đây là ảnh kết quả làm việc, không phải ảnh chụp lúc báo cáo.*
 
-![Hình 2 — kết quả thử các phần đã xây dựng](hinh-anh/tuan-02-ket-qua.svg)
-
-*Hình 2 tổng hợp kết quả thử trước đó. Khi nộp LMS, nhóm tải hai file ảnh trong thư mục `hinh-anh/` lên cùng bài và chèn vào các vị trí này.*
 
 ## 3. Ảnh chụp lúc báo cáo
 
-Nhóm quên chụp ảnh trong buổi báo cáo nên **không có ảnh chụp thực tế** để đính kèm. Nhóm có file ghi âm buổi trao đổi và có thể cung cấp khi cần. Ảnh màn hình và hình tổng hợp ở mục 2 chỉ minh họa kết quả làm việc, không được xem là ảnh chụp buổi gặp.
+Nhóm quên chụp ảnh trong buổi báo cáo nên **không có ảnh chụp thực tế** để đính kèm. Nhóm có file ghi âm buổi trao đổi và có thể cung cấp khi cần. Ảnh màn hình ở mục 2 chỉ minh họa kết quả làm việc, không được xem là ảnh chụp buổi gặp.
 
 ## 4. Đề xuất tuần 3 và 4, cách giải quyết và định hướng
 
