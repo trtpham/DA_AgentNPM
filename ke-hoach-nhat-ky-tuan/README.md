@@ -4,6 +4,8 @@
 
 [Báo cáo tiến độ tuần 02 (25/10/2026)](bao-cao-tuan-02-2026-10-25.md)
 
+[Bản ngắn để nộp LMS tuần 02](noi-dung-lms-tuan-02-2026-10-25.md)
+
 | Tuần | Trọng tâm | Nhật ký |
 | --- | --- | --- |
 | 01 | Nền tảng và model | [tuan-01.md](tuan-01.md) |
