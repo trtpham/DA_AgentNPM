@@ -13,6 +13,8 @@ from pathlib import Path
 HOOKS = ("preinstall", "install", "postinstall", "prepare")
 MAX_MEMBER = 10 * 1024 * 1024
 MAX_MANIFEST = 256 * 1024
+MAX_SOURCE_BYTES = 50 * 1024 * 1024
+MAX_SOURCE_FILES = 1000
 FIELDS = ("name", "version", "hooks", "sha256", "cluster", "archive")
 
 
@@ -26,42 +28,77 @@ def _manifest(data: bytes) -> dict | None:
     return value if isinstance(value, dict) else None
 
 
-def _members(archive: Path) -> tuple[dict | None, str | None]:
-    manifest, binding = None, None
+def _members(archive: Path) -> tuple[dict | None, str | None, tuple[str, ...]]:
+    manifest, binding, manifest_rank = None, None, None
+    source_hashes = []
+    source_bytes = 0
     with zipfile.ZipFile(archive) as zipped:
         for member in zipped.infolist():
-            if member.is_dir() or member.file_size > MAX_MEMBER:
+            if member.is_dir():
                 continue
             name = member.filename.replace("\\", "/")
-            if name.endswith("/binding.gyp") or name == "binding.gyp":
+            source_file = name.endswith((".js", ".cjs", ".mjs", ".sh")) and "node_modules" not in name.split("/")
+            if member.file_size > MAX_MEMBER:
+                if source_file:
+                    raise ValueError("source member too large")
+                continue
+            if (name.endswith("/binding.gyp") or name == "binding.gyp") and "node_modules" not in name.split("/"):
                 binding = hashlib.sha256(zipped.read(member, pwd=b"infected")).hexdigest()
             if not (name.endswith("/package.json") or name == "package.json" or
-                    name.endswith((".tgz", ".tar.gz", ".tar"))):
+                    name.endswith((".tgz", ".tar.gz", ".tar", ".js", ".cjs", ".mjs", ".sh"))):
                 continue
+            if source_file:
+                if source_bytes + member.file_size > MAX_SOURCE_BYTES or len(source_hashes) >= MAX_SOURCE_FILES:
+                    raise ValueError("source budget exceeded")
+                source_bytes += member.file_size
             content = zipped.read(member, pwd=b"infected")
-            if name.endswith("package.json") and manifest is None:
-                manifest = _manifest(content)
+            if source_file:
+                source_hashes.append(f"{name}:{hashlib.sha256(content).hexdigest()}")
+            if name.endswith("package.json"):
+                candidate = _manifest(content)
+                rank = (len(name.split("/")), name != "package/package.json", name)
+                if candidate is not None and (manifest_rank is None or rank < manifest_rank):
+                    manifest, manifest_rank = candidate, rank
             elif name.endswith((".tgz", ".tar.gz", ".tar")):
                 with tarfile.open(fileobj=io.BytesIO(content), mode="r:*") as tar:
                     for item in tar:
-                        if not item.isfile() or item.size > MAX_MEMBER:
+                        if not item.isfile():
                             continue
                         inner = item.name.replace("\\", "/")
-                        if inner.endswith("/binding.gyp") or inner == "binding.gyp":
-                            stream = tar.extractfile(item)
-                            if stream is not None:
-                                binding = hashlib.sha256(stream.read()).hexdigest()
-                        if (inner.endswith("/package.json") or inner == "package.json") and manifest is None:
-                            stream = tar.extractfile(item)
-                            if stream is not None:
-                                manifest = _manifest(stream.read(MAX_MANIFEST + 1))
-    return manifest, binding
+                        source_file = inner.endswith((".js", ".cjs", ".mjs", ".sh")) and "node_modules" not in inner.split("/")
+                        if item.size > MAX_MEMBER:
+                            if source_file:
+                                raise ValueError("source member too large")
+                            continue
+                        if not (inner.endswith(("/binding.gyp", "/package.json", ".js", ".cjs", ".mjs", ".sh")) or
+                                inner in ("binding.gyp", "package.json")):
+                            continue
+                        if source_file:
+                            if source_bytes + item.size > MAX_SOURCE_BYTES or len(source_hashes) >= MAX_SOURCE_FILES:
+                                raise ValueError("source budget exceeded")
+                            source_bytes += item.size
+                        stream = tar.extractfile(item)
+                        if stream is None:
+                            continue
+                        data = stream.read(MAX_MEMBER + 1)
+                        if (inner.endswith("/binding.gyp") or inner == "binding.gyp") and "node_modules" not in inner.split("/"):
+                            binding = hashlib.sha256(data).hexdigest()
+                        if source_file:
+                            source_hashes.append(f"{inner}:{hashlib.sha256(data).hexdigest()}")
+                        if inner.endswith("/package.json") or inner == "package.json":
+                            candidate = _manifest(data)
+                            rank = (len(inner.split("/")), inner != "package/package.json", inner)
+                            if candidate is not None and (manifest_rank is None or rank < manifest_rank):
+                                manifest, manifest_rank = candidate, rank
+    # shortcut: hash all source files, narrow to script dependencies if archive noise causes over-splitting.
+    return manifest, binding, tuple(sorted(source_hashes))
 
 
-def _cluster(scripts: dict, binding: str | None) -> str:
+def _cluster(scripts: dict, binding: str | None, source_hashes: tuple[str, ...]) -> str:
     source = "\n".join(str(scripts.get(hook, "")) for hook in HOOKS)
     if binding:
         source += "\nnode-gyp rebuild:" + binding
+    source += "\n" + "\n".join(source_hashes)
     source = re.sub(r"https?://[^\s\"']+", "<URL>", source)
     source = re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "<IP>", source)
     source = re.sub(r"\s+", "", source)
@@ -76,7 +113,7 @@ def filter_archives(source: Path, destination: Path) -> dict[str, int]:
     for archive in sorted(source.rglob("*.zip")):
         scanned += 1
         try:
-            manifest, binding = _members(archive)
+            manifest, binding, source_hashes = _members(archive)
         except (OSError, ValueError, RuntimeError, NotImplementedError, tarfile.TarError, zipfile.BadZipFile):
             failed += 1
             continue
@@ -91,7 +128,7 @@ def filter_archives(source: Path, destination: Path) -> dict[str, int]:
         if not hooks or not all(isinstance(manifest.get(key), str) for key in ("name", "version")):
             continue
         matching += 1
-        cluster = _cluster(scripts, binding)
+        cluster = _cluster(scripts, binding, source_hashes)
         if cluster in seen:
             continue
         seen.add(cluster)

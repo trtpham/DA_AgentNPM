@@ -299,3 +299,81 @@ def test_truncated_source_cannot_be_approved(tmp_path):
     result, steps = analyze(str(package), "fake-model", max_steps=3,
                             chat=lambda *_args, **_kwargs: next(replies))
     assert (result.label, result.action, steps) == ("suspicious", "review", 3)
+
+
+def test_agent_must_read_cited_lines_and_can_call_tool_after_evidence_error(tmp_path):
+    (tmp_path / "package.json").write_text(json.dumps({
+        "name": "ranges", "version": "1.0.0", "scripts": {"postinstall": "node entry.js"}
+    }), encoding="utf-8")
+    (tmp_path / "entry.js").write_text("\n".join(f"const line{i} = {i};" for i in range(1, 21)), encoding="utf-8")
+    verdict = {
+        "package": "ranges@1.0.0", "label": "suspicious", "confidence": 0.7,
+        "description": "The inspected source contains a local synthetic fixture",
+        "behaviors": [{"behavior": "Defines a constant", "technique": "local assignment", "severity": "low",
+                       "evidence": {"file": "entry.js", "lines": "20"},
+                       "analysis": "The cited line defines a constant.", "impact": "No external effect."}],
+        "action": "review", "remediation": ["Review the remaining source"],
+    }
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {
+            "file": "entry.js", "start": 1, "end": 2}}}]},
+        {"role": "assistant", "content": json.dumps(verdict)},
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {
+            "file": "entry.js", "start": 20, "end": 20}}}]},
+        {"role": "assistant", "content": json.dumps(verdict)},
+    ])
+    final_flags = []
+
+    def chat(_model, _messages, final=False):
+        final_flags.append(final)
+        return next(replies)
+
+    result, steps = analyze(str(tmp_path), "fake", max_steps=4, chat=chat)
+    assert (result.action, steps) == ("review", 4)
+    assert final_flags[2] is False
+
+
+def test_reading_full_pretty_view_clears_preview_truncation(tmp_path):
+    (tmp_path / "package.json").write_text(json.dumps({
+        "name": "long-pretty", "version": "1.0.0", "scripts": {"postinstall": "node entry.js"}
+    }), encoding="utf-8")
+    (tmp_path / "entry.js").write_text("\n".join(f"const line{i} = {i};" for i in range(1, 15)), encoding="utf-8")
+    verdict = {
+        "package": "long-pretty@1.0.0", "label": "benign", "confidence": 0.9,
+        "description": "The inspected install source only defines local fixture constants",
+        "behaviors": [{"behavior": "Defines constants", "technique": "local assignment", "severity": "low",
+                       "evidence": {"file": "entry.js#pretty", "lines": "1"},
+                       "analysis": "The first line defines a constant.", "impact": "No external effect."}],
+        "action": "approve", "remediation": [],
+    }
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "deobfuscate", "arguments": {"file": "entry.js"}}}]},
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "entry.js#pretty"}}}]},
+        {"role": "assistant", "content": json.dumps(verdict)},
+    ])
+    result, steps = analyze(str(tmp_path), "fake", max_steps=3,
+                            chat=lambda *_args, **_kwargs: next(replies))
+    assert (result.label, result.action, steps) == ("benign", "approve", 3)
+
+
+def test_reading_full_original_clears_pretty_preview_truncation(tmp_path):
+    (tmp_path / "package.json").write_text(json.dumps({
+        "name": "long-original", "version": "1.0.0", "scripts": {"postinstall": "node entry.js"}
+    }), encoding="utf-8")
+    (tmp_path / "entry.js").write_text("\n".join(f"const line{i} = {i};" for i in range(1, 15)), encoding="utf-8")
+    verdict = {
+        "package": "long-original@1.0.0", "label": "benign", "confidence": 0.9,
+        "description": "The inspected install source only defines local fixture constants",
+        "behaviors": [{"behavior": "Defines constants", "technique": "local assignment", "severity": "low",
+                       "evidence": {"file": "entry.js", "lines": "1"},
+                       "analysis": "The first line defines a constant.", "impact": "No external effect."}],
+        "action": "approve", "remediation": [],
+    }
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "deobfuscate", "arguments": {"file": "entry.js"}}}]},
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "entry.js"}}}]},
+        {"role": "assistant", "content": json.dumps(verdict)},
+    ])
+    result, steps = analyze(str(tmp_path), "fake", max_steps=3,
+                            chat=lambda *_args, **_kwargs: next(replies))
+    assert (result.label, result.action, steps) == ("benign", "approve", 3)

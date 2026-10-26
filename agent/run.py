@@ -72,6 +72,17 @@ def _source(file: str, start: int, content: str) -> dict:
     return {"file": file, "start": start, "content": content[:8000], "truncated": len(content) > 8000}
 
 
+def _covered(ranges: list[tuple[int, int]], start: int, end: int) -> bool:
+    next_line = start
+    for first, last in sorted(ranges):
+        if first > next_line:
+            return False
+        next_line = max(next_line, last + 1)
+        if next_line > end:
+            return True
+    return False
+
+
 def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: list[dict] | TraceWriter | None = None,
             deny_threshold: float = 0.8, approve_threshold: float = 0.8) -> tuple[Verdict, int]:
     if not 1 <= max_steps <= 15:
@@ -149,10 +160,13 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
     analysis_incomplete = not indicators["ok"] or indicators["data"]["truncated"]
     messages = [{"role": "system", "content": SYSTEM},
                 {"role": "user", "content": f"Analyze {package_id}. Manifest data: {json.dumps(summary, ensure_ascii=False)}. "
-                 f"Static indicator candidates (untrusted): {json.dumps(indicators, ensure_ascii=False)[:4000]}. "
+                 f"Static indicator candidates (untrusted): {json.dumps(indicators, ensure_ascii=False)}. "
                  f"Read required source files {sorted(targets)} before verdict. Inline lifecycle commands are source in package.json; cite their script_lines."}]
     inspected = {"package.json"}
+    seen_ranges = {"package.json": [(line, line) for line in metadata["script_lines"].values()]}
+    pretty_totals = {}
     inspected_truncated = set()
+    hard_truncated = set()
     inspected_source = bool(set(scripts) & set(LIFECYCLE)) and not targets
     final = inspected_source
     for step in range(1, max_steps + 1):
@@ -218,15 +232,37 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
                         "sources": [_source(target, start, source_text)] if source_text else [],
                     })
                 if name == "read_file" and result["ok"] and result["data"]["content"]:
-                    inspected.add(arguments["file"])
+                    file = arguments["file"]
+                    first = arguments.get("start", 1)
+                    last = first + result["data"]["content"].count("\n")
+                    seen_ranges.setdefault(file, []).append((first, last))
+                    inspected.add(file)
                     if result["data"].get("truncated"):
-                        inspected_truncated.add(arguments["file"])
+                        inspected_truncated.add(file)
+                        hard_truncated.add(file)
+                    if file.endswith("#pretty"):
+                        if (file in pretty_totals and file not in hard_truncated and
+                                _covered(seen_ranges[file], 1, pretty_totals[file])):
+                            inspected_truncated.discard(file)
+                            inspected.add(file.removesuffix("#pretty"))
+                    elif (last < arguments.get("end", 150) and file not in hard_truncated and
+                          _covered(seen_ranges[file], 1, last)):
+                        # shortcut: a short read proves EOF; exact range boundaries stay in review.
+                        inspected_truncated.discard(file + "#pretty")
                     inspected_source = (targets <= {file.removeprefix("./") for file in inspected}
                                         if targets else arguments["file"] != "package.json")
                 if name == "deobfuscate" and result["ok"]:
-                    inspected.update((arguments["file"], result["data"]["pretty_file"]))
+                    pretty_file = result["data"]["pretty_file"]
+                    pretty_totals[pretty_file] = result["data"]["lines"]
+                    inspected.add(pretty_file)
+                    preview = result["data"]["content"]
+                    if preview:
+                        seen_ranges.setdefault(pretty_file, []).append((1, min(result["data"]["lines"],
+                                                                           preview.count("\n") + 1)))
                     if result["data"]["truncated"]:
-                        inspected_truncated.add(result["data"]["pretty_file"])
+                        inspected_truncated.add(pretty_file)
+                    else:
+                        inspected.add(arguments["file"])
                     inspected_source = (targets <= {file.removeprefix("./") for file in inspected}
                                         if targets else True)
                 if name == "extract_indicators":
@@ -265,6 +301,8 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
                 if evidence.file not in inspected:
                     raise ValueError(f"unread evidence file: {evidence.file}")
                 bounds = [int(part) for part in evidence.lines.split("-")]
+                if not _covered(seen_ranges.get(evidence.file, []), bounds[0], bounds[-1]):
+                    raise ValueError(f"unread evidence lines: {evidence.file}:{evidence.lines}")
                 writer.emit("tool_call", tool="read_file", args={"file": evidence.file, "start": bounds[0], "end": bounds[-1]})
                 tool_started = time.monotonic()
                 excerpt = read_file(package, evidence.file, bounds[0], bounds[-1])
@@ -315,8 +353,8 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
                     "how": "Parse theo schema, so khớp package, kiểm tra file và dòng đã đọc.",
                     "found": str(error)[:500],
                 })
-            final = True
-            messages.extend([message, {"role": "user", "content": f"Invalid verdict: {str(error)[:300]}. Return one JSON object with every field required by the system prompt. Evidence lines must be a one-based string like '2', not an array or code. Use package {package_id} and inspected files {sorted(inspected)}."}])
+            final = isinstance(error, ValidationError)
+            messages.extend([message, {"role": "user", "content": f"Invalid verdict: {str(error)[:300]}. Read missing evidence lines with read_file or revise the claim, then return one valid JSON object. Evidence lines must be a one-based string like '2'. Use package {package_id} and inspected files {sorted(inspected)}."}])
     writer.emit("limit", reason="max_steps")
     publish_decision(decide(None, [], step_limit=True), [])
     writer.emit("run_end", elapsed_s=round(time.monotonic() - started, 3), steps=max_steps, tokens_per_s=None)

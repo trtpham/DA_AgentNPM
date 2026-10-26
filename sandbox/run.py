@@ -14,9 +14,16 @@ CANARY = json.loads((Path(__file__).parent / "canary" / "manifest.json").read_te
 OPEN = re.compile(r'\bopen(?:at|at2)?\([^"\n]*"([^"\n]+)"[^\n]*\)\s+=\s+\d+')
 
 
+def _field(output: str, key: str) -> str:
+    values = [part[len(key) + 1:] for part in output.splitlines() if part.startswith(key + "=")]
+    if len(values) != 1:
+        raise ValueError(f"invalid sandbox {key} output")
+    return values[0]
+
+
 def _decode(output: str, key: str) -> str:
-    value = next((part[len(key) + 1:] for part in output.splitlines() if part.startswith(key + "=")), None)
-    if value is None or len(value) > 2_700_000:
+    value = _field(output, key)
+    if len(value) > 2_700_000:
         raise ValueError(f"invalid sandbox {key} output")
     return base64.b64decode(value, validate=True).decode("utf-8", errors="replace")
 
@@ -39,29 +46,31 @@ def run_sandbox(package: Path) -> dict:
         ], capture_output=True, text=True, timeout=120, check=False)
         if result.returncode:
             raise RuntimeError(f"Docker failed: {result.stderr[-300:]}")
-        values = dict(part.split("=", 1) for part in result.stdout.splitlines()
-                      if "=" in part and part.split("=", 1)[0] in ("EXIT", "TRACE_TRUNCATED"))
-        status = int(values["EXIT"])
+        status = int(_field(result.stdout, "EXIT"))
+        trace_truncated = _field(result.stdout, "TRACE_TRUNCATED")
+        if trace_truncated not in ("0", "1"):
+            raise ValueError("invalid sandbox TRACE_TRUNCATED output")
         trace = _decode(result.stdout, "TRACE")
         stdout = _decode(result.stdout, "STDOUT")
         stderr = _decode(result.stdout, "STDERR")
+        trace_complete = trace_truncated == "0" and bool(trace.strip())
         opened = set(OPEN.findall(trace))
         touched = [item["name"] for item in CANARY["files"] if item["path"] in opened]
         if CANARY["environment"] in stdout or CANARY["environment"] in stderr:
             touched.append("environment")
         lines = trace.splitlines()
-        return {"ok": status == 0, "data": {
+        return {"ok": status == 0 and trace_complete, "data": {
             "returncode": status,
             "stdout": {"untrusted": True, "content": stdout},
             "stderr": {"untrusted": True, "content": stderr},
             "strace": {"untrusted": True, "content": trace,
-                       "truncated": values.get("TRACE_TRUNCATED") == "1"},
+                       "truncated": trace_truncated == "1"},
             "processes": [line[:300] for line in lines if "execve(" in line][:20],
             "files_outside_package": sorted(path for path in opened if path.startswith("/")
                                             and not path.startswith("/work/"))[:50],
             "network_attempts": [line[:300] for line in lines if "connect(" in line][:20],
             "canary_touched": touched,
-        }, "error": None if status == 0 else "sandbox execution failed"}
+        }, "error": "sandbox trace incomplete" if not trace_complete else None if status == 0 else "sandbox execution failed"}
     except (OSError, ValueError, KeyError, RuntimeError, binascii.Error,
             subprocess.SubprocessError) as error:
         return {"ok": False, "data": None, "error": str(error)[:300]}

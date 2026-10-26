@@ -70,21 +70,59 @@ def _pretty_source(package: str, file: str) -> str:
     if not file.endswith((".js", ".cjs", ".mjs")):
         raise ValueError("pretty view requires JavaScript file")
     source = _safe_file(package, file).read_text(encoding="utf-8", errors="replace")
-    # shortcut: punctuation splitting is a preview, upgrade to a JS parser for exact formatting.
+    # shortcut: regex detection is heuristic; use a JS parser if exact formatting becomes required.
     output, quote, escaped = [], None, False
-    for char in source:
+    line_comment = block_comment = regex = char_class = False
+    previous = ""
+    index = 0
+    while index < len(source):
+        char = source[index]
+        next_char = source[index + 1] if index + 1 < len(source) else ""
         output.append(char)
-        if quote:
+        if line_comment:
+            if char == "\n":
+                line_comment = False
+        elif block_comment:
+            if char == "*" and next_char == "/":
+                output.append("/")
+                index += 1
+                block_comment = False
+        elif quote:
             if escaped:
                 escaped = False
             elif char == "\\":
                 escaped = True
             elif char == quote:
                 quote = None
+                previous = char
+        elif regex:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == "[":
+                char_class = True
+            elif char == "]":
+                char_class = False
+            elif char == "/" and not char_class:
+                regex = False
+                previous = char
+        elif char == "/" and next_char in ("/", "*"):
+            output.append(next_char)
+            index += 1
+            line_comment = next_char == "/"
+            block_comment = next_char == "*"
         elif char in ("'", '"', "`"):
             quote = char
-        elif char in (";", "{", "}"):
-            output.append("\n")
+        elif char == "/" and ((previous and previous in "=(,:!?[>{") or
+                              source[max(0, index - 10):index].rstrip().endswith("return")):
+            regex = True
+        else:
+            if char in (";", "{", "}"):
+                output.append("\n")
+            if not char.isspace():
+                previous = char
+        index += 1
     return "".join(output)
 
 
@@ -169,12 +207,16 @@ INDICATORS = {
     "eval": re.compile(r"\beval\s*\("),
     "new_function": re.compile(r"\bnew\s+Function\b"),
     "sensitive_path": re.compile(r"(?:~/|/home/[^/]+/)(?:\.npmrc|\.ssh|\.aws)\b"),
+    "home_secret": re.compile(r"(?:os\.homedir\s*\(\s*\)|process\.env\.HOME|\bhome\b).{0,100}\.(?:npmrc|ssh|aws)\b"),
     "environment": re.compile(r"\bprocess\.env\b"),
+    "network_api": re.compile(r"\b(?:fetch|https?\.request|dns\.lookup)\s*\(|\brequire\s*\(\s*['\"](?:net|https?|dns)['\"]\s*\)"),
+    "decode": re.compile(r"\batob\s*\(|\bBuffer\.from\s*\([^;\n]*?,\s*['\"]base64['\"]\s*\)"),
     "hex": re.compile(r"\b(?:[0-9a-fA-F]{2}){20,}\b"),
     "base64": re.compile(r"\b[A-Za-z0-9+/]{40,}={0,2}\b"),
 }
 
 RELATIVE_REQUIRE = re.compile(r"\brequire\s*\(\s*['\"](\.{1,2}/[^'\"]+)['\"]\s*\)")
+RELATIVE_IMPORT = re.compile(r"\b(?:import|export)\b[^;\n]*?['\"](\.{1,2}/[^'\"]+)['\"]")
 
 
 def extract_indicators(package: str) -> dict:
@@ -184,15 +226,22 @@ def extract_indicators(package: str) -> dict:
             raise ValueError(manifest["error"])
         scripts = manifest["data"]["scripts"]["content"]
         found = []
+        seen_environment = set()
+
+        def add(kind: str, file: str, line: int | None, snippet: str) -> None:
+            if kind == "environment":
+                if file in seen_environment:
+                    return
+                seen_environment.add(file)
+            found.append({"type": kind, "file": file, "line": line, "snippet": snippet[:120]})
+
         truncated = False
         for hook in LIFECYCLE:
             if hook not in scripts:
                 continue
             for kind, pattern in INDICATORS.items():
                 if pattern.search(scripts[hook]):
-                    found.append({"type": kind, "file": "package.json",
-                                  "line": manifest["data"]["script_lines"].get(hook),
-                                  "snippet": scripts[hook][:120]})
+                    add(kind, "package.json", manifest["data"]["script_lines"].get(hook), scripts[hook])
         pending = [(file, 0) for file in sorted(script_targets(scripts))]
         if manifest["data"]["has_binding_gyp"] and "install" not in scripts:
             pending.append(("binding.gyp", 0))
@@ -212,17 +261,17 @@ def extract_indicators(package: str) -> dict:
             for number, line in enumerate(safe.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
                 for kind, pattern in INDICATORS.items():
                     if pattern.search(line):
-                        found.append({"type": kind, "file": relative, "line": number,
-                                      "snippet": line[:120]})
+                        add(kind, relative, number, line)
                 if safe.suffix in (".js", ".cjs", ".mjs"):
-                    for required in RELATIVE_REQUIRE.findall(line):
+                    for required in RELATIVE_REQUIRE.findall(line) + RELATIVE_IMPORT.findall(line):
                         if depth == 2:
                             truncated = True
                             continue
-                        target = (Path(relative).parent / required).as_posix()
-                        if not Path(target).suffix:
-                            target += ".js"
-                        pending.append((target, depth + 1))
+                        target = Path(relative).parent / required
+                        if not target.suffix:
+                            js_file = target.with_suffix(".js")
+                            target = js_file if (Path(package) / js_file).is_file() else target / "index.js"
+                        pending.append((target.as_posix(), depth + 1))
                 if len(found) >= 30:
                     break
         return {"ok": True, "data": {"untrusted": True, "indicators": found,

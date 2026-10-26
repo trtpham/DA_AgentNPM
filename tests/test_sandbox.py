@@ -29,3 +29,20 @@ def test_sandbox_rejects_invalid_trace_protocol(tmp_path):
     with patch("sandbox.run.subprocess.run", return_value=CompletedProcess([], 0, "EXIT=0\nTRACE=bad\n", "")):
         result = run_sandbox(tmp_path)
     assert not result["ok"] and result["data"] is None
+
+
+def test_sandbox_rejects_duplicate_trace_field(tmp_path):
+    (tmp_path / "package.json").write_text("{}", encoding="utf-8")
+    output = "EXIT=0\nTRACE_TRUNCATED=0\nTRACE=\nTRACE=\nSTDOUT=\nSTDERR=\n"
+    with patch("sandbox.run.subprocess.run", return_value=CompletedProcess([], 0, output, "")):
+        result = run_sandbox(tmp_path)
+    assert not result["ok"] and result["data"] is None
+
+
+def test_sandbox_cannot_pass_with_truncated_trace(tmp_path):
+    (tmp_path / "package.json").write_text("{}", encoding="utf-8")
+    trace = base64.b64encode(b'1 openat(AT_FDCWD, "/work/file", O_RDONLY) = 3\n').decode()
+    output = f"EXIT=0\nTRACE_TRUNCATED=1\nTRACE={trace}\nSTDOUT=\nSTDERR=\n"
+    with patch("sandbox.run.subprocess.run", return_value=CompletedProcess([], 0, output, "")):
+        result = run_sandbox(tmp_path)
+    assert not result["ok"] and result["error"] == "sandbox trace incomplete"
