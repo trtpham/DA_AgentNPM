@@ -164,3 +164,13 @@ EVIDENCE_REFERENCES: yêu cầu trong chat “enrich data, quá ít data, tôi c
 - Phạm vi: thu thập tên, phiên bản, lifecycle hook và URL nguồn công khai cho 400–500 ứng viên npm; ghi nguồn/phương pháp và kiểm tra cấu trúc, trùng lặp của CSV.
 - Giới hạn: không tải tarball, không chạy gói, không đọc `data/samples/`, không chuyển `source_label` thành nhãn ground truth trong `labels.csv`; các dòng chưa có kiểm tra chéo giữ trạng thái ứng viên.
 - Owner: Codex. Reviewer nhãn và tính đại diện: Phạm Minh Triết (TV2) trước khi dùng cho thực nghiệm.
+
+## Gate B0 — duyệt bằng chứng nhãn tuần 2 (2026-10-29)
+
+DECISION: APPROVED FOR STATIC LABEL REVIEW
+PO: Phạm Minh Triết
+EVIDENCE_REFERENCES: yêu cầu trực tiếp trong chat “duyệt tất cả 450 ứng viên metadata giúp tôi” và “hoàn thiện stuck tuần 2 luôn đi, ko dừng lại cho đến khi xong”.
+
+- Phạm vi: kiểm tra tĩnh manifest và mã đúng phiên bản của ứng viên trong Docker dùng một lần; ghi `file:dòng`, nguồn và quyết định nhãn vào hồ sơ tuần 2; chỉ đưa gói có bằng chứng rõ vào `labels.csv`.
+- Giới hạn: không chạy install script, không AI scan hàng loạt, không đưa tarball hay mã gói nghi vấn vào repo/host, không suy nhãn lành từ metadata; các gói thiếu bằng chứng giữ `needs_code_review`.
+- Owner thực hiện: Codex theo ủy quyền TV2. Reviewer sử dụng dữ liệu cho thí nghiệm: Phạm Minh Triết.

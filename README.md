@@ -10,8 +10,10 @@
 - `tools/`: tải tarball và công cụ đọc gói.
 - `sandbox/`: chạy install script trong Docker cách ly.
 - `data/`: hợp đồng nhãn và xử lý tập dữ liệu.
-- Hồ sơ nhãn tuần 2: [`data/REVIEW_WEEK2.md`](data/REVIEW_WEEK2.md). `labels.csv` đang chờ TV2 kiểm tra chéo từng gói trước khi dùng làm ground truth.
-- Kho 450 ứng viên chỉ có metadata: [`data/public_candidates_450.csv`](data/public_candidates_450.csv); cách thu thập và giới hạn ở [`data/README.md`](data/README.md). Các ứng viên chưa phải nhãn thật.
+- Hồ sơ nhãn tuần 2: [`data/REVIEW_WEEK2.md`](data/REVIEW_WEEK2.md). `labels.csv` có 22 nhãn: 2 `benign`, 2 `suspicious`, 18 `malicious`; 17 nhãn mới cùng chiến dịch Datadog MUT-4831, đã được Codex kiểm tra tĩnh theo ủy quyền TV2 và chờ Phạm Minh Triết kiểm tra chéo trước khi dùng để đánh giá. Bộ này chưa đủ đại diện để đo độ chính xác agent.
+- Đối chiếu 450 ứng viên metadata: [`data/review_450/metadata_review_450.csv`](data/review_450/metadata_review_450.csv) (445 manifest khớp, 5 không còn trên Registry; chưa gán nhãn từ metadata).
+- Chạy lại theo 25 batch, mỗi batch 18 gói: `rtk proxy python -m data.review_batches` (kết quả trong [`data/review_450/batches/`](data/review_450/batches/); có thể tiếp tục sau khi gián đoạn).
+- Kho 450 ứng viên chỉ có metadata: [`data/review_450/public_candidates_450.csv`](data/review_450/public_candidates_450.csv); cách thu thập và giới hạn ở [`data/README.md`](data/README.md). Các ứng viên chưa phải nhãn thật.
 - `tests/`: test và gói mô phỏng vô hại.
 - `experiments/configs/`: cấu hình ba model Ollama.
 - `reports/`: đầu ra phân tích (JSON bị ignore).

