@@ -1,10 +1,28 @@
 import json
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
-from agent.run import SYSTEM, analyze, script_targets, _tool
+from agent.run import SYSTEM, analyze, script_targets, _chat, _tool
 from agent.trace import TraceWriter
+
+
+@pytest.mark.parametrize("status, attempts", [(503, 2), (400, 1)])
+def test_ollama_http_retry_policy(monkeypatch, status, attempts):
+    connection = Mock()
+    connection.getresponse.side_effect = [
+        Mock(status=status, read=lambda *_: b"temporary error"),
+        Mock(status=200, read=lambda *_: b'{"message":{"content":"ok"}}'),
+    ]
+    monkeypatch.setattr("agent.run.HTTPConnection", Mock(return_value=connection))
+    monkeypatch.setattr("agent.run.time.sleep", lambda _: None)
+    if status == 400:
+        with pytest.raises(RuntimeError, match="Ollama HTTP 400"):
+            _chat("test-model", [])
+    else:
+        assert _chat("test-model", []) == {"content": "ok"}
+    assert connection.getresponse.call_count == attempts
 
 
 def test_prompt_requires_behavior_flow_not_package_name():

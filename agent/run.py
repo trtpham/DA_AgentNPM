@@ -42,7 +42,10 @@ def _chat(model: str, messages: list[dict], final: bool = False) -> dict:
             connection.request("POST", "/api/chat", payload, {"Content-Type": "application/json"})
             response = connection.getresponse()
             if response.status != 200:
-                raise RuntimeError(f"Ollama HTTP {response.status}: {response.read(300).decode(errors='replace')}")
+                error = f"Ollama HTTP {response.status}: {response.read(300).decode(errors='replace')}"
+                if response.status == 429 or 500 <= response.status < 600:
+                    raise HTTPException(error)
+                raise RuntimeError(error)
             return json.load(response)["message"]
         except (HTTPException, TimeoutError, OSError, json.JSONDecodeError, KeyError) as error:
             if attempt:
