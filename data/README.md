@@ -4,7 +4,7 @@
 
 | Đường dẫn | Vai trò |
 | --- | --- |
-| `labels.csv` | Bảng 22 nhãn có bằng chứng mã tĩnh; 17 nhãn mới chờ kiểm tra chéo trước khi dùng đánh giá. |
+| `labels.csv` | Bảng 40 nhãn có bằng chứng mã tĩnh; 35 nhãn mới chờ kiểm tra chéo trước khi dùng đánh giá. |
 | `candidates.csv` | 5 ứng viên cũ để tham khảo, chưa phải bảng nhãn. |
 | `review_450/public_candidates_450.csv` | Danh sách 450 ứng viên công khai, chưa được gán nhãn. |
 | `review_450/metadata_review_450.csv` | Kết quả đối chiếu metadata của 450 ứng viên; không phải kết luận lành/độc. |
@@ -12,7 +12,7 @@
 
 Các script `.py` ở thư mục này tạo/lọc/kiểm tra dữ liệu; `REVIEW_WEEK2.md` là hồ sơ bằng chứng. Không nhập 450 ứng viên vào `labels.csv` chỉ dựa trên metadata.
 
-`labels.csv` có 22 nhãn Codex kiểm tra tĩnh theo ủy quyền của Phạm Minh Triết: 2 `benign`, 2 `suspicious`, 18 `malicious` (17 bản cùng chiến dịch MUT-4831). Hợp đồng mục 8 của AGENTS gốc: `id,name,version,label,behavior_main,technique,file,lines,source,split,cluster`. `source` trỏ tới tarball npm hoặc archive bằng chứng đúng phiên bản; người kiểm tra, hash và lý do nằm trong [hồ sơ tuần 2](REVIEW_WEEK2.md). `prepare_labels` từ chối bảng rỗng và chia theo cụm. Nhãn mới chờ kiểm tra chéo trước khi đánh giá; bộ này chưa đại diện để công bố accuracy/recall/F1.
+`labels.csv` có 40 nhãn Codex kiểm tra tĩnh theo ủy quyền của Phạm Minh Triết: 2 `benign`, 2 `suspicious`, 36 `malicious` (35 bản thuộc hai chiến dịch Datadog). Hợp đồng mục 8 của AGENTS gốc: `id,name,version,label,behavior_main,technique,file,lines,source,split,cluster`. `source` trỏ tới tarball npm hoặc archive bằng chứng đúng phiên bản; người kiểm tra, hash và lý do nằm trong [hồ sơ tuần 2](REVIEW_WEEK2.md). `prepare_labels` từ chối bảng rỗng và chia theo cụm. Nhãn mới chờ kiểm tra chéo trước khi đánh giá; bộ này chưa đại diện để công bố accuracy/recall/F1.
 
 `candidates.csv` lưu **metadata ứng viên**. `source_label=malicious` là nhãn advisory; `unlabeled` nghĩa là nguồn không khẳng định benign. `review_status=needs_independent_review` nghĩa là nhóm chưa kiểm tra chéo. GitHub Advisory và bản OSV tương ứng có cùng nguồn gốc nên không tính là hai lượt kiểm tra độc lập. Chỉ chuyển dòng sang `labels.csv` sau khi TV2 hoặc người được TV2 ủy quyền xác minh đúng tên, phiên bản, install hook, hành vi và ghi người kiểm tra/quyết định vào [hồ sơ tuần 2](REVIEW_WEEK2.md). Không tải hoặc đưa tarball độc vào Git.
 

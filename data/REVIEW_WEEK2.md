@@ -1,6 +1,6 @@
 # Hồ sơ kiểm tra nhãn tuần 2
 
-Trạng thái 2026-10-30: `labels.csv` có 22 nhãn (2 `benign`, 2 `suspicious`, 18 `malicious`). Codex đã duyệt tĩnh 17 phiên bản trong batch Datadog theo ủy quyền của Phạm Minh Triết; reviewer dùng nhãn cho thí nghiệm vẫn là Phạm Minh Triết. Ba ứng viên nghi vấn cũ chưa có mã để xác minh `file:dòng`. Không chạy mã gói trên host hoặc đưa archive độc vào repo.
+Trạng thái 2026-10-30: `labels.csv` có 40 nhãn (2 `benign`, 2 `suspicious`, 36 `malicious`). Codex đã duyệt tĩnh thêm 35 phiên bản qua hai batch Datadog theo ủy quyền của Phạm Minh Triết; reviewer dùng nhãn cho thí nghiệm vẫn là Phạm Minh Triết. Ba ứng viên nghi vấn cũ chưa có mã để xác minh `file:dòng`. Không chạy mã gói trên host hoặc đưa archive độc vào repo.
 
 | Ứng viên | Nhãn đề xuất | Bằng chứng install hook và hành vi | Nguồn | Trạng thái duyệt |
 | --- | --- | --- | --- | --- |
@@ -63,7 +63,7 @@ Truy vấn batch OSV với đúng 450 cặp `package@version` tìm thấy 8 cặ
 
 Nguồn tarball: [`exnesss@0.0.1`](https://registry.npmjs.org/exnesss/-/exnesss-0.0.1.tgz) và [`@miurba/alcazaba@99.99.99`](https://registry.npmjs.org/@miurba/alcazaba/-/alcazaba-99.99.99.tgz). SHA-512 tính từ tarball trong container khớp `dist.integrity` của npm Registry: `exnesss` = `daeda9dbf5cb4fb43e1c8a89795e2fa5be22c53265c566a6ecb82e20c71da616a99e70bc45008feba826b89bda5d840fa3718672519f46268a14a81bf9526396`; `@miurba/alcazaba` = `f743d2339fcb152d2546766bb1c955fb4fbb9c2e525dc5fff1c8cc551ad6afcb70ea0a9385c854c8e20cd84b82f560ad77e9c70a37ceec85a8d31adac680969c`. Hai dòng đã vào `labels.csv`. `prepare_labels` xác nhận 5 dòng hợp lệ và chia theo cụm: `exnesss` ở `dev`, `@miurba/alcazaba` ở `test`.
 
-OSV là nguồn chọn ứng viên, không thay thế việc đọc mã. Lượt batch này chỉ tìm advisory đã biết, không xác nhận các gói không có hit là lành. Bộ 22 nhãn vẫn chưa đủ đại diện để công bố độ chính xác, recall hoặc F1 của agent; 17 nhãn mới cùng một chiến dịch.
+OSV là nguồn chọn ứng viên, không thay thế việc đọc mã. Lượt batch này chỉ tìm advisory đã biết, không xác nhận các gói không có hit là lành. Bộ 40 nhãn vẫn chưa đủ đại diện để công bố độ chính xác, recall hoặc F1 của agent; 35 nhãn mới chỉ thuộc hai chiến dịch.
 
 ## Batch Datadog MUT-4831 — 2026-10-30
 
@@ -92,6 +92,35 @@ Nguồn độc lập: [Datadog Security Labs — MUT-4831](https://securitylabs.
 | `telegram-bot-starter@1.2.7` | `package.json:28` → `src/dependencies.js:239,227,259` | `e98e837add0fe33fa55399b92334522df12056ccbe115059eddd0ed45904e6da` |
 
 Giữ `custom-tg-bot-plan@1.0.0` ở trạng thái `needs_code_review`: `package.json:25` gọi `node src/dependencies.js` nhưng file đó không có trong archive đúng phiên bản; có `src/extract.js` song hook không trỏ tới. Không suy ra mã đó đã được kích hoạt. 17 bản mới cùng `cluster=mut-4831`, `split=dev` để tránh rò rỉ cùng chiến dịch qua hai tập. Nhóm chỉ dùng các nhãn này sau kiểm tra chéo của Phạm Minh Triết; bộ dữ liệu vẫn mất cân bằng và chưa đủ đánh giá mô hình.
+
+## Batch Datadog compromised_lib — 2026-10-30
+
+Codex kiểm tra thêm 18 archive đúng tên và phiên bản, thuộc 18 gói khác nhau trong [Datadog malicious software packages dataset](https://github.com/DataDog/malicious-software-packages-dataset/tree/main/samples/npm/compromised_lib). URL archive từng dòng nằm ở `source` của `labels.csv`; SHA-256 dưới đây là của ZIP archive. Chỉ đọc `package.json` và mã đã mã hóa bằng `zipfile` trong Docker dùng một lần, không mount host và không thực thi hook, script con hay `npm publish`.
+
+Cả 18 bản có `package.json:7` khai báo `postinstall: node index.js` và file đích tồn tại. Hai fingerprint mã `index.js` và `scripts/deploy.js` đã được đối chiếu với hai bản đại diện: `index.js:12,18` đọc `.npmrc`, dòng 91 tạo tiến trình `scripts/deploy.js`, dòng 94 truyền `NPM_TOKENS`; script con dùng token với npm Registry và gọi `npm publish` ở dòng 65 hoặc 66. Đây là hành vi phát tán qua token trong lúc cài đặt, nên gán `malicious`. Hai cặp SHA-256 mã là `0c0d206d5e68c0cf64d57ffa8bc5b1dad54f2dda52f24e96e02e237498cb9c3a` / `5e2ba7c4c53fa6e0cef58011acdd50682cf83fb7b989712d2fcf1b5173bad956` và `c37c0ae9641d2e5329fcdee847a756bf1140fdb7f0b7c78a40fdc39055e7d926` / `158091ec92a3a91d7d2d29e6b867d47479d624bcae5f067cc80af4eff91c9729`.
+
+| Phiên bản | Bằng chứng mã tĩnh | SHA-256 archive |
+| --- | --- | --- |
+| `@emilgroup/partner-sdk@1.19.2` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:65` | `2e133aeb2d49b40f83434bdbff92fe2aca347ae9017cda8375c4fad094a72e3d` |
+| `@emilgroup/accounting-sdk@1.27.3` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `b9b96f6e1452c9b5f561474a031042a25170297699c94debd3690c9117b3ad60` |
+| `@emilgroup/commission-sdk-node@1.0.2` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:65` | `132592fcee1250e1e10c504574b74db474e82e0e333417dcd3374837d385261d` |
+| `@emilgroup/commission-sdk@1.0.2` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:65` | `b6646a039712a25bff6b8712b1ab45393664e248300d6b8e2c5ca89131ce0715` |
+| `@opengov/ppf-eslint-config@0.1.11` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `cd4f9cfa8b049c07e5983b93be321dfa463a25fca0aaab47050ac8bbe9f50304` |
+| `@emilgroup/gdv-sdk-node@2.6.3` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `c7010521b9f4abbd16e712f10bcfb96a13cf11605431f39e354876e9d11f0962` |
+| `@emilgroup/document-uploader@0.0.12` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `b0ce291fbd7135c760d8bba61e71c8c2567e77045a652ecb06c29b75b3b593ba` |
+| `@opengov/qa-record-types-api@1.0.3` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `e237e2ea8387b9d5c373a2d29f68e5ba388c5a56688b19a2d458ea4ca16907d2` |
+| `@emilgroup/numbergenerator-sdk-node@1.3.2` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:65` | `92e84a6e84d74edc65eba61d3e0e33d7fc6d8520cf4276e7a70a7a0c387bb187` |
+| `react-leaflet-marker-layer@0.1.5` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `9f7a98cd601846d5cbc5960b9ecd86ea296870794c4d1450870681e6759765a6` |
+| `@emilgroup/task-sdk-node@1.0.3` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:65` | `a2d5f5099730ede3b1fb72e5cd653d193ee4e9036335e5601893099b07ebc2b4` |
+| `@emilgroup/process-manager-sdk@1.4.2` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `2a07bac1068bec1a8475709ec14378c4fd80ff8a8cbeb16510d4d18ff0dae5af` |
+| `@emilgroup/changelog-sdk-node@1.0.3` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `9f6b69a0e89749375c67df59c67435be4a33249c9a1e3d198dd05945d4b2a00c` |
+| `@leafnoise/mirage@2.0.3` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `37fb49a509c1df17ebc095c7bb163fa94595bf7c15813c6ff8acc73ffc6b05db` |
+| `@emilgroup/task-sdk@1.0.3` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:65` | `7de5741a470aae844c564b68558e65848e585c38d785dec33d8fdd67beaa576c` |
+| `@emilgroup/discount-sdk-node@1.5.2` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `9e8ea667eefcd413390709af13b72eda28eafdfcc5336b9fbddd226e3afd29ed` |
+| `jest-preset-ppf@0.0.2` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `5b89cd5b863e3b45ff89df1a9ea802850dd0d888d47d3dc72047a03ed375feb9` |
+| `react-leaflet-cluster-layer@0.0.4` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `05de5918ede213b3edf29d1b5997618c9b47c530fd41a5eae91e4e0093511d02` |
+
+Các bản này cùng `cluster=npm-token-worm-2026-03` và `split=dev`. Hai batch Datadog bổ sung 35 nhãn, song chỉ đại diện hai chiến dịch; Phạm Minh Triết vẫn cần kiểm tra chéo trước khi dùng nhãn cho đánh giá mô hình. Không suy ra tính năng độc đã chạy thành công trên máy thật từ kiểm tra tĩnh.
 
 ## Sàng lọc nguồn để mở rộng nhãn — 2026-10-29
 
