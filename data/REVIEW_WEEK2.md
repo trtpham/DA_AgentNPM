@@ -1,6 +1,6 @@
 # Hồ sơ kiểm tra nhãn tuần 2
 
-Trạng thái 2026-10-30: `labels.csv` có 40 nhãn (2 `benign`, 2 `suspicious`, 36 `malicious`). Codex đã duyệt tĩnh thêm 35 phiên bản qua hai batch Datadog theo ủy quyền của Phạm Minh Triết; reviewer dùng nhãn cho thí nghiệm vẫn là Phạm Minh Triết. Ba ứng viên nghi vấn cũ chưa có mã để xác minh `file:dòng`. Không chạy mã gói trên host hoặc đưa archive độc vào repo.
+Trạng thái 2026-10-30: `labels.csv` có 58 nhãn (20 `benign`, 2 `suspicious`, 36 `malicious`). Codex đã duyệt tĩnh thêm 53 phiên bản qua ba batch theo ủy quyền của Phạm Minh Triết; reviewer dùng nhãn cho thí nghiệm vẫn là Phạm Minh Triết. Ba ứng viên nghi vấn cũ chưa có mã để xác minh `file:dòng`. Không chạy mã gói trên host hoặc đưa archive độc vào repo.
 
 | Ứng viên | Nhãn đề xuất | Bằng chứng install hook và hành vi | Nguồn | Trạng thái duyệt |
 | --- | --- | --- | --- | --- |
@@ -63,7 +63,7 @@ Truy vấn batch OSV với đúng 450 cặp `package@version` tìm thấy 8 cặ
 
 Nguồn tarball: [`exnesss@0.0.1`](https://registry.npmjs.org/exnesss/-/exnesss-0.0.1.tgz) và [`@miurba/alcazaba@99.99.99`](https://registry.npmjs.org/@miurba/alcazaba/-/alcazaba-99.99.99.tgz). SHA-512 tính từ tarball trong container khớp `dist.integrity` của npm Registry: `exnesss` = `daeda9dbf5cb4fb43e1c8a89795e2fa5be22c53265c566a6ecb82e20c71da616a99e70bc45008feba826b89bda5d840fa3718672519f46268a14a81bf9526396`; `@miurba/alcazaba` = `f743d2339fcb152d2546766bb1c955fb4fbb9c2e525dc5fff1c8cc551ad6afcb70ea0a9385c854c8e20cd84b82f560ad77e9c70a37ceec85a8d31adac680969c`. Hai dòng đã vào `labels.csv`. `prepare_labels` xác nhận 5 dòng hợp lệ và chia theo cụm: `exnesss` ở `dev`, `@miurba/alcazaba` ở `test`.
 
-OSV là nguồn chọn ứng viên, không thay thế việc đọc mã. Lượt batch này chỉ tìm advisory đã biết, không xác nhận các gói không có hit là lành. Bộ 40 nhãn vẫn chưa đủ đại diện để công bố độ chính xác, recall hoặc F1 của agent; 35 nhãn mới chỉ thuộc hai chiến dịch.
+OSV là nguồn chọn ứng viên, không thay thế việc đọc mã. Lượt batch này chỉ tìm advisory đã biết, không xác nhận các gói không có hit là lành. Bộ 58 nhãn vẫn chưa đủ đại diện để công bố độ chính xác, recall hoặc F1 của agent: 35 bản độc thuộc hai chiến dịch, 20 bản lành thuộc hai họ gói.
 
 ## Batch Datadog MUT-4831 — 2026-10-30
 
@@ -121,6 +121,35 @@ Cả 18 bản có `package.json:7` khai báo `postinstall: node index.js` và fi
 | `react-leaflet-cluster-layer@0.0.4` | `package.json:7` → `index.js:12,18,91,94` → `scripts/deploy.js:66` | `05de5918ede213b3edf29d1b5997618c9b47c530fd41a5eae91e4e0093511d02` |
 
 Các bản này cùng `cluster=npm-token-worm-2026-03` và `split=dev`. Hai batch Datadog bổ sung 35 nhãn, song chỉ đại diện hai chiến dịch; Phạm Minh Triết vẫn cần kiểm tra chéo trước khi dùng nhãn cho đánh giá mô hình. Không suy ra tính năng độc đã chạy thành công trên máy thật từ kiểm tra tĩnh.
+
+## Batch lành esbuild và @swc/core — 2026-10-30
+
+Codex đọc tĩnh 18 tarball phát hành từ npm Registry trong Docker dùng một lần: 9 phiên bản `esbuild`, 9 phiên bản `@swc/core`. Tên/phiên bản trong `package.json` khớp metadata; SHA-512 tarball khớp `dist.integrity` cho cả 18 bản. Chỉ có `postinstall` trong các lifecycle hook: `node install.js` hoặc `node postinstall.js`, file đích đều tồn tại. Không chạy hook hay mã native.
+
+Tám bản `esbuild` có cùng SHA-256 `install.js` = `417cbbaf3ea9cb878011832b70eeaa00ce49419a0589cbbf4b65d258c4d7c1dd`; bản `0.25.6` thêm nền tảng OpenHarmony và kiểm tra WASM trước khi liên kết binary. Mã chọn gói `@esbuild/*` theo hệ điều hành/kiến trúc (`install.js:66-78`), cài đúng phiên bản bằng npm hoặc tải trực tiếp từ `registry.npmjs.org` (`install.js:178-187,234-245,269-281`). Chín bản `@swc/core` có cùng SHA-256 `postinstall.js` = `5da0f556c5702eaf4c4b66283f03aeccbd8db3d4b730866741ca23c799614a87`; mã thử native binding rồi chỉ cài `@swc/wasm` đúng phiên bản nếu không dùng được binding (`postinstall.js:79-128`). Hai đường cài này phục vụ chức năng công khai của gói nên gán `benign` cho hành vi install đã đọc. Kiểm tra này không phải kiểm toán toàn bộ binary hay mọi file của gói.
+
+| Phiên bản | Bằng chứng install hook và mã | SHA-512 tarball |
+| --- | --- | --- |
+| `esbuild@0.24.1` | `package.json:10` → `install.js:66,186,235,269-273` | `6c7356e7b60028d8755526d73f7dc42fd0debed46e4f5d1ccc684bf729caa4e01e04c340933b0ff0548da054db53769b401ee439bf89a9473cf45aa564d6c479` |
+| `esbuild@0.24.2` | `package.json:10` → `install.js:66,186,235,269-273` | `fbd7a0a415bc237083e573ded27e817d3e5fc4bcf1ae50f3ab2745ddabe21bef678b59430bf3af307731a84155d3e2c03591b94756c53167d4ae356c770c49bc` |
+| `esbuild@0.25.0` | `package.json:10` → `install.js:66,186,235,269-273` | `057ab99aa73c96d6da377e1c0ea5ae60ac8d857f03fd9d09d7176d750f14708208c89cb3f9930a52de7cb45dd2ad9f398dc7cdfcf658863479b8340060d55bbb` |
+| `esbuild@0.25.1` | `package.json:10` → `install.js:66,186,235,269-273` | `0463b92edac60bbbf19eab9c01efeb9af29d26595f19a616772001bf23285d095f60c6f66db46e45e591e6d10613fff82dc3498fd5eb928bd3a8d6111591c031` |
+| `esbuild@0.25.2` | `package.json:10` → `install.js:66,186,235,269-273` | `d7af39e3371c28f9c2fada0ccb00beb8a35e612bfefde5e47af4407f0443fc6f4295eabaea6f17148ae28246ef6ae2cb9427c32f8e50d9c59e812839de01819d` |
+| `esbuild@0.25.3` | `package.json:10` → `install.js:66,186,235,269-273` | `a8a03a3ef6a2ef7f8cd85b5fb6934a47127bf062239855c5c5dff50d506a1a8fea3612d27eff86d769fda4da16772b490bc534d13ad588ec298d3d3382a412f1` |
+| `esbuild@0.25.4` | `package.json:10` → `install.js:66,186,235,269-273` | `f298232d47148dc80383ed90e0d6179cf6e8fef9dc018e149b26829b48d97af111a821d921a5b07491e47fc5d0b6ee00c5228276fad46d3d1752bd48759cc8f1` |
+| `esbuild@0.25.5` | `package.json:10` → `install.js:66,186,235,269-273` | `3fc3ad29946fff9279861cf471401dbbf70bb8f20a5e9425d51f6966dbe61d642fac051577450d20f4f8201e16deb34ea953b4ae5a8798221b4b0c61fdcf7251` |
+| `esbuild@0.25.6` | `package.json:10` → `install.js:67,187,237,271-275` | `195bb3b94c2d76c821137a1c27d06cf0f368175dc7350e535db122d8086f55bf31535230b7d168b3d1446a67e879efaefd33ac9fb19459cd38973e3a9f66db4e` |
+| `@swc/core@1.7.23` | `package.json:49` → `postinstall.js:79-128` | `543364a43bc396b786876137b650e3f01de98a2b8b861400ffbac8559a622d4bc6d58a6e7006ba37b8835c0ec673ff876a1f2ca5a0a0feabc468190299c21809` |
+| `@swc/core@1.7.24` | `package.json:49` → `postinstall.js:79-128` | `17325a6a2eb3e8361d202018d5428d379a734e7dbdea4b0adb3cc48e369796966da0c90692d593d2db52ee16dd0423c684b3aee50f53036cdd3de8ca5058e08a` |
+| `@swc/core@1.7.25` | `package.json:49` → `postinstall.js:79-128` | `1164d675bd060fe67d081caf5b98f96fd775705afd3fa872ed3906800c2784ac46c331aef011d31b7a2edbc298e8fe7bc995c354a0747b15a648d448bfa2d80a` |
+| `@swc/core@1.7.26` | `package.json:49` → `postinstall.js:79-128` | `7f9b9815ff9398c432608a31927fdebd684d1ae5330bbdf4745c00286c015471d5a0fc9a935fc6bc9526ea2d522a5fb61eb8fda0dd22dd64a8596678a6023c97` |
+| `@swc/core@1.7.28` | `package.json:49` → `postinstall.js:79-128` | `5daa5c320b0e4b470a874d401448fea973a4e8a338359869edae6f3e271d864451f11cef8eb09aec34ed8a33317e8b54f1ba9a10782ec668886a0d875254fc41` |
+| `@swc/core@1.7.35` | `package.json:49` → `postinstall.js:79-128` | `ddc52d7824dbaf6af98ea7e0c74af4f75b1fab932087a17549087c5c03a74afb4acf0bf66c2df59af04754089e0f5b8f6b69072612dabf6d034205ce869122b7` |
+| `@swc/core@1.7.39` | `package.json:49` → `postinstall.js:79-128` | `8e7b3a54578e4f8f6ea1328b58811f890a89025caa95d340b7cd2402bf1fedae588d7d338271b744188b32992cc7829ae1294ae0ee9327f96e9883374eba7cda` |
+| `@swc/core@1.7.40` | `package.json:49` → `postinstall.js:79-128` | `d07233339be28154f922f36e9bea4fb924fda7cc4584dea685d20a8eeeea61878db991bbf25c26b3fd9df168234c9265ce9e8994f82e5c6acc30dce3430d2a36` |
+| `@swc/core@1.7.42` | `package.json:49` → `postinstall.js:79-128` | `890ad193748a9dd419e29b49bf5af37904a209840884c8e23bded05ce942702a1a6b338b28f9cb9d7cd4e0abf416e045c987c6d8513de01a11d1723604dd36ab` |
+
+Các bản mới giữ `cluster=esbuild-family, split=test` và `cluster=swc-family, split=dev` cùng bản đã duyệt trước đó, tránh rò rỉ phiên bản gần giống giữa hai tập. Tập lành hiện tập trung ở hai họ gói; cần thêm họ độc lập và kiểm tra chéo của Phạm Minh Triết trước khi dùng để đánh giá mô hình.
 
 ## Sàng lọc nguồn để mở rộng nhãn — 2026-10-29
 
