@@ -1,6 +1,6 @@
 # Hồ sơ kiểm tra nhãn tuần 2
 
-Trạng thái 2026-10-30: `labels.csv` có 58 nhãn (20 `benign`, 2 `suspicious`, 36 `malicious`). Codex đã duyệt tĩnh thêm 53 phiên bản qua ba batch theo ủy quyền của Phạm Minh Triết; reviewer dùng nhãn cho thí nghiệm vẫn là Phạm Minh Triết. Ba ứng viên nghi vấn cũ chưa có mã để xác minh `file:dòng`. Không chạy mã gói trên host hoặc đưa archive độc vào repo.
+Trạng thái 2026-10-30: `labels.csv` có 76 nhãn (20 `benign`, 2 `suspicious`, 54 `malicious`). Codex đã duyệt tĩnh thêm 71 phiên bản qua bốn batch theo ủy quyền của Phạm Minh Triết; reviewer dùng nhãn cho thí nghiệm vẫn là Phạm Minh Triết. Ba ứng viên nghi vấn cũ chưa có mã để xác minh `file:dòng`. Không chạy mã gói trên host hoặc đưa archive độc vào repo.
 
 | Ứng viên | Nhãn đề xuất | Bằng chứng install hook và hành vi | Nguồn | Trạng thái duyệt |
 | --- | --- | --- | --- | --- |
@@ -63,7 +63,7 @@ Truy vấn batch OSV với đúng 450 cặp `package@version` tìm thấy 8 cặ
 
 Nguồn tarball: [`exnesss@0.0.1`](https://registry.npmjs.org/exnesss/-/exnesss-0.0.1.tgz) và [`@miurba/alcazaba@99.99.99`](https://registry.npmjs.org/@miurba/alcazaba/-/alcazaba-99.99.99.tgz). SHA-512 tính từ tarball trong container khớp `dist.integrity` của npm Registry: `exnesss` = `daeda9dbf5cb4fb43e1c8a89795e2fa5be22c53265c566a6ecb82e20c71da616a99e70bc45008feba826b89bda5d840fa3718672519f46268a14a81bf9526396`; `@miurba/alcazaba` = `f743d2339fcb152d2546766bb1c955fb4fbb9c2e525dc5fff1c8cc551ad6afcb70ea0a9385c854c8e20cd84b82f560ad77e9c70a37ceec85a8d31adac680969c`. Hai dòng đã vào `labels.csv`. `prepare_labels` xác nhận 5 dòng hợp lệ và chia theo cụm: `exnesss` ở `dev`, `@miurba/alcazaba` ở `test`.
 
-OSV là nguồn chọn ứng viên, không thay thế việc đọc mã. Lượt batch này chỉ tìm advisory đã biết, không xác nhận các gói không có hit là lành. Bộ 58 nhãn vẫn chưa đủ đại diện để công bố độ chính xác, recall hoặc F1 của agent: 35 bản độc thuộc hai chiến dịch, 20 bản lành thuộc hai họ gói.
+OSV là nguồn chọn ứng viên, không thay thế việc đọc mã. Lượt batch này chỉ tìm advisory đã biết, không xác nhận các gói không có hit là lành. Bộ 76 nhãn vẫn chưa đủ đại diện để công bố độ chính xác, recall hoặc F1 của agent: 53 bản độc thuộc ba chiến dịch, 20 bản lành thuộc hai họ gói.
 
 ## Batch Datadog MUT-4831 — 2026-10-30
 
@@ -151,6 +151,34 @@ Tám bản `esbuild` có cùng SHA-256 `install.js` = `417cbbaf3ea9cb878011832b7
 
 Các bản mới giữ `cluster=esbuild-family, split=test` và `cluster=swc-family, split=dev` cùng bản đã duyệt trước đó, tránh rò rỉ phiên bản gần giống giữa hai tập. Tập lành hiện tập trung ở hai họ gói; cần thêm họ độc lập và kiểm tra chéo của Phạm Minh Triết trước khi dùng để đánh giá mô hình.
 
+## Batch Shai-Hulud 2.0 Datadog — 2026-10-30
+
+Đã đọc tĩnh 40 archive trong Docker, 36 archive đọc thành công; 4 lỗi SSL không được gán nhãn. Chọn 18 tên gói khác nhau, không trùng `labels.csv`, bỏ tên test/demo/example/poc/echo/template. Không chạy `preinstall`, không chạy AI scan và không lưu payload vào Git.
+
+Cả 18 bản có `package.json` khai báo `preinstall: node setup_bun.js`; `setup_bun.js:133-137` tạo tiến trình và `setup_bun.js:180-182` gọi `bun_environment.js`. Hash SHA-256 của `setup_bun.js`: `a3894003ad1d293ba96d77881ccd2071446dc3f65f434669b49b3da92421901a`. Hai biến thể payload `bun_environment.js`: `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0`, `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068`. Cả 18 bản có chỉ dấu `.npmrc`, `api.github.com`, `npm publish`. [Datadog Security Labs](https://securitylabs.datadoghq.com/articles/shai-hulud-2.0-npm-worm/) mô tả cùng chiến dịch đánh cắp credential và tự phát tán; URL archive chính xác nằm ở cột `source` trong `labels.csv`.
+
+| Gói | Hook | SHA-256 archive | SHA-256 payload |
+| --- | --- | --- | --- |
+| `eslint-config-zeallat-base@1.0.4` | `package.json:13` | `6f279f3198d4984a969032e09e0767fdc6c0acd6d97e411a64426fc351dbc9b2` | `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068` |
+| `axios-builder@1.2.1` | `package.json:13` | `b79feb846ad0ceacea06ab20afacd2b9b4b08638c33c740401d62c4c21001f60` | `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068` |
+| `iron-shield-miniapp@0.0.2` | `package.json:11` | `c5f424fcec3bfb818e5d5152c23cb87f32de4d9ad58790301cb14da3d73e6799` | `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068` |
+| `manual-billing-system-miniapp-api@1.3.1` | `package.json:23` | `dc1d3319329aa302e09b237988c9c3ca9028b97ec917fa67ee23951ff76f2de9` | `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068` |
+| `korea-administrative-area-geo-json-util@1.0.7` | `package.json:10` | `0356b26fa6b0f40ef2d7aad358df4897527f4521cf6908cb6ad6112df034736e` | `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068` |
+| `@asyncapi/problem@1.0.1` | `package.json:39` | `d009a9242ed9bffcdd746508b84e96a84f45949eac121205d2eee30330b405ff` | `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068` |
+| `@quick-start-soft/quick-git-clean-markdown@1.4.2511142126` | `package.json:40` | `ed90d8a286d10ad356f7614e2d721ad0778a5e1953019471ef23f249f02fdbd7` | `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068` |
+| `skills-use@0.1.1` | `package.json:14` | `950f544df437c1d7971553d3a0c757035d913f4d7d15042a7cdef73980bf8f0e` | `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0` |
+| `@quick-start-soft/quick-markdown-image@1.4.2511142126` | `package.json:41` | `5bf45b34bed06e07251c2eeb1693da557570ee287631716c719c7fffdd41de1d` | `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068` |
+| `@mcp-use/mcp-use@1.0.1` | `package.json:7` | `42a75256d41dc89aff6a929baa3901b91dca23c9c5c43c30bf5836e83be7f8a0` | `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0` |
+| `mon-package-react-typescript@1.0.1` | `package.json:8` | `4cb010c7583cc6fbb6bf8081c9317c0893cb1c9f089d641ea08c96baa4f1b8b7` | `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0` |
+| `hopedraw@1.0.3` | `package.json:8` | `d4e8abff38cc5f4f71447176421da29d81d71c848c2e603910f7ac7234f61b4c` | `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0` |
+| `chrome-extension-downloads@0.0.4` | `package.json:9` | `266e9e811a7ff4b7c6589f77828c95a22d6629c5deec4bfb5b98ab3a770db736` | `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0` |
+| `@quick-start-soft/quick-markdown-print@1.4.2511142126` | `package.json:40` | `ea8272cb33bab21c32caebe1a2806fa9d44f3fe886cef363dd0ff89e53fd1e62` | `f099c5d9ec417d4445a0328ac0ada9cde79fc37410914103ae9c609cbc0ee068` |
+| `drop-events-on-property-plugin@0.0.2` | `package.json:6` | `9d1284d7d7efbe9447adacb5bcf82d3a62ef65fe62e3f60d61555a5b01c9988c` | `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0` |
+| `react-native-get-pixel-dimensions@1.0.1` | `package.json:21` | `c250545e664d1a4976710994f9d688640073a0ede24c5b5785bc53fd9c3ddb2a` | `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0` |
+| `@antstackio/eslint-config-antstack@0.0.3` | `package.json:48` | `be922683d43a19b637f948a7aa9096d95d1814f759e152c2af2320f72120512e` | `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0` |
+| `tiaan@1.0.2` | `package.json:14` | `55d8d1b04ee5ff43c6dd31ca6a01e3497c734cb6d599d347ae0dae6d92697acf` | `62ee164b9b306250c1172583f138c9614139264f889fa99614903c12755468d0` |
+
+Nhãn `malicious`, cụm `shai-hulud-2-2025-11`, split `dev`; chờ Phạm Minh Triết kiểm tra chéo trước khi dùng để đánh giá. Các bản cùng một chiến dịch không được coi là mẫu độc lập khi chia train/test.
 ## Sàng lọc nguồn để mở rộng nhãn — 2026-10-29
 
 Danh sách 450 gói hiện là **ứng viên metadata**, không phải 450 nhãn. Bộ lọc tên đơn giản (`test|demo|example|hello|dummy|poc|ctf|sandbox|fake|fail`) tìm thấy 64/450 gói có dấu hiệu là mẫu thử; đây chỉ là tín hiệu ưu tiên kiểm tra, không phải lý do tự động loại hoặc gán nhãn.
