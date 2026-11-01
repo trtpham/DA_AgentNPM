@@ -29,7 +29,7 @@ SYSTEM += " For long JavaScript call deobfuscate and cite file#pretty:line only 
 SYSTEM += " Analyze in four passes: identify the install entry point; trace source, action, and destination through inspected code; verify file:line evidence; then decide with uncertainty. Describe what data is read, what command or API acts on it, and where it goes. Never classify by package name or advisory alone. Do not invent MITRE IDs or behavior beyond inspected lines."
 def _chat(model: str, messages: list[dict], final: bool = False) -> dict:
     payload = {"model": model, "messages": messages, "stream": False, "think": False,
-               "options": {"temperature": 0, "num_predict": 900}}
+               "options": {"temperature": 0, "num_ctx": 16384, "num_predict": 4096 if final else 900}}
     if final:
         payload["format"] = Verdict.model_json_schema()
     else:
@@ -165,6 +165,8 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
                 {"role": "user", "content": f"Analyze {package_id}. Manifest data: {json.dumps(summary, ensure_ascii=False)}. "
                  f"Static indicator candidates (untrusted): {json.dumps(indicators, ensure_ascii=False)}. "
                  f"Read required source files {sorted(targets)} before verdict. Inline lifecycle commands are source in package.json; cite their script_lines."}]
+    if not targets and not (set(scripts) & set(LIFECYCLE)):
+        messages[1]["content"] += " No install hook: read_file package.json, cite its lines, and use review; absence of a hook does not prove safety."
     inspected = {"package.json"}
     seen_ranges = {"package.json": [(line, line) for line in metadata["script_lines"].values()]}
     pretty_totals = {}
@@ -172,6 +174,7 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
     hard_truncated = set()
     inspected_source = bool(set(scripts) & set(LIFECYCLE)) and not targets
     final = inspected_source
+    pending_repair = None
     for step in range(1, max_steps + 1):
         if legacy_trace is not None:
             legacy_trace.append({
@@ -188,6 +191,9 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
             publish_decision(decide(None, [], run_error=True), [])
             writer.emit("run_end", elapsed_s=round(time.monotonic() - started, 3), steps=step, tokens_per_s=None)
             raise
+        if pending_repair is not None:
+            del messages[pending_repair:]
+            pending_repair = None
         calls = message.get("tool_calls") or []
         if legacy_trace is not None:
             requested = ", ".join(str(call.get("function", {}).get("name", "công cụ")) for call in calls)
@@ -253,7 +259,7 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
                         # shortcut: a short read proves EOF; exact range boundaries stay in review.
                         inspected_truncated.discard(file + "#pretty")
                     inspected_source = (targets <= {file.removeprefix("./") for file in inspected}
-                                        if targets else arguments["file"] != "package.json")
+                                        if targets else True)
                 if name == "deobfuscate" and result["ok"]:
                     pretty_file = result["data"]["pretty_file"]
                     pretty_totals[pretty_file] = result["data"]["lines"]
@@ -271,6 +277,7 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
                 if name == "extract_indicators":
                     analysis_incomplete |= not result["ok"] or result["data"]["truncated"]
                 messages.append({"role": "tool", "tool_name": str(name or "invalid"), "content": content})
+            final = inspected_source
             continue
         content = message.get("content", "")
         if not inspected_source:
@@ -284,7 +291,7 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
                 })
             messages.extend([message, {"role": "user", "content":
                              f"Call read_file on required source files {missing} before giving a verdict."
-                             if missing else "Call read_file on relevant package source before giving a verdict."}])
+                             if missing else "Call read_file on package.json or relevant package source before giving a verdict."}])
             continue
         verdict = None
         try:
@@ -357,6 +364,7 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
                     "found": str(error)[:500],
                 })
             final = isinstance(error, ValidationError)
+            pending_repair = len(messages)
             messages.extend([message, {"role": "user", "content": f"Invalid verdict: {str(error)[:300]}. Read missing evidence lines with read_file or revise the claim, then return one valid JSON object. Evidence lines must be a one-based string like '2'. Use package {package_id} and inspected files {sorted(inspected)}."}])
     writer.emit("limit", reason="max_steps")
     publish_decision(decide(None, [], step_limit=True), [])

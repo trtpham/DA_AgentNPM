@@ -61,6 +61,55 @@ def test_package_without_install_hook_requires_review(tmp_path):
     assert (decision["final_action"], decision["dry_run"], decision["rule"]) == ("review", True, "R7_review")
 
 
+def test_manifest_only_package_finishes_with_review(tmp_path):
+    (tmp_path / "package.json").write_text(
+        json.dumps({"name": "manifest-only", "version": "1.0.0"}), encoding="utf-8"
+    )
+    proposed = {
+        "package": "manifest-only@1.0.0", "label": "benign", "confidence": 0.5,
+        "description": "The package manifest declares no install lifecycle hook",
+        "behaviors": [{"behavior": "No install hook declared", "technique": "manifest inspection",
+                       "severity": "low", "evidence": {"file": "package.json", "lines": "1"},
+                       "analysis": "The inspected manifest has no scripts field.",
+                       "impact": "Other package code remains unreviewed."}],
+        "action": "review", "remediation": [],
+    }
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {
+            "name": "read_file", "arguments": {"file": "package.json"}}}]},
+        {"role": "assistant", "content": json.dumps(proposed)},
+    ])
+    final_flags = []
+
+    def chat(_model, _messages, final=False):
+        final_flags.append(final)
+        return next(replies)
+
+    result, steps = analyze(str(tmp_path), "fake-model", chat=chat)
+    assert (result.label, result.action, steps) == ("benign", "review", 2)
+    assert final_flags == [False, True]
+
+
+def test_invalid_verdicts_do_not_accumulate_in_model_context(tmp_path):
+    (tmp_path / "package.json").write_text(
+        json.dumps({"name": "manifest-only", "version": "1.0.0"}), encoding="utf-8"
+    )
+    lengths = []
+
+    def chat(_model, messages, final=False):
+        lengths.append(len(messages))
+        if len(lengths) == 1:
+            return {"role": "assistant", "tool_calls": [{"function": {
+                "name": "read_file", "arguments": {"file": "package.json"}
+            }}]}
+        return {"role": "assistant", "content": "{}"}
+
+    with pytest.raises(RuntimeError, match="no valid evidence-backed verdict"):
+        analyze(str(tmp_path), "fake-model", max_steps=4, chat=chat)
+
+    assert lengths == [2, 4, 6, 6]
+
+
 def test_incomplete_install_source_scan_blocks_automatic_approval(tmp_path):
     (tmp_path / "package.json").write_text(json.dumps({"name": "deep-fixture", "version": "1.0.0",
                                                      "scripts": {"install": "node entry.js"}}), encoding="utf-8")
@@ -104,7 +153,7 @@ def test_gyp_only_requires_inspection_and_explains_implicit_install(tmp_path):
         return {"role": "assistant", "content": json.dumps(verdict)}
 
     result, steps = analyze(str(tmp_path), "fake", chat=chat)
-    assert (result.label, steps, calls) == ("benign", 2, [False, False])
+    assert (result.label, steps, calls) == ("benign", 2, [False, True])
 
 
 def test_agent_accepts_evidence_from_pretty_view(tmp_path):
@@ -186,7 +235,7 @@ def test_agent_reads_source_and_validates_verdict():
     result, steps = analyze(FIXTURE, "fake-model", chat=chat, trace=trace)
 
     assert steps == 3
-    assert final_flags == [False, False, True]
+    assert final_flags == [False, True, True]
     assert result.label == "benign"
     assert result.behaviors[0].evidence.lines == "2"
     assert [(item["step"], item["kind"], item["status"]) for item in trace] == [
@@ -217,7 +266,7 @@ def test_agent_rejects_unread_evidence_and_path_escape():
     ])
 
     with pytest.raises(RuntimeError, match="no valid evidence-backed verdict"):
-        analyze(FIXTURE, "fake-model", max_steps=2, chat=lambda _model, _messages: next(replies))
+        analyze(FIXTURE, "fake-model", max_steps=2, chat=lambda _model, _messages, **_kwargs: next(replies))
     assert not _tool(FIXTURE, "read_file", {"file": "../outside.js"})["ok"]
 
 

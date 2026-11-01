@@ -64,3 +64,50 @@ Kết quả này chỉ chứng minh luồng agent trên một fixture vô hại;
 - **PASS — hồi quy:** 50 test pytest PASS khi chạy ngoài sandbox hệ thống; Semgrep `--config auto --error` exit 0; `git diff --check` exit 0.
 - **Còn thiếu:** Chưa nối sandbox vào vòng lặp agent; chưa có benchmark nhiều lượt trên gói thật hoặc nhãn được kiểm tra chéo. Reviewer TV2 cần xem lại `agent/run.py` trước khi chốt code.
 - **Kiểm tra lại khi dịch vụ sẵn sàng:** Docker daemon 29.1.3 truy cập được; `ollama list` có cả ba model. Chạy `agent.run` trên `benign-package`: A-TLM PASS 4 bước, A-SLM PASS 5 bước, A-LLM PASS 4 bước; cả ba trả `benign`/`approve` dry-run. Chạy `sandbox.run` với cùng fixture trong Docker trả exit 0. Đây là smoke test một fixture lành, không phải accuracy hay kiểm thử mẫu độc thật.
+
+## Rà soát theo vai trò ngày 2026-10-29
+
+- **TV1 — PASS:** `read_manifest`, `read_file`, `extract_indicators` và giới hạn đường dẫn/file/dòng có test. Luồng quét tĩnh chỉ theo script cài đặt và `require` tương đối tối đa hai cấp.
+- **TV2 — PASS phần code và fixture:** cấu hình model, timeout/retry, prompt, vòng lặp tối đa 15 bước và schema verdict có test; lượt chạy fixture lành ngày 25/10 đã trả verdict hợp lệ cho ba model. Probe công cụ giả ngày 29/10 đạt 20/20 tool call và JSON cho từng model; đây không phải phép đo độ chính xác phân tích gói. Reviewer TV2 vẫn cần duyệt `agent/run.py`; độ ổn định A-TLM trên nhiều gói chưa được chứng minh.
+- **TV3 — PASS trên fixture:** sandbox Docker offline ghi tiến trình/file/kết nối và canary giả; ba fixture vô hại chạy thành công ngày 28/10. Nối sandbox vào agent thuộc giai đoạn sau, chưa nghiệm thu với mã độc thật.
+- **Kiểm tra lại:** 33/33 test trọng tâm TV1/TV2/TV3 và 64/64 test toàn repo PASS ngày 29/10. Không chạy AI scan các gói trong lần rà soát này. Bộ nhãn hiện có hai gói `benign` đã được Codex duyệt theo ủy quyền TV2; chưa có nhãn độc hại để tính accuracy, recall hoặc F1 có ý nghĩa.
+
+## Gỡ kẹt tuần 3 — 2026-10-30
+
+- Ollama: sửa retry một lần khi HTTP 429 hoặc 5xx; HTTP 400 báo lỗi ngay. Agent vẫn chỉ quyết định dry-run.
+- Kiểm tra offline: 23/23 test agent và sandbox PASS; Semgrep agent/run.py có 0 finding, 0 lỗi.
+- Docker offline: benign-package, canary-package và no-hook-package đều exit 0, có trace; canary-package phát hiện ssh và environment giả.
+- Probe công cụ giả, không đọc gói: A-LLM, A-SLM, A-TLM mỗi model đạt 1/1 tool call và 1/1 JSON, 0 lỗi.
+- Tại thời điểm 2026-10-30 chưa chạy AI scan gói npm thật theo yêu cầu khi đó. Chưa có bằng chứng ổn định trên nhiều gói; TV2 vẫn cần duyệt agent/run.py. Sandbox vẫn tách khỏi agent theo hợp đồng mục 6.4.
+
+### Bổ sung kiểm chứng trên 3 fixture vô hại (2026-10-30)
+
+Sau khi TV2 cho phép, đã chạy agent Ollama trên đúng `tests/fixtures/benign-package`, `canary-package`, `no-hook-package`; không quét 450 ứng viên hay gói npm thật. Trace được ghi dưới `reports/week3-fixtures-20261030-*` và được Git bỏ qua.
+
+| Model | Gói biên dịch lành | Gói canary | Gói chỉ có manifest |
+| --- | --- | --- | --- |
+| A-LLM (`qwen3.5:9b`) | JSON hợp lệ, `benign/approve`, 4 bước | JSON hợp lệ, `malicious/deny`, 4 bước | JSON hợp lệ, `benign/review`, 3 bước sau sửa vòng lặp |
+| A-SLM (`qwen3.5:4b`) | JSON hợp lệ, `benign/approve`, 5 bước | JSON hợp lệ, `malicious/deny`, 4 bước | JSON hợp lệ, `suspicious/review`, 5 bước sau sửa vòng lặp |
+| A-TLM (`qwen3.5:0.8b`) | JSON hợp lệ, `benign/approve`, 4 bước | JSON không hợp lệ, chạm 15 bước; fallback `suspicious/review` | JSON không hợp lệ, chạm 15 bước; fallback `suspicious/review` |
+
+Đã sửa hai lỗi vòng lặp: sau khi đọc đủ nguồn, lượt sau yêu cầu verdict theo schema JSON; gói chỉ có manifest được yêu cầu đọc `package.json` và vẫn phải `review`. Thử tăng giới hạn token, nhắc lại độ dài mô tả và giới hạn mô tả 100 ký tự trong JSON schema cho A-TLM đều không cải thiện nên đã bỏ các thay đổi thử nghiệm. Phản hồi thô của A-TLM trên fixture manifest có JSON cú pháp đúng nhưng mô tả 22 từ, vượt hợp đồng 5–15 từ; các lần sau lặp lại hoặc bị cắt giữa JSON. Không được diễn giải fallback `suspicious/review` là mô hình đã nhận diện đúng gói canary.
+
+Kiểm tra tại thời điểm đó: `tests/test_agent.py` và `tests/test_sandbox.py` **24/24 PASS**; `rtk semgrep scan --config auto --error agent/run.py` **PASS (exit 0)**. Còn kẹt: A-TLM chưa ổn định với schema hiện hành; TV2 cần review `agent/run.py`; chưa đo độ đúng trên tập gói thật hoặc Docker live tích hợp với agent. Hướng xử lý: giữ fallback `review`, đo thêm trên fixture được duyệt, cân nhắc rút gọn đầu vào hoặc dùng model lớn hơn cho kết luận; không tự phê duyệt khi JSON sai.
+
+### Quét thử một gói npm lành (2026-11-01)
+
+Theo yêu cầu mới của TV2, đã tải tĩnh `esbuild@0.24.0` (ứng viên lành có sẵn trong `data/labels.csv`) bằng `npm pack --ignore-scripts`, rồi chạy A-LLM (`qwen3.5:9b`) trên bản giải nén. Không chạy script cài đặt. Trace cục bộ: `reports/esbuild-0.24.0-live/` (44 sự kiện, Git bỏ qua).
+
+Agent đọc manifest, trích dấu hiệu và nhiều đoạn `install.js`. Bộ xác minh từ chối các nhận định có mã MITRE không được chứng minh và bằng chứng ở dòng chưa được đọc. Sau 15 bước, **không có verdict được xác minh hợp lệ**; agent trả fallback `suspicious/review`, `dry_run=true`. Đây là trạng thái cần người xem lại, không phải kết luận `esbuild` độc hại hay phép đo false positive. Kẹt mới cần xử lý: mô hình phải đọc đúng các dòng nó trích dẫn và hoàn tất verdict trên gói thật trong giới hạn bước.
+
+### Khắc phục quét gói thật và chốt kỹ thuật (2026-11-01)
+
+Đã xác nhận Ollama chỉ cấp ngữ cảnh 4096 token khi các lần quét `esbuild` thất bại. Agent nay yêu cầu ngữ cảnh 16384 token, dành tối đa 4096 token cho verdict và bỏ các verdict sai cũ khỏi lịch sử sau khi model đã nhận phản hồi lỗi. Các kết quả đọc mã, ngưỡng bằng chứng và chế độ dry-run được giữ nguyên.
+
+Quét lại đúng `esbuild@0.24.0`: A-LLM kết thúc sau **6 bước**, 24 sự kiện, verdict **hợp lệ** `benign/approve`, `dry_run=true`. Ba bằng chứng `install.js:87-93`, `install.js:234`, `install.js:238` đều được xác minh tồn tại. Trace cục bộ ở `reports/esbuild-0.24.0-16k/`. Đây là một lượt kiểm chứng trên gói lành đã chọn, chưa phải phép đo độ đúng trên nhiều gói.
+
+Kiểm tra lại fixture sau sửa: A-LLM kết luận canary `malicious/deny` sau 3 bước; A-SLM kết luận canary `malicious/deny` sau 8 bước và gói chỉ có manifest `suspicious/review` sau 6 bước. Cả ba lượt có verdict hợp lệ; tất cả hành động vẫn là dry-run.
+
+Kiểm tra lại A-TLM (`qwen3.5:0.8b`) trên fixture `no-hook-package` và `canary-package`: cả hai vẫn chạm **15 bước**, verdict không hợp lệ và fallback `suspicious/review`. Fallback giữ an toàn nhưng không chứng minh model đã nhận diện canary. Vì vậy **mốc kỹ thuật tuần 3 đã đạt** (agent có verdict hợp lệ trên fixture, sandbox có trace, A-LLM quét xong một gói thật), còn **độ ổn định A-TLM chưa đạt** và không được giới thiệu là đã giải quyết.
+
+Kiểm tra sau sửa và cập nhật dữ liệu tuần 2: **72/72 pytest PASS** toàn repo; `rtk semgrep scan --config auto --error agent/run.py` **PASS (exit 0)**. Chạy lại fixture canary trong Docker sandbox cho exit 0; trace cục bộ có tín hiệu `.ssh`, `.npmrc` và kết nối giả. TV2 vẫn cần review thay đổi trong `agent/run.py` trước khi chốt nghiệm thu nhóm; chưa quét hàng loạt hoặc chạy script cài đặt trên máy thật.

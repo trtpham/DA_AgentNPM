@@ -4,7 +4,7 @@
 
 | Đường dẫn | Vai trò |
 | --- | --- |
-| `labels.csv` | Bảng 76 nhãn có bằng chứng mã tĩnh; 53 nhãn mới chờ kiểm tra chéo trước khi dùng đánh giá. |
+| `labels.csv` | Bảng 76 nhãn có bằng chứng mã tĩnh; 71 nhãn thêm sau bộ 5 nhãn đầu chờ kiểm tra chéo trước khi dùng đánh giá. |
 | `candidates.csv` | 5 ứng viên cũ để tham khảo, chưa phải bảng nhãn. |
 | `review_450/public_candidates_450.csv` | Danh sách 450 ứng viên công khai, chưa được gán nhãn. |
 | `review_450/metadata_review_450.csv` | Kết quả đối chiếu metadata của 450 ứng viên; không phải kết luận lành/độc. |

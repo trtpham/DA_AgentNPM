@@ -13,7 +13,7 @@ from urllib.parse import quote, urlencode
 
 
 TARGET = 450
-OUTPUT = Path(__file__).with_name("public_candidates_450.csv")
+OUTPUT = Path(__file__).with_name("review_450") / "public_candidates_450.csv"
 HOOKS = ("preinstall", "install", "postinstall")
 TERMS = ("postinstall", "preinstall", "install script", "node-gyp", "native addon")
 NAME = re.compile(r"^(?:@[a-z0-9._~-]+/)?[a-z0-9._~-]+$")

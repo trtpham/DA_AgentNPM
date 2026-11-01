@@ -4,7 +4,7 @@
 
 **Thành viên:** Lê Đặng Thiên Phước · Phạm Minh Triết · Nguyễn Đình Thiên
 
-**Ngày cập nhật:** 25/10/2026
+**Ngày báo cáo:** 25/10/2026 · **Bổ sung tiến độ:** 01/11/2026
 
 ## 1. Nội dung buổi báo cáo tuần
 
@@ -32,3 +32,9 @@ Nhóm quên chụp ảnh trong buổi báo cáo nên **không có ảnh chụp t
 **Tuần 4:** Khi đã có một nhóm dữ liệu đáng tin, nhóm mới dùng chúng để đánh giá cách hệ thống phân tích và so sánh ba mô hình. Nhóm sẽ bổ sung công cụ hỗ trợ và ghi lại các trường hợp hệ thống nhận định sai để điều chỉnh. Việc thử nghiệm vẫn ưu tiên môi trường an toàn và chưa chạy hàng loạt trên 450 gói.
 
 **Định hướng chung:** Ưu tiên **dữ liệu đúng và có thể kiểm tra lại** hơn là chỉ tăng số lượng. Mục tiêu tiếp theo là biến danh sách ứng viên thành bộ dữ liệu có nhãn rõ ràng, sau đó mới đo kết quả và mở rộng quy mô. Mã nguồn, dữ liệu và báo cáo tuần 02 đã được cập nhật trên GitHub.
+
+## Tiến độ bổ sung sau buổi báo cáo
+
+Nhóm đã đối chiếu metadata của cả **450 gói** theo từng batch 18 gói. Trong đó 445 gói còn thông tin phát hành và 5 gói không còn; danh sách này vẫn là **ứng viên**, chưa tự động trở thành nhãn. Bảng nhãn riêng hiện có **76 dòng** (20 lành, 2 nghi vấn, 54 độc hại) kèm nguồn và vị trí mã cần kiểm tra. Nhóm cũng chia lại theo họ gói để cả tập thử có đủ ba nhóm nhãn mà không trộn cùng một họ vào hai tập.
+
+Việc còn cần người kiểm tra chéo là đối chiếu lại mã gốc ở đúng `file:dòng` trước khi dùng 76 dòng làm đáp án chuẩn để tính độ chính xác. Vì vậy báo cáo này chưa công bố accuracy; việc bổ sung dữ liệu sẽ tiếp tục theo từng batch an toàn.

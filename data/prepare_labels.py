@@ -1,4 +1,4 @@
-"""Validate a human-reviewed label table and assign a stable split."""
+"""Validate a reviewed label table and assign a stable split."""
 
 import hashlib
 from pathlib import Path
@@ -12,6 +12,8 @@ LABELS = {"malicious", "suspicious", "benign"}
 
 def prepare_labels(source: Path, destination: Path) -> int:
     rows = load_labels(source)
+    if not rows:
+        raise ValueError("no reviewed labels")
 
     seen_ids = set()
     seen_packages = set()

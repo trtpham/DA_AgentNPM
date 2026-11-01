@@ -1,9 +1,22 @@
 import csv
+from pathlib import Path
 
 import pytest
 
 from data.prepare_labels import prepare_labels
 from experiments.dataset import FIELDS, load_labels
+
+
+def test_committed_labels_have_reproducible_group_split(tmp_path):
+    source = Path(__file__).resolve().parents[1] / "data" / "labels.csv"
+    rows = load_labels(source)
+    destination = tmp_path / "labels.csv"
+    prepare_labels(source, destination)
+    assert rows == load_labels(destination)
+    for label in {row["label"] for row in rows}:
+        group = [row for row in rows if row["label"] == label]
+        if len({row["cluster"] for row in group}) > 1:
+            assert {row["split"] for row in group} == {"dev", "test"}
 
 
 def test_labels_deduplicate_and_split(tmp_path):
@@ -34,6 +47,16 @@ def test_labels_reject_wrong_contract(tmp_path):
     source.write_text(",".join(FIELDS) + "\n" + ",".join(["x"] * (len(FIELDS) + 1)) + "\n", encoding="utf-8")
     with pytest.raises(ValueError, match="row"):
         load_labels(source)
+
+
+def test_prepare_labels_rejects_empty_review_table(tmp_path):
+    source = tmp_path / "source.csv"
+    destination = tmp_path / "prepared.csv"
+    source.write_text(",".join(FIELDS) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="no reviewed labels"):
+        prepare_labels(source, destination)
+    assert not destination.exists()
 
 
 def test_split_is_stratified_and_keeps_clusters_together(tmp_path):
