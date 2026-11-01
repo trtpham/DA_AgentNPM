@@ -116,3 +116,27 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 - `labels.csv` hiện có **76 nhãn**: 20 lành, 2 nghi vấn, 54 độc hại. 447/450 ứng viên metadata chưa có nhãn trong bảng này. Hồ sơ tên/phiên bản và nguồn nằm trong [`data/REVIEW_WEEK2.md`](../data/REVIEW_WEEK2.md).
 - Đã sửa cách chia tập sau khi phát hiện 54 nhãn độc hại đều nằm ở `dev`: chạy lại `prepare_labels`, chuyển nguyên cụm MUT-4831 gồm 17 gói sang `test`. Nhãn, nguồn và bằng chứng của cả 76 dòng không đổi. Hiện `dev/test` lần lượt có 37/17 malicious, 10/10 benign, 1/1 suspicious; không có cụm nào xuất hiện ở cả hai tập. Test dữ liệu **6/6 PASS**.
 - Lượt QA thứ hai kiểm tra cấu trúc 76 nhãn và 450 dòng metadata: không trùng gói/phiên bản, không thiếu trường, đường dẫn bằng chứng không thoát thư mục, dòng bằng chứng hợp cú pháp, nguồn đều là HTTPS và 76 cặp tên/phiên bản đều có trong hồ sơ. Lượt này **chưa xác minh lại mã nguồn gốc từng dòng**; phần kiểm tra chéo độc lập của TV2/người được giao vẫn là điều kiện trước khi dùng bộ nhãn làm ground truth đánh giá agent.
+
+## Kế hoạch đóng tồn đọng tuần 2 — 2026-11-01
+
+**Mục tiêu nghiệm thu:** tạo bộ nhãn v1 có bằng chứng được kiểm tra chéo, đủ để đánh giá agent. Không lấy 450 ứng viên metadata làm 450 nhãn: lượt metadata 25 × 18 đã hoàn tất, 445 manifest còn tra được, 5 không còn; tất cả vẫn chờ đọc mã. Không chạy AI scan 450 gói.
+
+**Đã xử lý ngay:** code và dữ liệu đã được đẩy lên `main` ở commit `508239d`; 72/72 pytest PASS, Semgrep trên các file Python thay đổi PASS, `git diff --check` PASS ngày 01/11. Các kết quả này xác nhận công cụ và cấu trúc dữ liệu, chưa xác nhận đúng/sai của từng nhãn.
+
+| Lượt | Phạm vi nhãn hiện có | Việc cần đối chiếu tĩnh | Trạng thái |
+| --- | --- | --- | --- |
+| 1 | 20 lành: 10 `esbuild`, 10 `@swc/core` | Tên/phiên bản, tarball khớp integrity npm, hook cài đặt, mã và dòng bằng chứng; xem cả các dòng liên quan trước khi giữ nhãn lành. | Chờ kiểm tra chéo mã gốc |
+| 2 | 18 độc hại: `npm-token-worm-2026-03` | Đối chiếu ZIP nguồn Datadog trong Docker dùng một lần; xác nhận đúng gói/phiên bản, file:dòng và hành vi. | Chờ kiểm tra chéo mã gốc |
+| 3 | 18 độc hại: `shai-hulud-2-2025-11` | Cùng quy trình lượt 2; ghi rõ nguồn và hành vi của từng phiên bản. | Chờ kiểm tra chéo mã gốc |
+| 4 | 17 độc hại `mut-4831`, 1 `exnesss` độc hại, 2 nghi vấn | Đối chiếu nguồn, mã và dòng từng gói; giữ `suspicious` nếu bằng chứng chỉ đủ mức nghi vấn. | Chờ kiểm tra chéo mã gốc |
+
+**Cách xử lý từng lượt (15–20 gói):**
+
+1. Codex chuẩn bị bằng chứng từ đúng nguồn và đúng phiên bản đã ghi trong [`data/REVIEW_WEEK2.md`](../data/REVIEW_WEEK2.md). Chỉ đọc tĩnh trong môi trường cách ly đối với ZIP nghi vấn; không chạy script cài đặt, không chép mẫu vào Git hay máy demo.
+2. Với từng nhãn, đối chiếu byte nguồn, hash/integrity khi có, `file:dòng`, hành vi thực sự thể hiện trong đoạn mã và nguồn xác nhận độc lập. Nếu không lấy được đúng phiên bản hoặc dòng không khớp, đánh dấu **chờ/sửa**, không coi là nhãn chuẩn.
+3. Ghi kết quả ngay vào hồ sơ nhãn hiện có: trạng thái, bằng chứng, người kiểm tra và ngày. Người kiểm tra chéo phải khác người ghi nhãn ban đầu; không tự ghi tên hoặc chữ ký của TV1/TV3. TV2 Phạm Minh Triết chốt những dòng đã có kiểm tra chéo.
+4. Chỉ sửa `labels.csv` khi bằng chứng buộc phải đổi nhãn hoặc loại dòng. Sau mỗi lượt, chạy lại `prepare_labels`, pytest, kiểm tra ba lớp ở `dev`/`test` và bảo đảm một họ gói không xuất hiện ở cả hai tập.
+
+**Điều kiện hoàn tất:** mỗi nhãn dùng để tính điểm có đúng nguồn, đúng `file:dòng`, kết luận phù hợp mã và dấu xác nhận kiểm tra chéo thật; các dòng thiếu bằng chứng được loại khỏi bộ đánh giá. Nếu sau khi loại không còn đủ ba lớp ở cả `dev` và `test`, chưa báo cáo độ chính xác ba lớp. Năm ứng viên metadata 404 giữ trạng thái không khả dụng; việc gán nhãn cả 450 gói là giai đoạn mở rộng, không chặn mốc dữ liệu v1.
+
+**Trạng thái lúc lập kế hoạch:** 4 lượt kiểm tra chéo mã gốc còn mở. Không đánh dấu tuần 2 hoàn tất cho đến khi điều kiện nghiệm thu ở trên được kiểm tra thật.
