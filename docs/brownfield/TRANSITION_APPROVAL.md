@@ -174,3 +174,33 @@ EVIDENCE_REFERENCES: yêu cầu trực tiếp trong chat “duyệt tất cả 4
 - Phạm vi: kiểm tra tĩnh manifest và mã đúng phiên bản của ứng viên trong Docker dùng một lần; ghi `file:dòng`, nguồn và quyết định nhãn vào hồ sơ tuần 2; chỉ đưa gói có bằng chứng rõ vào `labels.csv`.
 - Giới hạn: không chạy install script, không AI scan hàng loạt, không đưa tarball hay mã gói nghi vấn vào repo/host, không suy nhãn lành từ metadata; các gói thiếu bằng chứng giữ `needs_code_review`.
 - Owner thực hiện: Codex theo ủy quyền TV2. Reviewer sử dụng dữ liệu cho thí nghiệm: Phạm Minh Triết.
+
+## Gate B0 — vá luật quyết định và vòng sửa verdict (2026-11-03)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-03 Asia/Saigon
+EVIDENCE_REFERENCES: trả lời trực tiếp trong chat với Claude “Duyệt, làm A rồi B” cho kế hoạch [`../KE_HOACH_XU_LY_TON_DONG_2026-11-03.md`](../KE_HOACH_XU_LY_TON_DONG_2026-11-03.md), mục 5.1.
+
+- AS-IS: 72/72 pytest PASS tại `cbdbcc2`. Trace `reports/week3-final-tlm-*` cho thấy A-TLM lặp cùng verdict sai 13 lượt vì vòng sửa xóa lượt sai khỏi ngữ cảnh; `decide()` cho approve chỉ dựa vào nhãn và độ tin cậy của model; lệnh gọi mã ngoài gói (`node-gyp`, `npx`, `curl`) không làm phân tích bị coi là chưa đủ.
+- Phạm vi: `agent/run.py`, `agent/decide.py`, `tools/static.py`, test và fixture vô hại liên quan. Thêm luật chặn approve `R7_risk`; coi lệnh gọi mã ngoài gói là phân tích chưa đủ; code tự điền định danh gói; dừng sớm khi verdict lặp; phân biệt đầu ra bị cắt.
+- Giới hạn: không nới schema verdict, không bật hành động approve/deny thật, không chạy mã gói, không đọc `data/samples/`. Chỉ chạy Ollama trên ba fixture vô hại.
+- Owner: Claude. Reviewer: TV2 (Phạm Minh Triết). Regression: pytest toàn repo, `git diff --check`, Semgrep khi môi trường cho phép. Rollback: revert commit của đợt này; không có migration dữ liệu.
+
+## Gate B0 — công việc tuần 4 và các task còn nợ (2026-11-03)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-03 Asia/Saigon
+EVIDENCE_REFERENCES: yêu cầu trong chat với Claude “thực hiện các việc tuần 4 … ko để tồn đọng công việc từ tuần trước”; trả lời ba câu hỏi phạm vi: cài GuardDog vào venv riêng, chạy trên 10 gói `@swc/core` thuộc `dev` cùng 3 fixture, cho phép tra OSV/npm Registry ở bước riêng.
+
+- Phạm vi:
+  - `tools/actions.py` (TV1-7, chỉ dry-run; `dry_run=False` bị từ chối);
+  - `tools/intel.py`: OSV, metadata Registry, so phiên bản tĩnh; tra cứu mạng chỉ dùng `tên@phiên bản`, ghi ra JSON, agent đọc file và không tự gọi mạng;
+  - `experiments/run_batch.py` (TV1-8, có resume và `run_meta.json`);
+  - `experiments/baseline_guarddog.py` (TV3-4);
+  - `experiments/metrics.py` (TV3-5);
+  - nối tín hiệu OSV vào `decide` (luật R5 đã có);
+  - test, README, nhật ký tuần.
+- Phạm vi chạy: GuardDog cài vào `.venv-guarddog`. Chỉ `npm pack --ignore-scripts` và đọc tĩnh 10 phiên bản `@swc/core` thuộc `dev` trong `labels.csv` cùng 3 fixture vô hại. Không chạy hook, không đọc `data/samples/`, không đưa tarball vào Git, không chạy trên mẫu độc hay 450 ứng viên.
+- Owner: Claude. Reviewer: TV2 (Phạm Minh Triết) cho agent/quyết định; TV3 cho baseline/metrics. Rollback: revert commit của đợt này.

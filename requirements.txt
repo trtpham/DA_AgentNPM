@@ -1,0 +1,3 @@
+# Python 3.14 (đã kiểm với 3.14.2 ngày 2026-11-03). Chỉ ghi phụ thuộc trực tiếp.
+pydantic==2.13.2
+pytest==9.1.1

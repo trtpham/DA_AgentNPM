@@ -3,6 +3,7 @@ __pycache__/
 .pytest_tmp/
 *.pyc
 data/samples/
+# Đầu ra của data/filter_datadog.py chạy trong VM; bản 5 dòng advisory cũ đã được track có chủ đích.
 data/candidates.csv
 data/**/*.zip
 data/**/*.tar
@@ -14,3 +15,4 @@ reports/*.json
 reports/*.html
 reports/*.sqlite
 reports/**/*.trace.jsonl
+.venv*/
