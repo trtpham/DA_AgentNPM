@@ -11,7 +11,7 @@ from agent.schema import Verdict
 def decide(verdict: Verdict | None, evidence_checks: list[dict], *, canary_touched: bool = False,
            run_error: bool = False, step_limit: bool = False, osv_malicious: bool = False,
            deny_threshold: float = 0.8, approve_threshold: float = 0.8,
-           auto_approve_allowed: bool = False) -> dict:
+           auto_approve_allowed: bool = False, unexplained_risks: list[str] = ()) -> dict:
     if not 0 <= deny_threshold <= 1 or not 0 <= approve_threshold <= 1:
         raise ValueError("decision thresholds must be between 0 and 1")
 
@@ -29,6 +29,7 @@ def decide(verdict: Verdict | None, evidence_checks: list[dict], *, canary_touch
     if verdict.behaviors and valid == 0:
         return result("suspicious", "review", "R3", "No behavior has verified file and lines")
     if verdict.label == "malicious" and valid == 0:
+        # Defensive: the schema already requires behaviors for malicious, so R3 normally fires first.
         return result("suspicious", "review", "R4", "Malicious claim has no verified behavior")
     if osv_malicious and verdict.label == "benign":
         return result("suspicious", "review", "R5", "OSV MAL signal blocks automatic approval")
@@ -37,6 +38,9 @@ def decide(verdict: Verdict | None, evidence_checks: list[dict], *, canary_touch
     if verdict.label == "benign" and verdict.confidence >= approve_threshold and valid:
         if not auto_approve_allowed:
             return result("benign", "review", "R7_review", "Install path not fully reviewed; human review required")
+        if unexplained_risks:
+            return result("benign", "review", "R7_risk", "Benign verdict does not cite risky install lines: "
+                          + ", ".join(list(unexplained_risks)[:5]))
         return result("benign", "approve", "R7", "Verified benign evidence meets approve threshold")
     return result(verdict.label, "review", "R8", "Decision requires human review")
 

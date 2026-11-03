@@ -47,3 +47,11 @@ def test_error_decision_is_recorded_in_sqlite(tmp_path):
     with sqlite3.connect(path) as connection:
         row = connection.execute("SELECT final_label, final_action, rule FROM decisions LIMIT 1").fetchone()
     assert row == ("suspicious", "review", "R2")
+
+
+def test_unexplained_risky_lines_block_only_approval():
+    evidence = [{"file": "setup.js", "lines": "1", "exists": True}]
+    blocked = decide(verdict("benign"), evidence, auto_approve_allowed=True, unexplained_risks=["setup.js:2"])
+    assert (blocked["label"], blocked["action"], blocked["rule"]) == ("benign", "review", "R7_risk")
+    assert "setup.js:2" in blocked["reasons"][0]
+    assert decide(verdict(), evidence, unexplained_risks=["setup.js:2"])["action"] == "deny"

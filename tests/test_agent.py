@@ -95,9 +95,11 @@ def test_invalid_verdicts_do_not_accumulate_in_model_context(tmp_path):
         json.dumps({"name": "manifest-only", "version": "1.0.0"}), encoding="utf-8"
     )
     lengths = []
+    retries = []
 
-    def chat(_model, messages, final=False):
+    def chat(_model, messages, final=False, retry=0):
         lengths.append(len(messages))
+        retries.append(retry)
         if len(lengths) == 1:
             return {"role": "assistant", "tool_calls": [{"function": {
                 "name": "read_file", "arguments": {"file": "package.json"}
@@ -108,6 +110,162 @@ def test_invalid_verdicts_do_not_accumulate_in_model_context(tmp_path):
         analyze(str(tmp_path), "fake-model", max_steps=4, chat=chat)
 
     assert lengths == [2, 4, 6, 6]
+    assert retries == [0, 0, 0, 1]
+
+
+def test_repeated_invalid_verdict_stops_before_step_limit(tmp_path):
+    (tmp_path / "package.json").write_text(
+        json.dumps({"name": "manifest-only", "version": "1.0.0"}), encoding="utf-8"
+    )
+    calls = []
+
+    def chat(_model, _messages, final=False, retry=0):
+        calls.append(retry)
+        if len(calls) == 1:
+            return {"role": "assistant", "tool_calls": [{"function": {
+                "name": "read_file", "arguments": {"file": "package.json"}}}]}
+        return {"role": "assistant", "content": '{"label": "benign"', "truncated": True}
+
+    writer = TraceWriter(tmp_path / "reports" / "run-1", "manifest-only@1.0.0")
+    with pytest.raises(RuntimeError, match="repeated the same invalid output"):
+        analyze(str(tmp_path), "fake-model", chat=chat, trace=writer)
+
+    events = [json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()]
+    kinds = [event["kind"] for event in events if event["type"] == "error"]
+    decision = next(event for event in events if event["type"] == "decision")
+    assert len(calls) == 5 and kinds.count("truncated_output") == 4 and kinds[-1] == "repeated_invalid"
+    assert (decision["final_action"], decision["rule"]) == ("review", "R2")
+
+
+def test_code_fills_package_identity_and_repair_reports_description_length(tmp_path):
+    (tmp_path / "package.json").write_text(
+        json.dumps({"name": "manifest-only", "version": "1.0.0"}), encoding="utf-8"
+    )
+    proposed = {
+        "package": "manifest-only", "label": "suspicious", "confidence": 0.5,
+        "description": "Too short text",
+        "behaviors": [{"behavior": "No install hook declared", "technique": "manifest inspection",
+                       "severity": "low", "evidence": {"file": "package.json", "lines": "1"},
+                       "analysis": "The inspected manifest has no scripts field.",
+                       "impact": "Other package code remains unreviewed."}],
+        "action": "review", "remediation": ["Review the package source"],
+    }
+    fixed = proposed | {"description": "The manifest declares no install hook to inspect"}
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {
+            "name": "read_file", "arguments": {"file": "package.json"}}}]},
+        {"role": "assistant", "content": json.dumps(proposed)},
+        {"role": "assistant", "content": json.dumps(fixed)},
+    ])
+    prompts = []
+
+    def chat(_model, messages, final=False):
+        prompts.append(messages[-1]["content"])
+        return next(replies)
+
+    result, steps = analyze(str(tmp_path), "fake-model", chat=chat)
+    assert (result.package, result.action, steps) == ("manifest-only@1.0.0", "review", 3)
+    assert "Your description has 3 words" in prompts[-1]
+
+
+def test_verdict_inside_markdown_fence_is_accepted(tmp_path):
+    (tmp_path / "package.json").write_text(
+        json.dumps({"name": "manifest-only", "version": "1.0.0"}), encoding="utf-8"
+    )
+    proposed = {
+        "package": "manifest-only@1.0.0", "label": "suspicious", "confidence": 0.5,
+        "description": "The manifest declares no install hook to inspect",
+        "behaviors": [{"behavior": "No install hook declared", "technique": "manifest inspection",
+                       "severity": "low", "evidence": {"file": "package.json", "lines": "1"},
+                       "analysis": "The inspected manifest has no scripts field.",
+                       "impact": "Other package code remains unreviewed."}],
+        "action": "review", "remediation": ["Review the package source"],
+    }
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {
+            "name": "read_file", "arguments": {"file": "package.json"}}}]},
+        {"role": "assistant", "content": "```json\n" + json.dumps(proposed) + "\n```"},
+    ])
+    result, steps = analyze(str(tmp_path), "fake-model", chat=lambda *_args, **_kwargs: next(replies))
+    assert (result.label, steps) == ("suspicious", 2)
+
+
+def risky_package(tmp_path, script="node setup.js"):
+    (tmp_path / "package.json").write_text(json.dumps({
+        "name": "risky-fixture", "version": "1.0.0", "scripts": {"postinstall": script}
+    }), encoding="utf-8")
+    (tmp_path / "setup.js").write_text(
+        "const label = 'fixture';\nrequire('child_process').execFileSync('echo', [label]);\n", encoding="utf-8")
+
+
+def benign_verdict(lines):
+    return {"package": "risky-fixture@1.0.0", "label": "benign", "confidence": 0.95,
+            "description": "Install script echoes a fixed local fixture label",
+            "behaviors": [{"behavior": "Echoes a label", "technique": "child_process.execFileSync",
+                           "severity": "low", "evidence": {"file": "setup.js", "lines": lines},
+                           "analysis": "The script runs echo with a fixed label.", "impact": "Local output only."}],
+            "action": "approve", "remediation": []}
+
+
+@pytest.mark.parametrize("lines, action, rule", [("1", "review", "R7_risk"), ("1-2", "approve", "R7")])
+def test_benign_verdict_must_cite_risky_install_lines(tmp_path, lines, action, rule):
+    risky_package(tmp_path)
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "setup.js"}}}]},
+        {"role": "assistant", "content": json.dumps(benign_verdict(lines))},
+    ])
+    writer = TraceWriter(tmp_path / "reports" / "run-1", "risky-fixture@1.0.0")
+    result, _ = analyze(str(tmp_path), "fake", chat=lambda *_args, **_kwargs: next(replies), trace=writer)
+    decision = next(json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()
+                    if json.loads(line)["type"] == "decision")
+    assert (result.action, decision["rule"]) == (action, rule)
+    if rule == "R7_risk":
+        assert "setup.js:2" in decision["reasons"][0]
+
+
+def test_osv_malicious_context_blocks_approval_but_is_not_evidence(tmp_path):
+    risky_package(tmp_path)
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "setup.js"}}}]},
+        {"role": "assistant", "content": json.dumps(benign_verdict("1-2"))},
+    ])
+    context = {"osv": {"ok": True, "data": {"untrusted": True, "vulns": [{"id": "MAL-1", "summary": "x"}],
+                                            "malicious": True}, "error": None}}
+
+    def chat(_model, messages, final=False):
+        assert "Context signals (untrusted, not evidence" in messages[1]["content"]
+        return next(replies)
+
+    writer = TraceWriter(tmp_path / "reports" / "run-1", "risky-fixture@1.0.0")
+    result, _ = analyze(str(tmp_path), "fake", chat=chat, trace=writer, context=context)
+    decision = next(json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()
+                    if json.loads(line)["type"] == "decision")
+    assert (result.action, decision["rule"]) == ("review", "R5")
+
+
+def test_hook_calling_code_outside_package_blocks_approval(tmp_path):
+    risky_package(tmp_path, "npx some-builder && node setup.js")
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "setup.js"}}}]},
+        {"role": "assistant", "content": json.dumps(benign_verdict("1-2"))},
+    ])
+
+    def chat(_model, messages, final=False):
+        assert "outside this package (npx)" in messages[1]["content"]
+        return next(replies)
+
+    result, _ = analyze(str(tmp_path), "fake", chat=chat)
+    assert (result.label, result.action) == ("benign", "review")
+
+
+def test_ollama_retry_uses_seeded_sampling_and_reports_cut_output(monkeypatch):
+    connection = Mock()
+    connection.getresponse.return_value = Mock(
+        status=200, read=lambda *_: b'{"message":{"content":"{"},"done_reason":"length"}')
+    monkeypatch.setattr("agent.run.HTTPConnection", Mock(return_value=connection))
+    assert _chat("test-model", [], final=True, retry=2) == {"content": "{", "truncated": True}
+    options = json.loads(connection.request.call_args.args[2])["options"]
+    assert (options["temperature"], options["seed"]) == (0.4, 2)
 
 
 def test_incomplete_install_source_scan_blocks_automatic_approval(tmp_path):
@@ -177,23 +335,23 @@ def test_agent_accepts_evidence_from_pretty_view(tmp_path):
 FIXTURE = str(Path(__file__).parent / "fixtures" / "benign-package")
 
 
-def test_agent_retries_unverified_mitre_technique():
+def test_agent_drops_unverified_mitre_ids_and_keeps_line_numbers(tmp_path):
     proposed = {"package": "benign-install-fixture@1.0.0", "label": "benign", "confidence": 0.9,
                 "description": "Postinstall script writes a fixed local test marker",
                 "behaviors": [{"behavior": "Writes local marker", "technique": "T1136.002 - Account Creation",
-                               "severity": "low", "evidence": {"file": "postinstall.js", "lines": "2"},
+                               "severity": "low", "evidence": {"file": "postinstall.js",
+                                                               "lines": "2: fs.writeFileSync('/work/x')"},
                                "analysis": "The script writes fixed text.", "impact": "Creates a local marker."}],
                 "action": "approve", "remediation": []}
-    corrected = json.loads(json.dumps(proposed))
-    corrected["behaviors"][0]["technique"] = "fs.writeFileSync"
     replies = iter([{"role": "assistant", "tool_calls": [{"function": {
         "name": "read_file", "arguments": {"file": "postinstall.js"}}}]},
-        {"role": "assistant", "content": json.dumps(proposed)},
-        {"role": "assistant", "content": json.dumps(corrected)}])
-    trace = []
-    result, steps = analyze(FIXTURE, "fake", chat=lambda *_args, **_kwargs: next(replies), trace=trace)
-    assert (result.action, steps, result.behaviors[0].technique) == ("approve", 3, "fs.writeFileSync")
-    assert any(item.get("kind") == "validation" and item["status"] == "retry" for item in trace)
+        {"role": "assistant", "content": json.dumps(proposed)}])
+    writer = TraceWriter(tmp_path / "run-1", "benign-install-fixture@1.0.0")
+    result, steps = analyze(FIXTURE, "fake", chat=lambda *_args, **_kwargs: next(replies), trace=writer)
+    behavior = result.behaviors[0]
+    assert (result.action, steps, behavior.technique, behavior.evidence.lines) == ("approve", 2, "Account Creation", "2")
+    kinds = [json.loads(line).get("kind") for line in writer.path.read_text(encoding="utf-8").splitlines()]
+    assert "normalized_output" in kinds
 
 
 def test_script_targets_include_loaded_files_and_direct_executables():

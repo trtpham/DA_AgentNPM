@@ -14,10 +14,17 @@ MAX_FILE_BYTES = 256 * 1024
 MAX_LINES = 150
 MAX_LINE_CHARS = 1000
 LIFECYCLE = ("preinstall", "install", "postinstall", "prepare")
+# Indicator types that a benign verdict must explain before automatic approval.
+RISK_INDICATORS = frozenset({"child_process", "network_api", "sensitive_path", "home_secret",
+                             "eval", "new_function", "decode"})
+# Commands that fetch or build code that is not inside the extracted package.
+EXTERNAL_COMMANDS = frozenset({"npx", "pnpx", "curl", "wget", "node-gyp", "prebuild-install",
+                               "node-pre-gyp", "prebuild", "cmake-js"})
+PACKAGE_MANAGER_FETCH = frozenset({"install", "i", "ci", "add", "exec", "dlx", "x"})
 
 
-def script_targets(scripts: dict) -> set[str]:
-    targets = set()
+def _hook_commands(scripts: dict) -> list[list[str]]:
+    commands = []
     pending = list(LIFECYCLE)
     seen = set()
     while pending:
@@ -29,40 +36,76 @@ def script_targets(scripts: dict) -> set[str]:
                             posix=True, punctuation_chars=";&|")
         lexer.whitespace_split = True
         lexer.commenters = ""
-        commands = [[]]
+        parsed = [[]]
         for token in lexer:
             if token and set(token) <= set(";&|"):
-                commands.append([])
+                parsed.append([])
             else:
-                commands[-1].append(token)
-        for command in commands:
+                parsed[-1].append(token)
+        for command in parsed:
             while command and re.fullmatch(r"[A-Za-z_]\w*=.*", command[0]):
                 command.pop(0)
             if not command:
                 continue
-            if command[0].startswith("./"):
-                targets.add(command[0].removeprefix("./"))
+            commands.append(command)
             if command[0] in ("npm", "pnpm", "yarn") and len(command) > 2 and command[1] in ("run", "run-script"):
                 if command[2] in scripts:
                     pending.append(command[2])
-            if command[0] not in ("node", "sh", "bash"):
+    return commands
+
+
+def external_commands(scripts: dict) -> set[str]:
+    found = set()
+    for command in _hook_commands(scripts):
+        if command[0] in EXTERNAL_COMMANDS:
+            found.add(command[0])
+        elif command[0] in ("npm", "pnpm", "yarn") and (
+                len(command) == 1 and command[0] == "yarn" or
+                len(command) > 1 and command[1] in PACKAGE_MANAGER_FETCH):
+            found.add(" ".join(command[:2]))
+    return found
+
+
+def install_targets(package: str, scripts: dict, has_binding_gyp: bool) -> set[str]:
+    """Files an install hook runs, resolved like Node (`x` -> `x.js`, `x/index.js`)."""
+    targets = set()
+    for target in script_targets(scripts):
+        for candidate in (target, f"{target}.js", f"{target}.cjs", f"{target}.mjs", f"{target}/index.js"):
+            try:
+                _safe_file(package, candidate)
+            except (OSError, ValueError):
                 continue
-            index = 1
-            while index < len(command):
-                argument = command[index]
-                if argument in (("-e", "--eval") if command[0] == "node" else ("-c", "-lc")):
-                    break
-                if command[0] == "node" and argument in ("-r", "--require", "--import", "--loader"):
-                    if index + 1 < len(command):
-                        targets.add(command[index + 1].removeprefix("./"))
-                    index += 2
-                    continue
-                if command[0] == "node" and argument.startswith(("--require=", "--import=", "--loader=")):
-                    targets.add(argument.split("=", 1)[1].removeprefix("./"))
-                elif not argument.startswith("-"):
-                    targets.add(argument.removeprefix("./"))
-                    break
-                index += 1
+            target = candidate
+            break
+        targets.add(target)
+    if has_binding_gyp and ("install" not in scripts or "node-gyp" in external_commands(scripts)):
+        targets.add("binding.gyp")
+    return targets
+
+
+def script_targets(scripts: dict) -> set[str]:
+    targets = set()
+    for command in _hook_commands(scripts):
+        if command[0].startswith("./"):
+            targets.add(command[0].removeprefix("./"))
+        if command[0] not in ("node", "sh", "bash"):
+            continue
+        index = 1
+        while index < len(command):
+            argument = command[index]
+            if argument in (("-e", "--eval") if command[0] == "node" else ("-c", "-lc")):
+                break
+            if command[0] == "node" and argument in ("-r", "--require", "--import", "--loader"):
+                if index + 1 < len(command):
+                    targets.add(command[index + 1].removeprefix("./"))
+                index += 2
+                continue
+            if command[0] == "node" and argument.startswith(("--require=", "--import=", "--loader=")):
+                targets.add(argument.split("=", 1)[1].removeprefix("./"))
+            elif not argument.startswith("-"):
+                targets.add(argument.removeprefix("./"))
+                break
+            index += 1
     return targets
 
 
@@ -242,9 +285,7 @@ def extract_indicators(package: str) -> dict:
             for kind, pattern in INDICATORS.items():
                 if pattern.search(scripts[hook]):
                     add(kind, "package.json", manifest["data"]["script_lines"].get(hook), scripts[hook])
-        pending = [(file, 0) for file in sorted(script_targets(scripts))]
-        if manifest["data"]["has_binding_gyp"] and "install" not in scripts:
-            pending.append(("binding.gyp", 0))
+        pending = [(file, 0) for file in sorted(install_targets(package, scripts, manifest["data"]["has_binding_gyp"]))]
         seen = set()
         while pending and len(seen) < 100 and len(found) < 30:
             relative, depth = pending.pop(0)
@@ -280,6 +321,49 @@ def extract_indicators(package: str) -> dict:
         return {"ok": False, "data": None, "error": str(error)[:300]}
 
 
+def _script_lines(raw: str) -> dict[str, int]:
+    """Line of each key in the top-level "scripts" object, ignoring nested "scripts" keys."""
+    lines: dict[str, int] = {}
+    stack: list[str] = []
+    scripts_depth = None
+    next_is_scripts = False
+    index = 0
+    while index < len(raw):
+        char = raw[index]
+        if char == '"':
+            end = index + 1
+            while raw[end] != '"':
+                end += 2 if raw[end] == "\\" else 1
+            key = json.loads(raw[index:end + 1])
+            after = end + 1
+            while after < len(raw) and raw[after].isspace():
+                after += 1
+            if after < len(raw) and raw[after] == ":" and stack and stack[-1] == "{":
+                if len(stack) == 1:
+                    next_is_scripts = key == "scripts"
+                elif scripts_depth == len(stack):
+                    # json.loads keeps the last duplicate key, so the last line wins here too.
+                    lines[key] = raw.count("\n", 0, index) + 1
+                index = after + 1
+                continue
+            next_is_scripts = False
+            index = end + 1
+            continue
+        if char in "{[":
+            stack.append(char)
+            if char == "{" and next_is_scripts and len(stack) == 2:
+                scripts_depth, lines = 2, {}
+            next_is_scripts = False
+        elif char in "}]":
+            if scripts_depth == len(stack):
+                scripts_depth = None
+            stack.pop()
+        elif not char.isspace() and char != ",":
+            next_is_scripts = False
+        index += 1
+    return lines
+
+
 def read_manifest(package: str) -> dict:
     try:
         raw = _safe_file(package, "package.json").read_text(encoding="utf-8")
@@ -290,16 +374,11 @@ def read_manifest(package: str) -> dict:
         if not isinstance(scripts, dict) or any(not isinstance(key, str) or not isinstance(value, str)
                                                 for key, value in scripts.items()):
             raise ValueError("invalid scripts")
-        script_lines = {}
+        script_lines = _script_lines(raw)
         source_lines = raw.splitlines()
-        scripts_start = re.search(r'(?<!\\)"scripts"\s*:\s*\{', raw)
-        if scripts and scripts_start is None:
-            raise ValueError("cannot locate scripts in package.json")
         for hook in scripts:
-            match = re.search(r'(?<!\\)"' + re.escape(hook) + r'"\s*:', raw[scripts_start.end():])
-            if match is None:
+            if hook not in script_lines:
                 raise ValueError(f"cannot locate script {hook} in package.json")
-            script_lines[hook] = raw.count("\n", 0, scripts_start.end() + match.start()) + 1
         deps = {key: manifest.get(key, {}) for key in ("dependencies", "devDependencies", "optionalDependencies")}
         if any(not isinstance(value, dict) for value in deps.values()):
             raise ValueError("invalid dependencies")
