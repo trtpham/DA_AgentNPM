@@ -53,3 +53,9 @@
 - Ollama vẫn có đủ `qwen3.5:9b`, `qwen3.5:4b`, `qwen3.5:0.8b`. `.gitignore` còn chặn `data/samples/`, tarball `.tgz` và trace dưới `reports/`.
 - Bốn đầu việc trong kế hoạch tuần 1 đều có bằng chứng kỹ thuật; bộ test toàn repo hiện **72/72 PASS**. Kết quả probe 20 lượt/model là kết quả đã ghi ngày 28/10, không chạy lại và không phải phép đo độ chính xác trên gói npm.
 - Còn điều kiện thủ tục: người review khác người thực hiện cần ký nghiệm thu tuần 1. Không ghi thay chữ ký của thành viên.
+
+## Xác minh lại ngày 2026-11-03 (Claude)
+
+- **PASS — môi trường:** `ollama list` có đủ `qwen3.5:9b/4b/0.8b`; Python 3.14.2 với `requirements.txt` (pydantic 2.13.2, pytest 9.1.1); Node 24.13.0, npm 11.6.2; Docker 29.1.3. `AGENTS.md` gốc đã được đưa vào repo.
+- **PASS — probe 20 lượt/model với công cụ giả, chạy lại hôm nay:** A-LLM 20/20 tool call, 20/20 JSON, 14.95 token/s; A-SLM 20/20, 20/20, 49.14 token/s; A-TLM 20/20, 20/20, 177.31 token/s. Probe không dùng mã gói và không đo độ chính xác.
+- **Còn thủ tục, chỉ người thật làm được:** reviewer khác người thực hiện ký nghiệm thu tuần 1. Mọi hạng mục kỹ thuật của tuần 1 đã có bằng chứng.

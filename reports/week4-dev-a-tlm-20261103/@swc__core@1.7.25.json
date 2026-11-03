@@ -1,0 +1,26 @@
+{
+  "package": "@swc/core@1.7.25",
+  "variant": "A-TLM",
+  "model": "qwen3.5:0.8b",
+  "trace": "9f1c0f979c6b8965000a66e427c557a5a89698b75bf8b004316b1a98ca62c2c2.trace.jsonl",
+  "status": "error",
+  "error": "no valid evidence-backed verdict: model repeated the same invalid output",
+  "steps": 6,
+  "errors": [
+    "json_invalid",
+    "json_invalid",
+    "json_invalid",
+    "json_invalid",
+    "repeated_invalid"
+  ],
+  "decision": {
+    "label": "suspicious",
+    "action": "review",
+    "rule": "R2",
+    "reasons": [
+      "Analysis failed or reached its step limit"
+    ]
+  },
+  "planned_command": null,
+  "elapsed_s": 20.5
+}

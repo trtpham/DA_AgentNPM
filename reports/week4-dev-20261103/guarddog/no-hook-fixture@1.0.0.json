@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "data": {
+    "issues": 0,
+    "rules": [],
+    "errors": {},
+    "results": {
+      "shady-links": {},
+      "npm-silent-process-execution": {},
+      "npm-install-script": {},
+      "npm-dll-hijacking": {},
+      "npm-serialize-environment": {},
+      "npm-exfiltrate-sensitive-data": {},
+      "npm-steganography": {},
+      "npm-exec-base64": {},
+      "npm-obfuscation": {}
+    }
+  },
+  "error": null,
+  "package": "no-hook-fixture@1.0.0"
+}

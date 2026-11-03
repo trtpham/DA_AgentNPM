@@ -1,0 +1,29 @@
+{
+  "package": "@swc/core@1.7.23",
+  "osv": {
+    "ok": true,
+    "data": {
+      "untrusted": true,
+      "vulns": [],
+      "malicious": false
+    },
+    "error": null
+  },
+  "registry": {
+    "ok": true,
+    "data": {
+      "untrusted": true,
+      "versions": 932,
+      "previous_version": "1.7.22",
+      "lifecycle": {
+        "postinstall": "node postinstall.js"
+      },
+      "hooks_changed_since_previous": false,
+      "new_hooks": [],
+      "maintainers": 2,
+      "deprecated": false,
+      "integrity": "sha512-VDNkpDvDlreGh2E3tlDj8B3piiuLhhQA/7rIVZpiLUvG1YpucAa6N7iDXA7Gc/+Hah8spaCg/qvEaBkCmcIYCQ=="
+    },
+    "error": null
+  }
+}

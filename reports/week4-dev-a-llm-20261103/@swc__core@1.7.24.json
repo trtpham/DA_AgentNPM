@@ -1,0 +1,79 @@
+{
+  "package": "@swc/core@1.7.24",
+  "variant": "A-LLM",
+  "model": "qwen3.5:9b",
+  "trace": "8b810632dbb6f6aa6d2636d4ccf65bb81017dc81df50067290f4d42596784674.trace.jsonl",
+  "status": "ok",
+  "steps": 4,
+  "verdict": {
+    "package": "@swc/core@1.7.24",
+    "label": "benign",
+    "confidence": 0.95,
+    "description": "Postinstall script validates native bindings and installs @swc/wasm fallback if needed.",
+    "behaviors": [
+      {
+        "behavior": "Child process execution for system library detection",
+        "technique": "Command and Scripting Interpreter",
+        "severity": "low",
+        "evidence": {
+          "file": "binding.js",
+          "lines": "52"
+        },
+        "analysis": "Executes 'ldd --version' to detect musl libc on Linux. This is a standard system diagnostic command used for compatibility checking, not malicious activity.",
+        "impact": "Low - reads system version information for binary compatibility."
+      },
+      {
+        "behavior": "Child process execution for npm package installation",
+        "technique": "Command and Scripting Interpreter",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "125"
+        },
+        "analysis": "Executes 'npm install' to install @swc/wasm fallback when native bindings fail. This is a legitimate post-installation recovery mechanism documented in the code comments.",
+        "impact": "Low - installs optional dependency as fallback for functionality."
+      },
+      {
+        "behavior": "File system operations for cleanup",
+        "technique": "File and Directory Discovery",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "29-46"
+        },
+        "analysis": "Removes temporary installation directory after fallback install. Standard cleanup behavior to prevent package bloat.",
+        "impact": "Low - cleans up temporary files created during installation."
+      },
+      {
+        "behavior": "Environment variable inspection",
+        "technique": "Abuse Elevation Privileges",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "69"
+        },
+        "analysis": "Reads package.json from INIT_CWD to identify installation context. Standard npm postinstall behavior for detecting if this is the target package.",
+        "impact": "Low - reads local environment configuration."
+      }
+    ],
+    "action": "review",
+    "remediation": [
+      "No remediation needed - legitimate package with standard postinstall behavior"
+    ]
+  },
+  "errors": [
+    "normalized_output",
+    "invalid_verdict",
+    "normalized_output"
+  ],
+  "decision": {
+    "label": "benign",
+    "action": "review",
+    "rule": "R7_review",
+    "reasons": [
+      "Install path not fully reviewed; human review required"
+    ]
+  },
+  "planned_command": null,
+  "elapsed_s": 106.3
+}

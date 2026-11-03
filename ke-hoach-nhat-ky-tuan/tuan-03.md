@@ -111,3 +111,29 @@ Kiểm tra lại fixture sau sửa: A-LLM kết luận canary `malicious/deny` s
 Kiểm tra lại A-TLM (`qwen3.5:0.8b`) trên fixture `no-hook-package` và `canary-package`: cả hai vẫn chạm **15 bước**, verdict không hợp lệ và fallback `suspicious/review`. Fallback giữ an toàn nhưng không chứng minh model đã nhận diện canary. Vì vậy **mốc kỹ thuật tuần 3 đã đạt** (agent có verdict hợp lệ trên fixture, sandbox có trace, A-LLM quét xong một gói thật), còn **độ ổn định A-TLM chưa đạt** và không được giới thiệu là đã giải quyết.
 
 Kiểm tra sau sửa và cập nhật dữ liệu tuần 2: **72/72 pytest PASS** toàn repo; `rtk semgrep scan --config auto --error agent/run.py` **PASS (exit 0)**. Chạy lại fixture canary trong Docker sandbox cho exit 0; trace cục bộ có tín hiệu `.ssh`, `.npmrc` và kết nối giả. TV2 vẫn cần review thay đổi trong `agent/run.py` trước khi chốt nghiệm thu nhóm; chưa quét hàng loạt hoặc chạy script cài đặt trên máy thật.
+
+## Cập nhật 2026-11-03 — Claude tiếp nhận, vá vòng lặp agent và đo lại
+
+- **Ngày / người thực hiện / người kiểm tra:** 2026-11-03 / Claude (theo Gate B0 ngày 03/11) / chờ TV2 Phạm Minh Triết review code.
+- **Nguyên nhân A-TLM chạm 15 bước (đọc từ trace `reports/week3-final-tlm-*`):** model lặp đúng một verdict sai qua 13 lượt. Ngữ cảnh mỗi lượt giống hệt nhau nên ở nhiệt độ 0 nó sinh lại cùng câu trả lời: thiếu `@version` trong `package`, `description` sai số từ, JSON bị cắt khi hết `num_predict`.
+- **Đã sửa (`agent/run.py`, `agent/decide.py`, `tools/static.py`; test 72 → 99):**
+  1. Code tự điền định danh gói.
+  2. Lỗi lặp lại thì lượt sau dùng `temperature 0.4` với `seed` cố định; lỗi giống nhau 4 lần thì dừng với `repeated_invalid` và trả R2.
+  3. Phân biệt `truncated_output` (đầu ra bị cắt).
+  4. Bóc khối ```` ```json ````.
+  5. Chuẩn hóa `evidence.lines` dạng `"2: code"` thành `"2"`, bỏ mã MITRE chưa kiểm chứng khỏi `technique`, ghi sự kiện `normalized_output`. Mọi dòng trích dẫn vẫn được đọc lại và kiểm chứng.
+  6. Luật mới `R7_risk`: verdict `benign` phải dẫn đúng từng dòng chỉ báo rủi ro trên đường install mới được approve.
+  7. Hook gọi mã ngoài gói (`node-gyp`, `npx`, `curl`, `npm install`…) bị coi là phân tích chưa đủ.
+  8. `node x` được phân giải thành `x.js`/`x/index.js`.
+  9. Dòng script được lấy theo cấu trúc JSON cấp gốc.
+- **PASS — ma trận 3 fixture × 3 model × 3 lần, code cuối (`reports/b5v3-20261103-*`):**
+
+| Model | Verdict hợp lệ | Bước | Kết quả cuối (dry-run) |
+| --- | --- | --- | --- |
+| A-LLM `qwen3.5:9b` | 9/9 | 2 | benign → approve (R7); canary → malicious/deny (R6); no-hook → benign/review (R7_review) |
+| A-SLM `qwen3.5:4b` | 9/9 | 2–4 | benign → approve; canary → deny; no-hook → suspicious/review (R8) |
+| A-TLM `qwen3.5:0.8b` | **1/9** | 3–8 | 8 lượt fallback `suspicious/review` (R2) sau 6–8 bước, không còn tốn đủ 15 bước |
+
+- **Còn yếu (FAIL có kiểm soát):** A-TLM vẫn viết `description` quá 15 từ dù được nhắc số từ, và dẫn bằng chứng ở file không tồn tại (`manifest.json`). Schema không được nới để tăng tỷ lệ PASS. Lượt đo trung gian (`b5v2-*`, trước khi chuẩn hóa định dạng) chỉ cho A-SLM 6/9 vì model lặp mã MITRE. Đây là kết quả trên 3 fixture, không phải độ chính xác trên npm.
+- **PASS — sandbox tái hiện ngày 03/11:** build lại `agent-npm-sandbox:local`; ba fixture đều `ok`, `returncode=0`, `strace` không bị cắt; canary ghi nhận `ssh` và `environment`. Cả ba fixture có 4 lời gọi `connect()` là npm tự tra nscd/DNS và bị chặn bởi `--network none`. Tách lời gọi của npm khỏi lời gọi của gói là việc tuần 5.
+- **Viewer VIZ-1 G3–G4:** xong replay/live tiếng Việt trong `viewer/static/`. Kiểm tra trên trình duyệt: replay 8/8 sự kiện, live nối sự kiện của run đang chạy, chuỗi XSS hiện dạng chữ, không cuộn ngang ở 375px. Chờ PO nghiệm thu demo.

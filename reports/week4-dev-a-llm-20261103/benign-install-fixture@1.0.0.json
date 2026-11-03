@@ -1,0 +1,46 @@
+{
+  "package": "benign-install-fixture@1.0.0",
+  "variant": "A-LLM",
+  "model": "qwen3.5:9b",
+  "trace": "d6f7d26d7c089bfd3cef061b2282eaf7010b858cda39a600ec8628aa2793b846.trace.jsonl",
+  "status": "ok",
+  "steps": 2,
+  "verdict": {
+    "package": "benign-install-fixture@1.0.0",
+    "label": "benign",
+    "confidence": 0.95,
+    "description": "Postinstall script writes benign text to sandbox path.",
+    "behaviors": [
+      {
+        "behavior": "File write operation in postinstall lifecycle",
+        "technique": "Account Manipulation (Path Creation)",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "2"
+        },
+        "analysis": "The script uses fs.writeFileSync to write a string to /work/sandbox-result.txt. This is a standard postinstall action for fixture packages.",
+        "impact": "Writes non-sensitive text to a sandboxed path; no data exfiltration or persistence."
+      }
+    ],
+    "action": "approve",
+    "remediation": []
+  },
+  "errors": [
+    "normalized_output"
+  ],
+  "decision": {
+    "label": "benign",
+    "action": "approve",
+    "rule": "R7",
+    "reasons": [
+      "Verified benign evidence meets approve threshold"
+    ]
+  },
+  "planned_command": [
+    "npm",
+    "approve-scripts",
+    "benign-install-fixture@1.0.0"
+  ],
+  "elapsed_s": 35.8
+}

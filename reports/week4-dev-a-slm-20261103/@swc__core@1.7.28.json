@@ -1,0 +1,66 @@
+{
+  "package": "@swc/core@1.7.28",
+  "variant": "A-SLM",
+  "model": "qwen3.5:4b",
+  "trace": "9b6c0ccada689a7d89bfb528b4ae7c2e09374317cf0622dbcd6c53c9fe5b7ac7.trace.jsonl",
+  "status": "ok",
+  "steps": 3,
+  "verdict": {
+    "package": "@swc/core@1.7.28",
+    "label": "benign",
+    "confidence": 0.95,
+    "description": "Postinstall script validates native bindings and installs @swc/wasm as fallback.",
+    "behaviors": [
+      {
+        "behavior": "Reads package.json to identify target package name",
+        "technique": "(Software Component Acquisition)",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "69"
+        },
+        "analysis": "Script reads package.json via path.resolve(process.env.INIT_CWD, 'package.json') to verify if it is @swc/core or @swc/workspace.",
+        "impact": "Legitimate dependency validation; no data exfiltration."
+      },
+      {
+        "behavior": "Executes npm install command to install @swc/wasm fallback",
+        "technique": "(Software Component Acquisition)",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "125"
+        },
+        "analysis": "Executes npm install --no-save ... @swc/wasm@version to ensure native bindings are available.",
+        "impact": "Standard post-install behavior for optional native dependencies."
+      },
+      {
+        "behavior": "Uses child_process.execSync for system checks",
+        "technique": "(Software Component Acquisition)",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "44"
+        },
+        "analysis": "Uses child_process.execSync for npm install and ldd --version checks; no command injection patterns detected.",
+        "impact": "Legitimate system interaction for dependency resolution."
+      }
+    ],
+    "action": "review",
+    "remediation": []
+  },
+  "errors": [
+    "normalized_output",
+    "json_invalid",
+    "normalized_output"
+  ],
+  "decision": {
+    "label": "benign",
+    "action": "review",
+    "rule": "R7_review",
+    "reasons": [
+      "Install path not fully reviewed; human review required"
+    ]
+  },
+  "planned_command": null,
+  "elapsed_s": 25.2
+}

@@ -1,0 +1,45 @@
+{
+  "package": "no-hook-fixture@1.0.0",
+  "variant": "A-LLM",
+  "model": "qwen3.5:9b",
+  "trace": "3056e475534fe2880cbba014dbdd6913b1d7c3e6c34091353d9ceb3589f90238.trace.jsonl",
+  "status": "ok",
+  "steps": 2,
+  "verdict": {
+    "package": "no-hook-fixture@1.0.0",
+    "label": "benign",
+    "confidence": 0.95,
+    "description": "Package contains only metadata with no executable scripts or hooks.",
+    "behaviors": [
+      {
+        "behavior": "No install hook or lifecycle script present in package.json",
+        "technique": "(Phishing - Attachment)",
+        "severity": "low",
+        "evidence": {
+          "file": "package.json",
+          "lines": "1-2"
+        },
+        "analysis": "The package.json file contains only 'name' and 'version' fields. No 'scripts', 'bin', or 'main' entry points are defined that could execute code during installation.",
+        "impact": "No malicious payload execution possible via standard npm lifecycle hooks."
+      }
+    ],
+    "action": "review",
+    "remediation": [
+      "Verify package integrity using checksums before deployment.",
+      "Ensure no external dependencies are added post-installation."
+    ]
+  },
+  "errors": [
+    "normalized_output"
+  ],
+  "decision": {
+    "label": "benign",
+    "action": "review",
+    "rule": "R7_review",
+    "reasons": [
+      "Install path not fully reviewed; human review required"
+    ]
+  },
+  "planned_command": null,
+  "elapsed_s": 23.3
+}

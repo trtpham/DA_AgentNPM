@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "data": {
+    "issues": 0,
+    "rules": [],
+    "errors": {},
+    "results": {
+      "npm-exfiltrate-sensitive-data": {},
+      "npm-exec-base64": {},
+      "npm-install-script": {},
+      "npm-serialize-environment": {},
+      "npm-dll-hijacking": {},
+      "shady-links": {},
+      "npm-obfuscation": {},
+      "npm-silent-process-execution": {},
+      "npm-steganography": {}
+    }
+  },
+  "error": null,
+  "package": "canary-fixture@1.0.0"
+}

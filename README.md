@@ -18,7 +18,7 @@
 - `experiments/configs/`: cấu hình ba model Ollama.
 - `reports/`: đầu ra phân tích (JSON bị ignore).
 
-Chạy kiểm tra: `rtk proxy python -m pytest -q --basetemp=.pytest_tmp`. Một số test HTTP cần quyền bind loopback. Kiểm tra bảo mật: `rtk semgrep scan --config auto --error`.
+Cài phụ thuộc: `py -3.14 -m pip install -r requirements.txt`. Chạy kiểm tra: `rtk proxy py -3.14 -m pytest -q --basetemp=.pytest_tmp`. Một số test HTTP cần quyền bind loopback. Kiểm tra bảo mật: `rtk semgrep scan --config auto --error`.
 
 Probe 20 lượt với công cụ giả, không dùng mã gói: `rtk proxy python -m experiments.model_probe --attempts 20`. Kết quả probe không thay thế phép đo accuracy trên nhãn thật.
 
@@ -59,3 +59,21 @@ Chạy lần lượt hai biến thể TLM và LLM, mỗi lệnh mở một URL d
 rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-TLM --output reports/A-TLM-agent-flow.html
 rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-LLM --output reports/A-LLM-agent-flow.html
 ```
+
+## Trình xem trace (VIZ-1)
+
+Xem lại hoặc theo dõi trực tiếp các trace JSONL trong `reports/` mà không chạy agent:
+
+```powershell
+rtk proxy py -3.14 -m viewer --reports reports --port 8765
+```
+
+Mở `http://127.0.0.1:8765/`, chọn run rồi chọn gói. **Phát lại**, **Bước trước**, **Bước tiếp** và tốc độ 1×/2×/4× dùng để xem lại. Với gói đang chạy (chưa có `run_end`), trang tự lấy sự kiện mới mỗi giây. Có thể dán đường dẫn `#run=<run_id>&pkg=<tên@phiên bản>` để mở thẳng một gói. Run `sample_traces` gồm ba trace tổng hợp vô hại để demo, trong đó một trace chứa chuỗi XSS thử nghiệm. Server chỉ lắng nghe `127.0.0.1` và chỉ nhận GET/HEAD. Nội dung trace được đưa vào trang bằng `textContent`; trang không có nút chạy agent.
+
+## Tuần 4: bối cảnh, chạy lô, baseline và chỉ số
+
+- **Bối cảnh (`tools/intel.py`):** `rtk proxy py -3.14 -m tools.intel @swc/core 1.7.36 --output reports/week4-context/@swc__core@1.7.36.json`. Lệnh chỉ gửi `tên@phiên bản` tới `api.osv.dev` và `registry.npmjs.org`. Kết quả gồm advisory OSV (cờ `malicious` khi có mã `MAL-`), phiên bản trước, hook mới và integrity. `diff_versions(old_dir, new_dir)` so tĩnh đường install của hai bản đã giải nén. Agent chỉ đọc file context. Tín hiệu OSV MAL chặn approve (luật R5) nhưng không bao giờ là bằng chứng.
+- **Chạy lô (`experiments/run_batch.py`):** `rtk proxy py -3.14 -m experiments.run_batch <run_id> A-SLM --labels data/labels.csv --split dev --name @swc/core --contexts reports/week4-context`. Thêm `--dir` cho gói đã giải nén. Kết quả ghi vào `reports/<run_id>/<gói>.json` cùng `run_meta.json` (commit, phiên bản Python/Ollama, digest model, tham số chat, hash dataset). Chạy lại cùng `run_id` sẽ bỏ qua gói đã xong. Một gói lỗi vẫn có kết quả fallback R2 và lô tiếp tục. Dòng không phải `benign` bị từ chối nếu thiếu `--isolated`; cờ này chỉ dùng trong VM. Nhãn không bao giờ vào prompt.
+- **Hành động (`tools/actions.py`):** `apply_decision` chỉ lập lệnh `npm approve-scripts`/`deny-scripts` ở chế độ dry-run. `dry_run=False` bị từ chối cho tới khi có gate riêng.
+- **GuardDog (`experiments/baseline_guarddog.py`):** build một lần bằng `docker build -t agent-npm-guarddog:2.6.0 experiments/guarddog`, sau đó `rtk proxy py -3.14 -m experiments.baseline_guarddog <run_id> --labels data/labels.csv --split dev --name @swc/core`. Quét trong container tắt mạng, mount chỉ đọc. Trên Windows, semgrep của GuardDog không chạy native và GuardDog còn bỏ qua đường dẫn chứa `tests`, nên không dùng bản pip trên host.
+- **Chỉ số (`experiments/metrics.py`):** `rtk proxy py -3.14 -m experiments.metrics reports/<run_id>` (thêm `--source guarddog` cho `reports/<run_id>/guarddog`). Lệnh in confusion matrix, Precision/Recall/F1/FPR, tỷ lệ review, JSON hợp lệ, lỗi, số bước và thời gian. Lượt chạy lỗi được tính là bỏ sót, không bị loại khỏi mẫu số.

@@ -1,0 +1,69 @@
+{
+  "package": "@swc/core@1.7.23",
+  "variant": "A-TLM",
+  "model": "qwen3.5:0.8b",
+  "trace": "278615a52365e414a5400b0dd5323ec4342fc5942c5ad6ca96cad0daf72b2b5b.trace.jsonl",
+  "status": "ok",
+  "steps": 4,
+  "verdict": {
+    "package": "@swc/core@1.7.23",
+    "label": "benign",
+    "confidence": 0.95,
+    "description": "Postinstall script validates native binary compatibility and installs fallback wasm if needed.",
+    "behaviors": [
+      {
+        "behavior": "Reads package.json to check for @swc/wasm dependency",
+        "technique": "Inspect postinstall.js line 69: const { name } = require(path.resolve(process.env.INIT_CWD, \"package.json\")).",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "1-2"
+        },
+        "analysis": "Line 69 reads package.json to check if @swc/wasm is already installed. This is a legitimate dependency check for native binary compatibility.",
+        "impact": "Legitimate validation step that ensures fallback wasm installation works correctly."
+      },
+      {
+        "behavior": "Executes npm install with --no-save and --prefer-offline flags",
+        "technique": "Inspect postinstall.js line 125: child_process.execSync(`npm install --no-save --loglevel=error --prefer-offline --no-audit --progress=false @swc/wasm@${version}`, { cwd: installDir, stdio: \"pipe\", env });",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "1-2"
+        },
+        "analysis": "Line 125 executes npm install with explicit flags to avoid optional dependencies and audit warnings. This is a legitimate system-wide installation command.",
+        "impact": "Legitimate system dependency resolution that ensures fallback wasm works correctly."
+      },
+      {
+        "behavior": "Removes installed @swc/wasm directory if it exists",
+        "technique": "Inspect postinstall.js line 134: fs.unlinkSync(entryPath);",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "1-2"
+        },
+        "analysis": "Line 134 removes the installed @swc/wasm directory if it exists. This is a legitimate cleanup step to ensure clean installation.",
+        "impact": "Legitimate cleanup step that ensures clean installation."
+      }
+    ],
+    "action": "review",
+    "remediation": [
+      "Review postinstall.js for any additional security checks or logic that may be misaligned with the installed binary.",
+      "Ensure SWC_BINARY_PATH environment variable is properly configured if manual override is required.",
+      "Verify native binding target triple exists in binding.js to confirm compatibility."
+    ]
+  },
+  "errors": [
+    "truncated_output",
+    "truncated_output"
+  ],
+  "decision": {
+    "label": "benign",
+    "action": "review",
+    "rule": "R7_review",
+    "reasons": [
+      "Install path not fully reviewed; human review required"
+    ]
+  },
+  "planned_command": null,
+  "elapsed_s": 54.1
+}

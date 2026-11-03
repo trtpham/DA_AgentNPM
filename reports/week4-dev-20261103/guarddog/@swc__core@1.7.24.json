@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "data": {
+    "issues": 0,
+    "rules": [],
+    "errors": {},
+    "results": {
+      "npm-steganography": {},
+      "npm-serialize-environment": {},
+      "npm-dll-hijacking": {},
+      "npm-exfiltrate-sensitive-data": {},
+      "npm-install-script": {},
+      "npm-exec-base64": {},
+      "npm-obfuscation": {},
+      "npm-silent-process-execution": {},
+      "shady-links": {}
+    }
+  },
+  "error": null,
+  "package": "@swc/core@1.7.24"
+}

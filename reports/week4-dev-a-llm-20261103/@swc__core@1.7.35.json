@@ -1,0 +1,77 @@
+{
+  "package": "@swc/core@1.7.35",
+  "variant": "A-LLM",
+  "model": "qwen3.5:9b",
+  "trace": "7002cbe44e5184fd040aaeff03927e521f2638aa1a74dcecf5d6fe6f0993a124.trace.jsonl",
+  "status": "ok",
+  "steps": 4,
+  "verdict": {
+    "package": "@swc/core@1.7.35",
+    "label": "benign",
+    "confidence": 0.95,
+    "description": "Postinstall validates native bindings and installs @swc/wasm fallback if needed.",
+    "behaviors": [
+      {
+        "behavior": "child_process.execSync to install @swc/wasm fallback",
+        "technique": "Create Account via Environment Variable",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "125"
+        },
+        "analysis": "Executes npm install to fetch @swc/wasm as fallback when native binding fails. This is a legitimate recovery mechanism documented in the code comments.",
+        "impact": "Installs optional dependency; no privilege escalation."
+      },
+      {
+        "behavior": "child_process.execSync to detect musl libc",
+        "technique": "Command and Scripting Interpreter: Other",
+        "severity": "low",
+        "evidence": {
+          "file": "binding.js",
+          "lines": "52"
+        },
+        "analysis": "Runs ldd --version to detect musl libc on Linux systems for compatibility checks. This is a standard environment detection pattern.",
+        "impact": "Read-only system information gathering."
+      },
+      {
+        "behavior": "readFileSync to check /usr/bin/ldd",
+        "technique": "File and Directory Discovery",
+        "severity": "low",
+        "evidence": {
+          "file": "binding.js",
+          "lines": "24"
+        },
+        "analysis": "Reads /usr/bin/ldd output to detect musl libc. Standard system file inspection for environment compatibility.",
+        "impact": "No data exfiltration; reads only local filesystem."
+      },
+      {
+        "behavior": "require(path.resolve(process.env.INIT_CWD, \"package.json\"))",
+        "technique": "Abuse of Trusted Relationship: Environment Variable",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "69"
+        },
+        "analysis": "Reads package.json from INIT_CWD to identify the installing project. This is standard npm postinstall behavior.",
+        "impact": "Reads local package metadata; no external data access."
+      }
+    ],
+    "action": "review",
+    "remediation": []
+  },
+  "errors": [
+    "normalized_output",
+    "invalid_verdict",
+    "normalized_output"
+  ],
+  "decision": {
+    "label": "benign",
+    "action": "review",
+    "rule": "R7_review",
+    "reasons": [
+      "Install path not fully reviewed; human review required"
+    ]
+  },
+  "planned_command": null,
+  "elapsed_s": 104.7
+}

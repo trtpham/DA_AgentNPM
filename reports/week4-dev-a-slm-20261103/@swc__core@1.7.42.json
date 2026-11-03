@@ -1,0 +1,57 @@
+{
+  "package": "@swc/core@1.7.42",
+  "variant": "A-SLM",
+  "model": "qwen3.5:4b",
+  "trace": "dc45a920d75e102e4d2944eacd24e6ed051d31624bf0f9774fc51b533bfcd3d8.trace.jsonl",
+  "status": "ok",
+  "steps": 5,
+  "verdict": {
+    "package": "@swc/core@1.7.42",
+    "label": "benign",
+    "confidence": 0.95,
+    "description": "Postinstall helper for native binary validation and optional wasm fallback.",
+    "behaviors": [
+      {
+        "behavior": "Reads package.json to identify target package name",
+        "technique": "(Software Component Acquisition)",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "69"
+        },
+        "analysis": "Reads INIT_CWD/package.json to determine if installing @swc/core or @swc/workspace, skipping validation for these packages.",
+        "impact": "Legitimate package identification for conditional logic."
+      },
+      {
+        "behavior": "Executes npm install command to download @swc/wasm as fallback",
+        "technique": "(Software Component Acquisition)",
+        "severity": "low",
+        "evidence": {
+          "file": "postinstall.js",
+          "lines": "125"
+        },
+        "analysis": "Runs npm install with --no-save, --prefer-offline, and --no-audit flags to fetch @swc/wasm when native bindings are missing.",
+        "impact": "Ensures core functionality works without native dependencies by installing wasm fallback."
+      }
+    ],
+    "action": "review",
+    "remediation": []
+  },
+  "errors": [
+    "normalized_output",
+    "invalid_verdict",
+    "normalized_output",
+    "invalid_verdict",
+    "normalized_output"
+  ],
+  "decision": {
+    "label": "benign",
+    "action": "review",
+    "rule": "R7_review",
+    "reasons": [
+      "Install path not fully reviewed; human review required"
+    ]
+  },
+  "planned_command": null,
+  "elapsed_s": 32.0
+}

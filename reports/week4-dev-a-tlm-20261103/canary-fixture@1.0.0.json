@@ -1,0 +1,30 @@
+{
+  "package": "canary-fixture@1.0.0",
+  "variant": "A-TLM",
+  "model": "qwen3.5:0.8b",
+  "trace": "1f6cbe1ca33f61188f949fe05c62689dc4276035482d188c3ae4411ac68ef42b.trace.jsonl",
+  "status": "error",
+  "error": "no valid evidence-backed verdict: model repeated the same invalid output",
+  "steps": 6,
+  "errors": [
+    "normalized_output",
+    "json_invalid",
+    "normalized_output",
+    "json_invalid",
+    "normalized_output",
+    "json_invalid",
+    "normalized_output",
+    "json_invalid",
+    "repeated_invalid"
+  ],
+  "decision": {
+    "label": "suspicious",
+    "action": "review",
+    "rule": "R2",
+    "reasons": [
+      "Analysis failed or reached its step limit"
+    ]
+  },
+  "planned_command": null,
+  "elapsed_s": 15.2
+}
