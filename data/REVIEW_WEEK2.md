@@ -198,3 +198,14 @@ Chạy lại bộ chia cụm đã chuyển 17 dòng của MUT-4831 sang `test`, 
 Trong container Python dùng một lần, chỉ đọc từ npm Registry và không chạy script gói: cả **20/20** nhãn `benign` có đúng tên/phiên bản trong metadata và `package.json`, URL tarball khớp metadata, SHA-512 tarball khớp `dist.integrity`, file bằng chứng tồn tại và mọi dòng được trích dẫn đều nằm trong file. Container chỉ gắn `labels.csv` và chương trình kiểm tra ở chế độ đọc; không ghi tarball hoặc mã gói lên máy/Git. Lượt kiểm tra trả `checked=20, passed=20, failed=[]`.
 
 Đây là **kiểm tra tự động về nguồn và vị trí bằng chứng**, chưa phải đánh giá độc lập ý nghĩa hành vi của từng đoạn mã. Người kiểm tra chéo khác người ghi nhãn ban đầu vẫn phải đọc mã và xác nhận tên/ngày trước khi dùng 20 nhãn này làm đáp án chuẩn.
+
+## Phiếu kiểm tra chéo và giới hạn đại diện — 2026-11-03
+
+Claude tạo bốn phiếu trong [`review_rounds/`](review_rounds/) bằng `py -3.14 -m data.review_sheet build <lượt>`: lượt 1 có 20 dòng lành; lượt 2 có 18 dòng `npm-token-worm-2026-03`; lượt 3 có 18 dòng `shai-hulud-2-2025-11`; lượt 4 có 20 dòng (17 `mut-4831`, 1 `exnesss`, 2 nghi vấn). Tổng 76/76 dòng. Phiếu chỉ chép những gì người ghi nhãn ban đầu đã ghi. Các cột `decision`, `reviewer`, `reviewed_at`, `observed_behavior` và `note` để trống cho **người kiểm tra chéo** điền sau khi đọc mã trong VM/container. Lệnh `check` từ chối các trường hợp sau: người duyệt là Codex/Claude, thiếu ngày, quyết định ngoài `verified/revise/exclude`, hoặc `revise/exclude` không ghi lý do. Phiếu không ghi đè được.
+
+**Giới hạn đại diện của cách chia hiện tại (phải nêu khi báo cáo chỉ số):**
+
+- `test` chỉ có một họ lành (`esbuild`, 10 phiên bản), một chiến dịch độc chính (`mut-4831`, 17 phiên bản) và một gói nghi vấn (`@miurba/alcazaba`).
+- `dev` có họ lành `@swc/core`, hai chiến dịch độc (36 dòng) và hai ca lẻ.
+- Các phiên bản trong một họ hay chiến dịch không độc lập với nhau, nên cỡ mẫu hiệu dụng gần với **số cụm** (test: 3 cụm) hơn là số dòng (28).
+- Chỉ số trên `test` vì vậy đo khả năng tổng quát hóa sang một chiến dịch là chính. Muốn tăng độ tin cậy, nên bổ sung họ/chiến dịch mới **trước** khi chạy test, không đổi split sau khi đã thấy kết quả.

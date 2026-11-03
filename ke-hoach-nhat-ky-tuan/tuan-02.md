@@ -144,3 +144,9 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 ### Bổ sung lượt 1 — đối chiếu nguồn 20 nhãn lành ngày 2026-11-01
 
 Đã kiểm tra tĩnh 20/20 nhãn `benign` trong container dùng một lần: tên và phiên bản, URL tarball, SHA-512 khớp `dist.integrity`, file bằng chứng và phạm vi dòng đều hợp lệ; không chạy install script. Kết quả chi tiết ở [`data/REVIEW_WEEK2.md`](../data/REVIEW_WEEK2.md). Đây mới là kiểm tra tự động về nguồn và vị trí bằng chứng. Người kiểm tra chéo khác người gán nhãn ban đầu vẫn cần đọc ý nghĩa hành vi, xác nhận tên/ngày; vì vậy lượt 1 và mốc dữ liệu v1 **chưa đóng**.
+
+### Cập nhật 2026-11-03 — phiếu kiểm tra chéo
+
+- **PASS — công cụ:** `data/review_sheet.py` sinh bốn phiếu trong [`data/review_rounds/`](../data/review_rounds/): lượt 1 có 20 dòng lành; lượt 2 có 18 `npm-token-worm`; lượt 3 có 18 `shai-hulud`; lượt 4 có 17 `mut-4831` + `exnesss` + 2 nghi vấn. Tổng 76/76 dòng. Lệnh `check` từ chối các trường hợp: người duyệt là Codex/Claude, thiếu ngày, quyết định ngoài `verified/revise/exclude`, hoặc thiếu lý do khi `revise/exclude`.
+- **Giới hạn đại diện đã ghi** trong [hồ sơ nhãn](../data/REVIEW_WEEK2.md): `test` chủ yếu đo một chiến dịch độc (`mut-4831`) và một họ lành (`esbuild`); cỡ mẫu hiệu dụng gần với số cụm (3) hơn là số dòng (28).
+- **Vẫn BLOCKED — chỉ người thật làm được:** điền và ký bốn phiếu. Lượt 2–4 cần ZIP Datadog trong VM. Claude không ký thay reviewer. Mốc dữ liệu v1 chưa đạt cho tới khi `check` trả `complete: True` cho cả bốn phiếu.
