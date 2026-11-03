@@ -15,7 +15,7 @@ EVENT_FIELDS = {
     "decision": ("threshold", "evidence_checks", "final_label", "final_action", "dry_run", "rule", "reasons"),
     "error": ("kind", "message"),
     "limit": ("reason",),
-    "run_end": ("elapsed_s", "steps", "tokens_per_s"),
+    "run_end": ("elapsed_s", "steps", "tokens_per_s", "prompt_tokens", "output_tokens"),
 }
 
 

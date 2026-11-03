@@ -149,3 +149,24 @@ def test_install_targets_resolve_node_paths_and_explicit_node_gyp(tmp_path):
         "scripts/x.js", "lib/index.js"}
     assert install_targets(str(tmp_path), {"install": "node-gyp rebuild"}, True) == {"binding.gyp"}
     assert install_targets(str(tmp_path), {"install": "node scripts/x"}, True) == {"scripts/x.js"}
+
+
+def test_scan_names_each_reason_the_install_path_is_incomplete(tmp_path):
+    (tmp_path / "package.json").write_text(json.dumps({
+        "name": "native-like", "version": "1.0.0", "scripts": {"postinstall": "node postinstall.js"}}), encoding="utf-8")
+    (tmp_path / "postinstall.js").write_text(
+        "require('./binding');\nrequire('./missing-helper');\n"
+        "require('child_process').execSync(`npm install --no-save fallback-pkg`);\n", encoding="utf-8")
+    (tmp_path / "binding.js").write_text("module.exports = require('./addon.linux-x64.node');\n", encoding="utf-8")
+    data = extract_indicators(str(tmp_path))["data"]
+    assert data["truncated"] is True
+    assert data["incomplete"] == ["1 native binaries not in package (e.g. addon.linux-x64.node)",
+                                  "install source not readable: missing-helper/index.js"]
+    assert {"type": "external_install", "file": "postinstall.js", "line": 3} in [
+        {key: item[key] for key in ("type", "file", "line")} for item in data["indicators"]]
+
+
+def test_complete_scan_reports_no_reasons():
+    from pathlib import Path
+    data = extract_indicators(str(Path(__file__).parent / "fixtures" / "benign-package"))["data"]
+    assert (data["truncated"], data["incomplete"]) == (False, [])

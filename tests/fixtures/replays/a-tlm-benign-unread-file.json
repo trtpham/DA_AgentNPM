@@ -1,0 +1,82 @@
+{
+ "recorded": "2026-11-04",
+ "variant": "A-TLM",
+ "fixture": "benign-package",
+ "source_run": "i2base",
+ "expected": {
+  "valid": false,
+  "steps": 8,
+  "rule": "R2",
+  "final": "suspicious/review"
+ },
+ "replies": [
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"benign-install-fixture@1.0.0.0\",\n  \"label\": \"benign\",\n  \"confidence\": 0.95,\n  \"description\": \"Package installs a benign postinstall script that executes node code without executing it.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"Source file inspection: Read postinstall.js to verify content is valid JavaScript.\",\n      \"technique\": \"Read source file using read_file.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"postinstall.js\",\n        \"lines\": \"1\"\n      },\n      \"analysis\": \"The postinstall script contains only valid JavaScript code (no execution context). It does not contain any suspicious patterns, secrets, or malicious constructs.\",\n      \"impact\": \"No security impact; the package is benign.\"\n    },\n    {\n      \"behavior\": \"Dependency analysis: Check git_or_url_deps to confirm no untrusted dependencies exist.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Git or URL dependencies are marked as untrusted in the manifest, but no actual dependency is present. The package has no external dependencies to execute.\",\n      \"impact\": \"No security risk from missing dependencies.\"\n    },\n    {\n      \"behavior\": \"Binding analysis: Verify binding_gyp flag indicates no GYP bindings which could be exploited.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"The binding_gyp flag is false, meaning no GYP bindings are present. This prevents potential exploitation of GYP-specific vulnerabilities.\",\n      \"impact\": \"No security risk from unbound GYP.\"\n    },\n    {\n      \"behavior\": \"Lifecycle command analysis: Identify and verify lifecycle commands in package.json.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Lifecycle commands are present in package.json but do not execute code. They are standard npm lifecycle steps (postinstall, preinstall, etc.) that run before or after the application starts.\",\n      \"impact\": \"No security impact; these are legitimate npm lifecycle commands.\"\n    }\n  ],\n  \"action\": \"approve\",\n  \"remediation\": \"Continue using the package as-is. No remediation is required for a benign package.\"\n}"
+  },
+  {
+   "role": "assistant",
+   "content": "",
+   "tool_calls": [
+    {
+     "id": "call_8hkimghq",
+     "function": {
+      "index": 0,
+      "name": "read_file",
+      "arguments": {
+       "file": "postinstall.js"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"benign-install-fixture@1.0.0.0\",\n  \"label\": \"benign\",\n  \"confidence\": 0.95,\n  \"description\": \"Package installs a benign postinstall script that executes node code without executing it.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"Source file inspection: Read postinstall.js to verify content is valid JavaScript.\",\n      \"technique\": \"Read source file using read_file.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"postinstall.js\",\n        \"lines\": \"1\"\n      },\n      \"analysis\": \"The postinstall script contains only valid JavaScript code (no execution context). It does not contain any suspicious patterns, secrets, or malicious constructs.\",\n      \"impact\": \"No security impact; the package is benign.\"\n    },\n    {\n      \"behavior\": \"Dependency analysis: Check git_or_url_deps to confirm no untrusted dependencies exist.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Git or URL dependencies are marked as untrusted in the manifest, but no actual dependency is present. The package has no external dependencies to execute.\",\n      \"impact\": \"No security risk from missing dependencies.\"\n    },\n    {\n      \"behavior\": \"Binding analysis: Verify binding_gyp flag indicates no GYP bindings which could be exploited.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"The binding_gyp flag is false, meaning no GYP bindings are present. This prevents potential exploitation of GYP-specific vulnerabilities.\",\n      \"impact\": \"No security risk from unbound GYP.\"\n    },\n    {\n      \"behavior\": \"Lifecycle command analysis: Identify and verify lifecycle commands in package.json.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Lifecycle commands are present in package.json but do not execute code. They are standard npm lifecycle steps (postinstall, preinstall, etc.) that run before or after the application starts.\",\n      \"impact\": \"No security impact; these are legitimate npm lifecycle commands.\"\n    }\n  ],\n  \"action\": \"approve\",\n  \"remediation\": [\n    \"Continue using the package as-is. No remediation is required for a benign package.\"\n  ]\n}"
+  },
+  {
+   "role": "assistant",
+   "content": "",
+   "tool_calls": [
+    {
+     "id": "call_0cpszswo",
+     "function": {
+      "index": 0,
+      "name": "read_file",
+      "arguments": {
+       "file": "manifest.json"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"benign-install-fixture@1.0.0.0\",\n  \"label\": \"benign\",\n  \"confidence\": 0.95,\n  \"description\": \"Package installs a benign postinstall script that executes node code without executing it.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"Source file inspection: Read postinstall.js to verify content is valid JavaScript.\",\n      \"technique\": \"Read source file using read_file.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"postinstall.js\",\n        \"lines\": \"1\"\n      },\n      \"analysis\": \"The postinstall script contains only valid JavaScript code (no execution context). It does not contain any suspicious patterns, secrets, or malicious constructs.\",\n      \"impact\": \"No security impact; the package is benign.\"\n    },\n    {\n      \"behavior\": \"Dependency analysis: Check git_or_url_deps to confirm no untrusted dependencies exist.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Git or URL dependencies are marked as untrusted in the manifest, but no actual dependency is present. The package has no external dependencies to execute.\",\n      \"impact\": \"No security risk from missing dependencies.\"\n    },\n    {\n      \"behavior\": \"Binding analysis: Verify binding_gyp flag indicates no GYP bindings which could be exploited.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"The binding_gyp flag is false, meaning no GYP bindings are present. This prevents potential exploitation of GYP-specific vulnerabilities.\",\n      \"impact\": \"No security risk from unbound GYP.\"\n    },\n    {\n      \"behavior\": \"Lifecycle command analysis: Identify and verify lifecycle commands in package.json.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Lifecycle commands are present in package.json but do not execute code. They are standard npm lifecycle steps (postinstall, preinstall, etc.) that run before or after the application starts.\",\n      \"impact\": \"No security impact; these are legitimate npm lifecycle commands.\"\n    }\n  ],\n  \"action\": \"approve\",\n  \"remediation\": [\n    \"Continue using the package as-is. No remediation is required for a benign package.\"\n  ]\n}"
+  },
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"benign-install-fixture@1.0.0.0\",\n  \"label\": \"benign\",\n  \"confidence\": 0.95,\n  \"description\": \"Package installs a benign postinstall script that executes node code without executing it.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"Source file inspection: Read postinstall.js to verify content is valid JavaScript.\",\n      \"technique\": \"Read source file using read_file.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"postinstall.js\",\n        \"lines\": \"1\"\n      },\n      \"analysis\": \"The postinstall script contains only valid JavaScript code (no execution context). It does not contain any suspicious patterns, secrets, or malicious constructs.\",\n      \"impact\": \"No security impact; the package is benign.\"\n    },\n    {\n      \"behavior\": \"Dependency analysis: Check git_or_url_deps to confirm no untrusted dependencies exist.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Git or URL dependencies are marked as untrusted in the manifest, but no actual dependency is present. The package has no external dependencies to execute.\",\n      \"impact\": \"No security risk from missing dependencies.\"\n    },\n    {\n      \"behavior\": \"Binding analysis: Verify binding_gyp flag indicates no GYP bindings which could be exploited.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"The binding_gyp flag is false, meaning no GYP bindings are present. This prevents potential exploitation of GYP-specific vulnerabilities.\",\n      \"impact\": \"No security risk from unbound GYP.\"\n    },\n    {\n      \"behavior\": \"Lifecycle command analysis: Identify and verify lifecycle commands in package.json.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Lifecycle commands are present in package.json but do not execute code. They are standard npm lifecycle steps (postinstall, preinstall, etc.) that run before or after the application starts.\",\n      \"impact\": \"No security impact; these are legitimate npm lifecycle commands.\"\n    }\n  ],\n  \"action\": \"approve\",\n  \"remediation\": [\n    \"Continue using the package as-is. No remediation is required for a benign package.\"\n  ]\n}"
+  },
+  {
+   "role": "assistant",
+   "content": "",
+   "tool_calls": [
+    {
+     "id": "call_h4gj7yvj",
+     "function": {
+      "index": 0,
+      "name": "read_file",
+      "arguments": {
+       "file": "manifest.json"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"benign-install-fixture@1.0.0.0\",\n  \"label\": \"benign\",\n  \"confidence\": 0.95,\n  \"description\": \"Package installs a benign postinstall script that executes node code without executing it.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"Source file inspection: Read postinstall.js to verify content is valid JavaScript.\",\n      \"technique\": \"Read source file using read_file.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"postinstall.js\",\n        \"lines\": \"1\"\n      },\n      \"analysis\": \"The postinstall script contains only valid JavaScript code (no execution context). It does not contain any suspicious patterns, secrets, or malicious constructs.\",\n      \"impact\": \"No security impact; the package is benign.\"\n    },\n    {\n      \"behavior\": \"Dependency analysis: Check git_or_url_deps to confirm no untrusted dependencies exist.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Git or URL dependencies are marked as untrusted in the manifest, but no actual dependency is present. The package has no external dependencies to execute.\",\n      \"impact\": \"No security risk from missing dependencies.\"\n    },\n    {\n      \"behavior\": \"Binding analysis: Verify binding_gyp flag indicates no GYP bindings which could be exploited.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"manifest.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"The binding_gyp flag is false, meaning no GYP bindings are present. This prevents potential exploitation of GYP-specific vulnerabilities.\",\n      \"impact\": \"No security risk from unbound GYP.\"\n    },\n    {\n      \"behavior\": \"Lifecycle command analysis: Identify and verify lifecycle commands in package.json.\",\n      \"technique\": \"Read manifest data using read_manifest.\",\n      \"severity\": \"low\",\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": \"1-2\"\n      },\n      \"analysis\": \"Lifecycle commands are present in package.json but do not execute code. They are standard npm lifecycle steps (postinstall, preinstall, etc.) that run before or after the application starts.\",\n      \"impact\": \"No security impact; these are legitimate npm lifecycle commands.\"\n    }\n  ],\n  \"action\": \"approve\",\n  \"remediation\": [\n    \"Continue using the package as-is. No remediation is required for a benign package.\"\n  ]\n}"
+  }
+ ]
+}

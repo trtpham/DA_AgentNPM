@@ -285,7 +285,7 @@ def test_incomplete_install_source_scan_blocks_automatic_approval(tmp_path):
         {"role": "assistant", "content": json.dumps(proposed)}])
 
     def chat(_model, messages, final=False):
-        assert '"truncated": true' in messages[1]["content"]
+        assert "scan incomplete: require depth limit (2) at leaf.js:1" in messages[1]["content"]
         return next(replies)
 
     result, _ = analyze(str(tmp_path), "fake", chat=chat)
@@ -602,3 +602,91 @@ def test_reading_full_original_clears_pretty_preview_truncation(tmp_path):
     result, steps = analyze(str(tmp_path), "fake", max_steps=3,
                             chat=lambda *_args, **_kwargs: next(replies))
     assert (result.label, result.action, steps) == ("benign", "approve", 3)
+
+
+def test_review_reason_names_external_fetch_and_missing_binary(tmp_path):
+    (tmp_path / "package.json").write_text(json.dumps({
+        "name": "native-like", "version": "1.0.0", "scripts": {"postinstall": "node postinstall.js"}}), encoding="utf-8")
+    (tmp_path / "postinstall.js").write_text(
+        "require('./addon.node');\nrequire('child_process').execSync(`npm install --no-save fallback-pkg`);\n",
+        encoding="utf-8")
+    verdict = {"package": "native-like@1.0.0", "label": "benign", "confidence": 0.9,
+               "description": "Install script loads a native addon or installs a fallback",
+               "behaviors": [{"behavior": "Installs fallback package", "technique": "child_process.execSync",
+                              "severity": "low", "evidence": {"file": "postinstall.js", "lines": "1-2"},
+                              "analysis": "Runs npm install for a fallback.", "impact": "Fetches another package."}],
+               "action": "approve", "remediation": []}
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "postinstall.js"}}}]},
+        {"role": "assistant", "content": json.dumps(verdict)},
+    ])
+    writer = TraceWriter(tmp_path / "reports" / "run-1", "native-like@1.0.0")
+    result, _ = analyze(str(tmp_path), "fake", chat=lambda *_args, **_kwargs: next(replies), trace=writer)
+    decision = next(json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()
+                    if json.loads(line)["type"] == "decision")
+    assert (result.action, decision["rule"]) == ("review", "R7_review")
+    assert "install code fetches code outside the package at postinstall.js:2" in decision["reasons"][0]
+    assert "1 native binaries not in package (e.g. addon.node)" in decision["reasons"][0]
+
+
+def test_review_reason_names_hook_line_for_outside_command(tmp_path):
+    risky_package(tmp_path, "npx some-builder && node setup.js")
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "setup.js"}}}]},
+        {"role": "assistant", "content": json.dumps(benign_verdict("1-2"))},
+    ])
+    writer = TraceWriter(tmp_path / "reports" / "run-1", "risky-fixture@1.0.0")
+    analyze(str(tmp_path), "fake", chat=lambda *_args, **_kwargs: next(replies), trace=writer)
+    decision = next(json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()
+                    if json.loads(line)["type"] == "decision")
+    assert "hook runs code outside the package (npx) at package.json:1" in decision["reasons"][0]
+
+
+def test_token_usage_is_summed_into_run_end_and_kept_out_of_context(tmp_path):
+    seen = []
+    replies = iter([
+        {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "postinstall.js"}}}],
+         "prompt_tokens": 100, "output_tokens": 20, "output_seconds": 1.0},
+        {"role": "assistant", "content": json.dumps({
+            "package": "benign-install-fixture@1.0.0", "label": "benign", "confidence": 0.9,
+            "description": "Installation writes only a fixed local test marker",
+            "behaviors": [{"behavior": "Writes a local marker", "technique": "file write", "severity": "low",
+                           "evidence": {"file": "postinstall.js", "lines": "2"},
+                           "analysis": "Fixed text.", "impact": "Local marker."}],
+            "action": "approve", "remediation": []}),
+         "prompt_tokens": 150, "output_tokens": 30, "output_seconds": 1.5},
+    ])
+
+    def chat(_model, messages, final=False):
+        seen.extend(message for message in messages if message.get("role") == "assistant")
+        return next(replies)
+
+    writer = TraceWriter(tmp_path / "run-1", "benign-install-fixture@1.0.0")
+    analyze(FIXTURE, "fake", chat=chat, trace=writer)
+    end = [json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()][-1]
+    assert (end["prompt_tokens"], end["output_tokens"], end["tokens_per_s"]) == (250, 50, 20.0)
+    assert all("prompt_tokens" not in message for message in seen)
+
+
+def test_analyze_has_no_function_over_80_lines():
+    import ast
+    import inspect
+    from agent import run
+    tree = ast.parse(inspect.getsource(run))
+    long = [node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+            and node.end_lineno - node.lineno + 1 > 80]
+    assert long == []
+
+
+def test_first_prompt_lists_indicators_compactly(tmp_path):
+    risky_package(tmp_path)
+    prompts = []
+
+    def chat(_model, messages, final=False):
+        prompts.append(messages[1]["content"])
+        raise TimeoutError("stop after the first prompt")
+
+    with pytest.raises(TimeoutError):
+        analyze(str(tmp_path), "fake", chat=chat)
+    assert "setup.js:2 child_process: require('child_process').execFileSync('echo', [label]);" in prompts[0]
+    assert '"snippet"' not in prompts[0]

@@ -1,0 +1,34 @@
+{
+ "recorded": "2026-11-04",
+ "variant": "A-SLM",
+ "fixture": "canary-package",
+ "source_run": "i3",
+ "expected": {
+  "valid": true,
+  "steps": 2,
+  "rule": "R8",
+  "final": "suspicious/review"
+ },
+ "replies": [
+  {
+   "role": "assistant",
+   "content": "",
+   "tool_calls": [
+    {
+     "id": "call_1f0b91p8",
+     "function": {
+      "index": 0,
+      "name": "read_file",
+      "arguments": {
+       "file": "inspect.js"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"canary-fixture@1.0.0\",\n  \"label\": \"suspicious\",\n  \"confidence\": 0.95,\n  \"description\": \"Package attempts to read SSH private key and logs environment variables.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"Reads SSH private key from filesystem\",\n      \"technique\": \"T1547.002 (Exfiltration Over C2 Channel) / T1560.003 (Data Encrypted for Transmission)\",\n      \"severity\": \"high\",\n      \"evidence\": {\n        \"file\": \"inspect.js\",\n        \"lines\": 2\n      },\n      \"analysis\": \"Code explicitly reads '/home/agent/.ssh/id_rsa' using fs.readFileSync, a common location for SSH private keys. This action exposes credentials that could be used to impersonate the agent or access restricted systems.\",\n      \"impact\": \"Credential theft enables unauthorized system access and lateral movement.\"\n    },\n    {\n      \"behavior\": \"Logs environment variables\",\n      \"technique\": \"T1562 (Exfiltration Over Cloud Storage)\",\n      \"severity\": \"medium\",\n      \"evidence\": {\n        \"file\": \"inspect.js\",\n        \"lines\": 3\n      },\n      \"analysis\": \"Console.log outputs process.env.CANARY_ENV, potentially exposing sensitive configuration or secrets if the environment is unencrypted.\",\n      \"impact\": \"Information disclosure of environment-specific data.\"\n    }\n  ],\n  \"action\": \"deny\",\n  \"remediation\":\n    [\n      \"Remove package from dependencies immediately.\",\n      \"Audit for any cached credentials in agent environment.\",\n      \"Review postinstall scripts for similar credential exposure patterns.\"\n    ]\n}"
+  }
+ ]
+}

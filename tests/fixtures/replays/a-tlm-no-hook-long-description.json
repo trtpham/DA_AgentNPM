@@ -1,0 +1,50 @@
+{
+ "recorded": "2026-11-04",
+ "variant": "A-TLM",
+ "fixture": "no-hook-package",
+ "source_run": "i2base",
+ "expected": {
+  "valid": false,
+  "steps": 6,
+  "rule": "R2",
+  "final": "suspicious/review"
+ },
+ "replies": [
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"no-hook-fixture@1.0.0\",\n  \"label\": \"suspicious\",\n  \"confidence\": 0.85,\n  \"description\": \"Package lacks explicit install hook and contains no script lines to execute, making it a potential untrusted dependency without known security controls.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"No explicit install hook detected in package.json\",\n      \"technique\": \"Inspect package.json for 'scripts' section and look for 'install' or similar hooks\",\n      \"severity\": medium,\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": [\n          \"scripts\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\n          \"script_lines\": {},\n          \"git_or_url_deps\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\n          \"bin\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\n          \"has_binding_gyp\\\": false\n        ]\n      },\n      \"analysis\": \"The package.json shows 'scripts' with 'untrusted': true and empty content. No explicit install hook is present, which is a critical security gap as it means the dependency can be installed without triggering known security mechanisms.\",\n      \"impact\": \"Potential for uncontrolled installation of potentially malicious code or dependencies\"\n    },\n    {\n      \"behavior\": \"No script lines exist in package.json\",\n      \"technique\": \"Verify that scripts section is empty and no inline commands are present\",\n      \"severity\": low,\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": [\n          \"scripts\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\n          \"script_lines\": {},\n          \"git_or_url_deps\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\n          \"bin\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\n          \"has_binding_gyp\\\": false\n        ]\n      },\n      \"analysis\": \"The scripts section is empty and contains no script_lines. This means the package has no defined entry point for execution or command injection.\",\n      \"impact\": \"No mechanism to execute commands or inject malicious code\"\n    }\n  ],\n  \"action\": \"review\",\n  \"remediation\": \"Review package.json for explicit install hooks, inline scripts, and any other security controls. If no hook is present, consider using a dependency manager with proper installation hooks (e.g., pipenv, tox) or use the 'untrusted' flag to prevent automatic execution.\"\n}"
+  },
+  {
+   "role": "assistant",
+   "content": "",
+   "tool_calls": [
+    {
+     "id": "call_jhuwud9q",
+     "function": {
+      "index": 0,
+      "name": "read_file",
+      "arguments": {
+       "file": "package.json"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"no-hook-fixture@1.0.0\",\n  \"label\": \"suspicious\",\n  \"confidence\": 0.85,\n  \"description\": \"Package lacks explicit install hook and contains no script lines to execute, making it a potential untrusted dependency without known security controls.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"No explicit install hook detected in package.json\",\n      \"technique\": \"Inspect package.json for 'scripts' section and look for 'install' or similar hooks\",\n      \"severity\": \"medium\",\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": \"scripts\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"script_lines\\\": {},\\n          \\\"git_or_url_deps\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"bin\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"has_binding_gyp\\\": false\\n      },\\n      \"\n  },\"analysis\": \"The package.json shows 'scripts' with 'untrusted': true and empty content. No explicit install hook is present, which is a critical security gap as it means the dependency can be installed without triggering known security mechanisms.\",\n  \"impact\": \"Potential for uncontrolled installation of potentially malicious code or dependencies\"\n}\n  ],\"action\":\"review\",\"remediation\": [\n    \"Review package.json for explicit install hooks, inline scripts, and any other security controls. If no hook is present, consider using a dependency manager with proper installation hooks (e.g., pipenv, tox) or use the 'untrusted' flag to prevent automatic execution.\"\n  ]\n}"
+  },
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"no-hook-fixture@1.0.0\",\n  \"label\": \"suspicious\",\n  \"confidence\": 0.85,\n  \"description\": \"Package lacks explicit install hook and contains no script lines to execute, making it a potential untrusted dependency without known security controls.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"No explicit install hook detected in package.json\",\n      \"technique\": \"Inspect package.json for 'scripts' section and look for 'install' or similar hooks\",\n      \"severity\": \"medium\",\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": \"scripts\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"script_lines\\\": {},\\n          \\\"git_or_url_deps\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"bin\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"has_binding_gyp\\\": false\\n      },\\n      \"\n  },\"analysis\": \"The package.json shows 'scripts' with 'untrusted': true and empty content. No explicit install hook is present, which is a critical security gap as it means the dependency can be installed without triggering known security mechanisms.\",\n  \"impact\": \"Potential for uncontrolled installation of potentially malicious code or dependencies\"\n}\n  ],\"action\":\"review\",\"remediation\": [\n    \"Review package.json for explicit install hooks, inline scripts, and any other security controls. If no hook is present, consider using a dependency manager with proper installation hooks (e.g., pipenv, tox) or use the 'untrusted' flag to prevent automatic execution.\"\n  ]\n}"
+  },
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"no-hook-fixture@1.0.0\",\n  \"label\": \"suspicious\",\n  \"confidence\": 0.85,\n  \"description\": \"Package lacks explicit install hook and contains no script lines to execute, making it a potential untrusted dependency without known security controls.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"No explicit install hook detected in package.json\",\n      \"technique\": \"Inspect package.json for 'scripts' section and look for 'install' or similar hooks\",\n      \"severity\": \"medium\",\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": \"scripts\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"script_lines\\\": {},\\n          \\\"git_or_url_deps\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"bin\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"has_binding_gyp\\\": false\\n      },\\n      \"\n  },\"analysis\": \"The package.json shows 'scripts' with 'untrusted': true and empty content. No explicit install hook is present, which is a critical security gap as it means the dependency can be installed without triggering known security mechanisms.\",\n  \"impact\": \"Potential for uncontrolled installation of potentially malicious code or dependencies\"\n}\n  ],\"action\":\"review\",\"remediation\": [\n    \"Review package.json for explicit install hooks, inline scripts, and any other security controls. If no hook is present, consider using a dependency manager with proper installation hooks (e.g., pipenv, tox) or use the 'untrusted' flag to prevent automatic execution.\"\n  ]\n}"
+  },
+  {
+   "role": "assistant",
+   "content": "{\n  \"package\": \"no-hook-fixture@1.0.0\",\n  \"label\": \"suspicious\",\n  \"confidence\": 0.9,\n  \"description\": \"Package lacks explicit install hook and contains no script lines to execute, making it a potential untrusted dependency without known security controls.\",\n  \"behaviors\": [\n    {\n      \"behavior\": \"No explicit install hook detected in package.json\",\n      \"technique\": \"Inspect package.json for 'scripts' section and look for 'install' or similar hooks\",\n      \"severity\": \"medium\",\n      \"evidence\": {\n        \"file\": \"package.json\",\n        \"lines\": \"scripts\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"script_lines\\\": {},\\n          \\\"git_or_url_deps\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"bin\\\": {\\\"untrusted\\\": true, \\\"content\\\": {}},\\n          \\\"has_binding_gyp\\\": false\\n      },\\n      \"\n    },\"analysis\": \"The package.json shows 'scripts' with 'untrusted': true and empty content. No explicit install hook is present, which is a critical security gap as it means the dependency can be installed without triggering known security mechanisms.\",\n  \"impact\": \"Potential for uncontrolled installation of potentially malicious code or dependencies\"\n}\n  ],\n  \"action\": \"review\",\n  \"remediation\": [\n    \"Review package.json for explicit install hooks, inline scripts, and any other security controls. If no hook is present, consider using a dependency manager with proper installation hooks (e.g., pipenv, tox) or use the 'untrusted' flag to prevent automatic execution.\"\n  ]\n}"
+  }
+ ]
+}

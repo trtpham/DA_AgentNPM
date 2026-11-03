@@ -55,3 +55,10 @@ def test_unexplained_risky_lines_block_only_approval():
     assert (blocked["label"], blocked["action"], blocked["rule"]) == ("benign", "review", "R7_risk")
     assert "setup.js:2" in blocked["reasons"][0]
     assert decide(verdict(), evidence, unexplained_risks=["setup.js:2"])["action"] == "deny"
+
+
+def test_review_reasons_are_listed_in_r7_review():
+    evidence = [{"file": "setup.js", "lines": "1", "exists": True}]
+    decision = decide(verdict("benign"), evidence, review_reasons=["native binary not in package: a.node"])
+    assert decision["rule"] == "R7_review"
+    assert decision["reasons"] == ["Human review required: native binary not in package: a.node"]

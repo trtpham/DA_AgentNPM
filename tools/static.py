@@ -244,6 +244,9 @@ def deobfuscate(package: str, file: str) -> dict:
 
 
 INDICATORS = {
+    # A command string that fetches or builds code outside the package, e.g. execSync(`npm install ...`).
+    "external_install": re.compile(r"\b(?:execSync|exec|execFileSync|execFile|spawnSync|spawn)\s*\(\s*[`'\"]\s*"
+                                   r"(?:npm|npx|pnpm|yarn|curl|wget|node-gyp|prebuild-install)\b"),
     "url": re.compile(r"https?://[^\s\"'<>]{3,}"),
     "ip": re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
     "child_process": re.compile(r"\bchild_process\b"),
@@ -278,7 +281,9 @@ def extract_indicators(package: str) -> dict:
                 seen_environment.add(file)
             found.append({"type": kind, "file": file, "line": line, "snippet": snippet[:120]})
 
-        truncated = False
+        # Why the install path could not be scanned completely; any entry blocks automatic approval.
+        incomplete = []
+        native = []  # per-platform .node files are reported as one reason
         for hook in LIFECYCLE:
             if hook not in scripts:
                 continue
@@ -295,7 +300,10 @@ def extract_indicators(package: str) -> dict:
             try:
                 safe = _safe_file(package, relative)
             except (OSError, ValueError):
-                truncated = True
+                if relative.endswith(".node"):
+                    native.append(relative)
+                else:
+                    incomplete.append(f"install source not readable: {relative}")
                 continue
             if safe.suffix not in (".js", ".cjs", ".mjs", ".json", ".sh", ".gyp"):
                 continue
@@ -306,7 +314,7 @@ def extract_indicators(package: str) -> dict:
                 if safe.suffix in (".js", ".cjs", ".mjs"):
                     for required in RELATIVE_REQUIRE.findall(line) + RELATIVE_IMPORT.findall(line):
                         if depth == 2:
-                            truncated = True
+                            incomplete.append(f"require depth limit (2) at {relative}:{number}")
                             continue
                         target = Path(relative).parent / required
                         if not target.suffix:
@@ -315,8 +323,14 @@ def extract_indicators(package: str) -> dict:
                         pending.append((target.as_posix(), depth + 1))
                 if len(found) >= 30:
                     break
-        return {"ok": True, "data": {"untrusted": True, "indicators": found,
-                                      "truncated": truncated or bool(pending) or len(found) >= 30}, "error": None}
+        if native:
+            incomplete.insert(0, f"{len(native)} native binaries not in package (e.g. {', '.join(sorted(native)[:2])})")
+        if len(found) >= 30:
+            incomplete.append("indicator limit (30) reached")
+        elif any(file not in seen and "node_modules" not in Path(file).parts for file, _ in pending):
+            incomplete.append("file limit (100) reached")
+        return {"ok": True, "data": {"untrusted": True, "indicators": found, "truncated": bool(incomplete),
+                                      "incomplete": incomplete[:10]}, "error": None}
     except (OSError, ValueError) as error:
         return {"ok": False, "data": None, "error": str(error)[:300]}
 
