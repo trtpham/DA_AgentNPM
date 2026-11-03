@@ -60,7 +60,7 @@ Không thêm chức năng mới; nhóm chỉ làm tốt hơn phần đã có. Ch
 
 - **I1 — lý do quyết định cụ thể:** 10/10 gói swc nêu đúng `postinstall.js:125`, 18 file `.node` thiếu và `swc.wasi.cjs` không có trong gói.
 - **I2 — mô hình nhỏ ổn định hơn:** trên 3 mẫu thử × 3 lần, A-TLM tăng từ 2/9 lên 9/9 kết luận hợp lệ; A-LLM và A-SLM giữ 9/9. Cách làm: giới hạn độ dài ngay lúc sinh câu trả lời; định dạng kết luận không bị nới.
-- **I3 — tốc độ:** **chưa đạt mục tiêu, đang đo lại.** Hệ thống giờ ghi số token của từng lượt, và danh sách dấu hiệu gửi cho mô hình đã rút gọn. A-TLM nhanh hơn (trung vị 20,5 → 9,8 giây/gói), A-SLM nhanh hơn (17,2 → 13,1 giây). Riêng A-LLM chậm hơn (50,7 → 83,5 giây), vì phần chậm nhất là độ dài câu trả lời (khoảng 12 token/giây). Nhóm đã siết độ dài câu trả lời; trên mẫu thử vẫn 27/27 kết luận hợp lệ và đang đo lại trên 13 gói dev.
+- **I3 — tốc độ: đạt một phần.** Trên 13 gói dev, thời gian trung vị mỗi gói giảm với A-TLM (20,5 → 8,4 giây, −59%) và A-SLM (17,2 → 12,0 giây, −30%). **A-LLM chậm hơn** (50,7 → 82,2 giây). Cả ba vẫn 13/13 kết luận hợp lệ, và hành động giữ nguyên ở 38/39 lượt. Nhóm đang tìm nguyên nhân A-LLM chậm trước khi sửa tiếp.
 - **I4 — mã nguồn dễ bảo trì:** tách hàm phân tích dài khoảng 340 dòng thành các bước nhỏ (không hàm nào quá 80 dòng). Thêm 5 bài kiểm thử phát lại nguyên văn câu trả lời thật của mô hình. Bộ kiểm thử: **115/115**.
 
 ## 5. Đề xuất tuần 5 và cách thực hiện

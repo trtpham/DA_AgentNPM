@@ -48,7 +48,7 @@ Các vấn đề đã thấy trong trace là cơ sở cho kế hoạch:
 
 ### I3. Tốc độ (không đổi kết luận)
 
-> **Trạng thái 04/11: CHƯA ĐẠT, đang đo lại.** A-TLM/A-SLM nhanh hơn; A-LLM lần đo 1 chậm hơn (50,7 → 83,5 giây), đã siết đầu ra.
+> **Trạng thái 04/11: ĐẠT một phần.** Giây/gói trung vị trên 13 gói dev: A-TLM −59%, A-SLM −30%, **A-LLM +62% (không đạt)**. Token vào/ra đã được ghi trong trace. Còn mở: tìm nguyên nhân A-LLM chậm ([nhật ký tuần 5](tuan-05.md)).
 
 - **Vì sao:** A-LLM mất khoảng 50–100 giây cho một gói swc. Chạy lô 76 gói × 3 model mất nhiều giờ.
 - **Việc làm:**

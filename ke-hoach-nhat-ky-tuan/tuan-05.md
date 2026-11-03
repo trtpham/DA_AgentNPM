@@ -58,8 +58,17 @@ Sandbox trả kết quả có thể tái hiện và không chạm secret thật;
 | A-LLM hợp lệ | 9/9 | 9/9 (27,9 giây TB) |
 
   - Ghi chú: trên fixture canary (đọc khóa SSH, in biến môi trường, không gửi đi đâu), A-SLM và A-TLM nay ra `suspicious/review` thay vì `malicious/deny`. Theo AGENTS §3 (không có đích gửi ra ngoài), nhãn này vẫn hợp lý và hành động cuối vẫn an toàn.
-- **I3 — tốc độ: CHƯA ĐẠT, đang đo lại.**
+- **I3 — tốc độ: CHƯA ĐẠT với A-LLM (đã đo xong lần 2).**
   - Trace `run_end` giờ có `prompt_tokens`, `output_tokens`, `tokens_per_s`; danh sách chỉ báo trong prompt được rút gọn thành dòng `file:dòng loại: snippet`.
   - Lần đo 1 trên 13 gói dev (`i4-dev-*`), trung vị giây/gói: A-TLM 20,5 → 9,8; A-SLM 17,2 → 13,1; **A-LLM 50,7 → 83,5 (chậm hơn)**. Nguyên nhân: đầu ra tới khoảng 880 token ở tốc độ khoảng 12 token/giây.
-  - Đã siết giới hạn đầu ra; fixture vẫn 27/27 hợp lệ. Lần đo 2 trên 13 gói dev (`i3b-dev-*`) đang chạy, kết quả sẽ ghi bổ sung.
+  - Đã siết giới hạn đầu ra (tối đa 3 behavior, analysis/impact ≤ 200 ký tự); fixture vẫn 27/27 hợp lệ (`i3b-*`).
+  - Lần đo 2 trên 13 gói dev (`i3b-dev-*`), so với mốc tuần 4 (`week4-dev-*`):
+
+| Model | Kết luận hợp lệ | Giây/gói trung vị | Hành động giữ nguyên | swc có lý do `postinstall.js:125` |
+| --- | --- | --- | --- | --- |
+| A-TLM | 3/13 → **13/13** | 20,5 → 8,4 (**−59%**) | 13/13 | 10/10 |
+| A-SLM | 13/13 → 13/13 | 17,2 → 12,0 (**−30%**) | 12/13 | 10/10 |
+| A-LLM | 13/13 → 13/13 | 50,7 → 82,2 (**+62%**) | 13/13 | 10/10 |
+
+  - **Kết luận I3:** đạt với A-TLM và A-SLM, **không đạt với A-LLM** (mục tiêu −25%). Siết độ dài đầu ra không làm A-LLM nhanh hơn trên gói thật, nên giả thuyết "chậm do câu trả lời dài" chưa đủ. Bước tiếp: đo riêng từng lượt (token vào/ra, thời gian nạp prompt so với thời gian sinh) và tải GPU khi chạy, rồi mới sửa tiếp. Ca A-SLM đổi hành động là fixture canary: `deny` → `review`, như đã ghi ở I2.
 - **Bằng chứng phiếu kiểm tra chéo:** `data/review_evidence.py` đọc tĩnh trong container dùng một lần cho cả 4 lượt; **76/76 dòng không có vấn đề tự động**. File bằng chứng ở `data/review_rounds/evidence/` (Git ignore). Các cột `decision`/`reviewer`/`reviewed_at` chờ người kiểm tra chéo điền.
