@@ -127,3 +127,17 @@ def test_samples_directory_cannot_be_used_as_reports_root():
     forbidden = Path(__file__).parents[1] / "data" / "samples"
     with pytest.raises(ValueError, match="data/samples"):
         make_server(forbidden, 0)
+
+
+def test_ui_assets_are_served_and_never_parse_trace_as_html(viewer):
+    server, _ = viewer
+    status, headers, body = request(server, "GET", "/app.js")
+    assert status == 200 and headers["Content-Type"].startswith("text/javascript")
+    source = body.decode("utf-8")
+    for sink in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "new Function"):
+        assert sink not in source
+    assert "textContent" in source
+    status, headers, _ = request(server, "GET", "/style.css")
+    assert status == 200 and headers["Content-Type"].startswith("text/css")
+    _, _, page = request(server, "GET", "/")
+    assert b'src="/app.js"' in page and b"<script>" not in page

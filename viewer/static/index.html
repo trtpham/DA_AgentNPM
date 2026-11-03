@@ -4,9 +4,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trace agent npm</title>
 <link rel="stylesheet" href="/style.css">
-<main>
-  <h1>Trace agent npm</h1>
-  <p>Server cục bộ đang hoạt động. Giao diện replay và live sẽ có ở G3–G4.</p>
-  <a href="/api/runs">Xem danh sách run</a>
+<script src="/app.js" defer></script>
+<body>
+<main class="shell">
+  <header class="masthead">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>NPM AGENT <small>/ trình xem trace</small></span></div>
+    <div class="session-status" id="session-status"><span class="status-dot" aria-hidden="true"></span><span id="run-status" aria-live="polite">Đang tải danh sách run</span></div>
+  </header>
+
+  <section class="picker" aria-labelledby="picker-title">
+    <div class="section-head"><h2 id="picker-title">Chọn lượt chạy</h2><span class="count" id="package-count"></span></div>
+    <div class="picker-row">
+      <label for="run-select">Run</label>
+      <select id="run-select"></select>
+    </div>
+    <ul class="packages" id="packages" aria-label="Các gói trong run"></ul>
+  </section>
+
+  <div class="workbench">
+    <section class="activity" aria-labelledby="flow-title">
+      <div class="section-head"><h2 id="flow-title">Nhật ký điều tra</h2><span id="step-count" class="count">0 sự kiện</span></div>
+      <div class="transport" aria-label="Điều khiển phát lại">
+        <button type="button" id="previous">Bước trước</button><button type="button" class="primary" id="play">Phát lại</button><button type="button" id="next">Bước tiếp</button>
+        <label for="speed">Tốc độ</label><select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
+        <span id="replay-position" class="replay-position">0 / 0</span>
+      </div>
+      <div class="current-action" aria-live="polite"><small>BƯỚC ĐANG XEM</small><strong id="current-action-text">Chưa chọn gói</strong><p id="current-action-detail">Chọn một run và một gói để xem lại từng bước của agent.</p></div>
+      <ol class="timeline" id="timeline"></ol>
+    </section>
+    <aside class="result pending" id="result" aria-labelledby="result-title">
+      <h2 id="result-title">Quyết định</h2>
+      <p class="result-note">Quyết định cuối do luật trong <code>agent/decide.py</code> đưa ra, luôn ở chế độ dry-run; chưa phải nhãn dữ liệu chuẩn.</p>
+      <div id="result-body"><p class="pending-copy">Chưa có quyết định</p></div>
+    </aside>
+  </div>
+
+  <footer class="footnote">Trình xem chỉ đọc trace JSONL trên máy này. Nội dung lấy từ gói và lời mô hình được hiển thị như dữ liệu không tin cậy; trang không chạy mã npm. Kết luận vẫn cần người kiểm tra.</footer>
 </main>
+</body>
 </html>
