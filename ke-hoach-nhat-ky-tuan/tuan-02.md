@@ -140,3 +140,7 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 **Điều kiện hoàn tất:** mỗi nhãn dùng để tính điểm có đúng nguồn, đúng `file:dòng`, kết luận phù hợp mã và dấu xác nhận kiểm tra chéo thật; các dòng thiếu bằng chứng được loại khỏi bộ đánh giá. Nếu sau khi loại không còn đủ ba lớp ở cả `dev` và `test`, chưa báo cáo độ chính xác ba lớp. Năm ứng viên metadata 404 giữ trạng thái không khả dụng; việc gán nhãn cả 450 gói là giai đoạn mở rộng, không chặn mốc dữ liệu v1.
 
 **Trạng thái lúc lập kế hoạch:** 4 lượt kiểm tra chéo mã gốc còn mở. Không đánh dấu tuần 2 hoàn tất cho đến khi điều kiện nghiệm thu ở trên được kiểm tra thật.
+
+### Bổ sung lượt 1 — đối chiếu nguồn 20 nhãn lành ngày 2026-11-01
+
+Đã kiểm tra tĩnh 20/20 nhãn `benign` trong container dùng một lần: tên và phiên bản, URL tarball, SHA-512 khớp `dist.integrity`, file bằng chứng và phạm vi dòng đều hợp lệ; không chạy install script. Kết quả chi tiết ở [`data/REVIEW_WEEK2.md`](../data/REVIEW_WEEK2.md). Đây mới là kiểm tra tự động về nguồn và vị trí bằng chứng. Người kiểm tra chéo khác người gán nhãn ban đầu vẫn cần đọc ý nghĩa hành vi, xác nhận tên/ngày; vì vậy lượt 1 và mốc dữ liệu v1 **chưa đóng**.

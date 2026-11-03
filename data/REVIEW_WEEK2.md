@@ -192,3 +192,9 @@ Sàng lọc batch 01 (18 gói) bằng `npm pack --ignore-scripts` trong Docker d
 Lượt QA đọc lại độc lập với bước ghi CSV, không tải archive độc hại: 76 dòng nhãn có đủ 11 cột, không trùng ID hoặc cặp tên/phiên bản; 8 cụm không rò giữa `dev` và `test`; đường dẫn file và cú pháp dòng bằng chứng hợp lệ; URL nguồn dùng HTTPS. Cả 76 cặp tên/phiên bản xuất hiện trong hồ sơ này. Bộ 450 ứng viên gồm 25 batch × 18 gói, không trùng; 445 metadata xác minh được, 5 không còn; 450/450 vẫn là `needs_code_review`.
 
 Chạy lại bộ chia cụm đã chuyển 17 dòng của MUT-4831 sang `test`, tạo đủ ba nhãn ở cả `dev` và `test` mà không đổi nhãn hoặc bằng chứng. **Chưa xác minh lại byte mã và `file:dòng` từ nguồn gốc trong lượt QA này**; đây không phải chữ ký kiểm tra chéo của Phạm Minh Triết hay bằng chứng độ chính xác agent.
+
+## Đối chiếu tĩnh lại 20 nhãn lành — 2026-11-01
+
+Trong container Python dùng một lần, chỉ đọc từ npm Registry và không chạy script gói: cả **20/20** nhãn `benign` có đúng tên/phiên bản trong metadata và `package.json`, URL tarball khớp metadata, SHA-512 tarball khớp `dist.integrity`, file bằng chứng tồn tại và mọi dòng được trích dẫn đều nằm trong file. Container chỉ gắn `labels.csv` và chương trình kiểm tra ở chế độ đọc; không ghi tarball hoặc mã gói lên máy/Git. Lượt kiểm tra trả `checked=20, passed=20, failed=[]`.
+
+Đây là **kiểm tra tự động về nguồn và vị trí bằng chứng**, chưa phải đánh giá độc lập ý nghĩa hành vi của từng đoạn mã. Người kiểm tra chéo khác người ghi nhãn ban đầu vẫn phải đọc mã và xác nhận tên/ngày trước khi dùng 20 nhãn này làm đáp án chuẩn.
