@@ -59,3 +59,7 @@
 - **PASS — môi trường:** `ollama list` có đủ `qwen3.5:9b/4b/0.8b`; Python 3.14.2 với `requirements.txt` (pydantic 2.13.2, pytest 9.1.1); Node 24.13.0, npm 11.6.2; Docker 29.1.3. `AGENTS.md` gốc đã được đưa vào repo.
 - **PASS — probe 20 lượt/model với công cụ giả, chạy lại hôm nay:** A-LLM 20/20 tool call, 20/20 JSON, 14.95 token/s; A-SLM 20/20, 20/20, 49.14 token/s; A-TLM 20/20, 20/20, 177.31 token/s. Probe không dùng mã gói và không đo độ chính xác.
 - **Còn thủ tục, chỉ người thật làm được:** reviewer khác người thực hiện ký nghiệm thu tuần 1. Mọi hạng mục kỹ thuật của tuần 1 đã có bằng chứng.
+
+## Nghiệm thu ngày 2026-11-04
+
+- **TV2 Phạm Minh Triết** xác nhận trong chat đã review code agent và **ký nghiệm thu tuần 01**. Claude ghi lại theo lời PO, không ký thay.

@@ -2,7 +2,9 @@
 
 **Thành viên:** Lê Đặng Thiên Phước · Phạm Minh Triết · Nguyễn Đình Thiên
 
-**Ngày cập nhật:** 01/11/2026
+**Giai đoạn:** Công cụ đọc, agent và sandbox cơ bản · **Ngày báo cáo:** 01/11/2026 · **Cập nhật:** 04/11/2026 · **Nghiệm thu:** TV2 Phạm Minh Triết, 04/11/2026
+
+> Mục 1–6 giữ nguyên nội dung đã trình bày ngày 01/11. Những vướng mắc ở mục 4 đã được xử lý; kết quả mới ở **mục 7**.
 
 Thưa thầy, trong tuần 3 nhóm đã cho các agent chạy được ở mức thử nghiệm. Khi kiểm tra một gói, nhóm có thể cho thầy xem agent đọc những file nào, nhận ra dấu hiệu gì và dựa vào đâu để đưa ra đề xuất. Nhóm mới chứng minh được quy trình hoạt động; độ chính xác của AI vẫn cần được đánh giá trên dữ liệu đã kiểm tra chéo.
 
@@ -58,7 +60,7 @@ Nhóm chọn phát lại lượt chạy đã lưu để buổi demo liền mạc
 
 ## 4. Nhóm đã xử lý được gì, còn vướng gì?
 
-Ban đầu A-LLM bị lặp khi kiểm tra `esbuild` và không kết thúc trong giới hạn 15 bước. Nhóm đã điều chỉnh lượng thông tin mô hình có thể ghi nhớ trong một lượt, sau đó agent hoàn tất cùng gói này trong 6 bước. A-LLM và A-SLM cũng đã chạy trên mẫu mô phỏng hành vi đáng ngờ và đề xuất chặn. Bộ kiểm thử phần mềm hiện đạt **72/72 bài**.
+Ban đầu A-LLM bị lặp khi kiểm tra `esbuild` và không kết thúc trong giới hạn 15 bước. Nhóm đã điều chỉnh lượng thông tin mô hình có thể ghi nhớ trong một lượt, sau đó agent hoàn tất cùng gói này trong 6 bước. A-LLM và A-SLM cũng đã chạy trên mẫu mô phỏng hành vi đáng ngờ và đề xuất chặn. Bộ kiểm thử phần mềm khi đó đạt **72/72 bài** (ngày 04/11: 115/115, xem mục 7).
 
 Nhóm vẫn thấy A-LLM đưa ra **ba kết quả sai định dạng trước kết quả hợp lệ cuối cùng** trong lượt `esbuild`. Do đó nhóm chỉ báo cáo rằng agent đã chạy được, chưa khẳng định nó ổn định hay dự đoán chính xác.
 
@@ -79,3 +81,38 @@ Nhóm đã đưa báo cáo, code và dữ liệu hiện có lên [GitHub của d
 3. Khi có một tập nhãn đã được kiểm tra chéo, nhóm sẽ đánh giá các mô hình trên cùng tập đó và trình bày cả những ca làm sai. Nhóm sẽ chụp ảnh thật trong buổi báo cáo tiếp theo. Việc nối môi trường cách ly vào agent sẽ thực hiện sau khi phần dữ liệu và cách đánh giá đã rõ.
 
 Tóm lại, nhóm đã có thể **cho thầy xem agent làm việc ở mức bản thử nghiệm**. Việc quan trọng nhất tiếp theo là chốt dữ liệu đáng tin cậy và kiểm tra agent chạy ổn định đến đâu, trước khi báo cáo độ chính xác.
+
+## 7. Cập nhật sau buổi báo cáo (03–04/11/2026)
+
+**Nguyên nhân A-TLM không kết thúc.** Nhóm đọc lại dấu vết từng bước. Mô hình nhỏ không hỏng ngẫu nhiên mà **lặp đúng một câu trả lời sai** suốt 13 lượt:
+- `description` quá 15 từ;
+- ghi cả đoạn mã vào ô số dòng;
+- thiếu phiên bản gói.
+
+Lý do: mỗi lượt mô hình nhận lại cùng một nội dung nên cũng sinh lại cùng một câu trả lời.
+
+**Cách xử lý (không nới lỏng định dạng kết luận):**
+- Phần mềm tự điền tên và phiên bản gói.
+- Khi lỗi lặp lại, lượt sau đổi seed để mô hình thử cách khác; lặp 4 lần thì dừng sớm và chuyển cho người xem lại.
+- Giới hạn độ dài ngay lúc mô hình sinh câu trả lời.
+- Ô số dòng chỉ nhận số. Mọi dòng mô hình dẫn ra vẫn được đọc lại để kiểm chứng.
+
+Kết quả trên 3 mẫu thử × 3 lần chạy:
+
+| Mô hình | Trước (01/11) | Sau (04/11) | Số bước TB | Thời gian TB |
+| --- | --- | --- | --- | --- |
+| A-LLM | chạy được | **9/9** kết luận hợp lệ | 2,0 | 27 giây |
+| A-SLM | chạy được | **9/9** | 2,3 | 9 giây |
+| A-TLM | hết 15 bước, chưa có kết luận | **9/9** | 3,0 | 6 giây |
+
+Kết quả cuối đúng như mong đợi:
+- mẫu lành → cho phép (chạy thử);
+- mẫu chạm dữ liệu mồi → chặn;
+- mẫu không có script cài đặt → chuyển người xem lại.
+
+**Phần khác đã hoàn thành:**
+- Giao diện xem lại và theo dõi trực tiếp đã xong, bằng tiếng Việt. Nhóm đã thử trên trình duyệt, kể cả chuỗi tấn công XSS cài trong mẫu.
+- Sandbox Docker chạy lại thành công trên 3 mẫu: mẫu đọc dữ liệu mồi bị ghi nhận đúng.
+- Ngày 04/11, bộ kiểm thử đạt **115/115 bài**.
+
+**Vẫn giữ giới hạn.** Đây là kết quả trên mẫu mô phỏng vô hại, không phải độ chính xác trên gói npm thật. Kết quả trên gói npm thật nằm ở [báo cáo tuần 4](BaoCaoTienDo_Tuan04.md).

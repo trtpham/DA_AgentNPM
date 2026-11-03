@@ -180,7 +180,7 @@ EVIDENCE_REFERENCES: yêu cầu trực tiếp trong chat “duyệt tất cả 4
 DECISION: APPROVED FOR IMPLEMENTATION
 PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-03 Asia/Saigon
-EVIDENCE_REFERENCES: trả lời trực tiếp trong chat với Claude “Duyệt, làm A rồi B” cho kế hoạch [`../KE_HOACH_XU_LY_TON_DONG_2026-11-03.md`](../KE_HOACH_XU_LY_TON_DONG_2026-11-03.md), mục 5.1.
+EVIDENCE_REFERENCES: trả lời trực tiếp trong chat với Claude “Duyệt, làm A rồi B” cho kế hoạch [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_XU_LY_TON_DONG_2026-11-03.md`](../../ke-hoach-nhat-ky-tuan/KE_HOACH_XU_LY_TON_DONG_2026-11-03.md), mục 5.1.
 
 - AS-IS: 72/72 pytest PASS tại `cbdbcc2`. Trace `reports/week3-final-tlm-*` cho thấy A-TLM lặp cùng verdict sai 13 lượt vì vòng sửa xóa lượt sai khỏi ngữ cảnh; `decide()` cho approve chỉ dựa vào nhãn và độ tin cậy của model; lệnh gọi mã ngoài gói (`node-gyp`, `npx`, `curl`) không làm phân tích bị coi là chưa đủ.
 - Phạm vi: `agent/run.py`, `agent/decide.py`, `tools/static.py`, test và fixture vô hại liên quan. Thêm luật chặn approve `R7_risk`; coi lệnh gọi mã ngoài gói là phân tích chưa đủ; code tự điền định danh gói; dừng sớm khi verdict lặp; phân biệt đầu ra bị cắt.
@@ -204,3 +204,27 @@ EVIDENCE_REFERENCES: yêu cầu trong chat với Claude “thực hiện các vi
   - test, README, nhật ký tuần.
 - Phạm vi chạy: GuardDog cài vào `.venv-guarddog`. Chỉ `npm pack --ignore-scripts` và đọc tĩnh 10 phiên bản `@swc/core` thuộc `dev` trong `labels.csv` cùng 3 fixture vô hại. Không chạy hook, không đọc `data/samples/`, không đưa tarball vào Git, không chạy trên mẫu độc hay 450 ứng viên.
 - Owner: Claude. Reviewer: TV2 (Phạm Minh Triết) cho agent/quyết định; TV3 cho baseline/metrics. Rollback: revert commit của đợt này.
+
+## Gate B0 — I1: lý do quyết định cụ thể (2026-11-03)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-03 Asia/Saigon
+EVIDENCE_REFERENCES: trả lời trong chat với Claude “Duyệt, làm I1” cho [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md`](../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md), mục I1.
+
+- AS-IS (commit `4ff2132`): `R7_review` chỉ ghi "Install path not fully reviewed". Với 10 bản `@swc/core`, kết quả `review` đúng nhưng đến từ việc bộ quét đánh dấu "thiếu" khi gặp file `.node`, không phải vì nhận ra lệnh `execSync("npm install …")` ở `postinstall.js:125`.
+- Phạm vi: `tools/static.py`, `agent/run.py`, `agent/decide.py`, test liên quan. Bộ quét nêu nguyên nhân quét thiếu (file `.node` nhị phân, file nguồn không đọc được, chạm giới hạn); thêm chỉ báo lệnh tải mã ngoài nằm trong mã đường install; `R7_review` liệt kê nguyên nhân.
+- Giới hạn: không đổi luật approve/deny, không đổi schema verdict, không thêm công cụ agent, không chạy mã gói. Chỉ đo lại trên 10 bản swc thuộc dev và 3 fixture đã được duyệt.
+- Owner: Claude. Reviewer: TV2. Rollback: revert commit của I1.
+
+## Nghiệm thu tuần 1–4 và Gate B0 cho I2–I4 cùng bằng chứng phiếu kiểm tra chéo (2026-11-04)
+
+DECISION: APPROVED
+PO / TV2: Phạm Minh Triết
+APPROVED_AT: 2026-11-04 Asia/Saigon
+EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “tôi đã review code agent và ký nghiệm thu tuần 1–4”; “hôm nay ít nhất phải xong(100%) từ I1 đến I4”; với lượt 2–4, PO chọn “Docker dùng một lần”.
+
+- **Nghiệm thu:** TV2 Phạm Minh Triết xác nhận đã review code agent (`agent/run.py`, `agent/decide.py`, `tools/static.py`) và ký nghiệm thu tuần 1–4. Claude chỉ ghi lại xác nhận này theo lời PO, không ký thay.
+- **Phạm vi I2–I4** theo [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md`](../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md): tách hàm `analyze()` và thêm test phát lại trace; ổn định A-TLM/A-SLM không nới schema; đo token và giảm đầu vào. Không đổi luật approve/deny, không thêm công cụ agent, chỉ đo trên 3 fixture và 10 bản swc dev.
+- **Bằng chứng phiếu kiểm tra chéo:** chỉ đọc tĩnh trong container dùng một lần (`--read-only`, `--cap-drop ALL`, không mount thư mục nào ngoài `labels.csv` chỉ đọc). Tarball/ZIP chỉ nằm trong bộ nhớ container, không chạy mã gói. Đầu ra là đoạn mã dạng chữ tại các dòng được trích, ghi vào `data/review_rounds/evidence/` (Git ignore). Claude **không** điền `decision`, `reviewer`, `reviewed_at`; người kiểm tra chéo điền sau khi đọc bằng chứng.
+- Owner: Claude. Reviewer: TV2. Rollback: revert commit tương ứng.

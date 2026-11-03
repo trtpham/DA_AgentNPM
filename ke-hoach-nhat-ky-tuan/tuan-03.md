@@ -1,6 +1,6 @@
 # Tuần 03 — Công cụ đọc, agent và sandbox cơ bản
 
-[Báo cáo chi tiết và kịch bản demo ngày 24/10/2026](bao-cao-tuan-03-2026-10-24.md)
+[Báo cáo chi tiết và kịch bản demo ngày 24/10/2026](BaoCaoTienDo_Tuan03.md)
 
 ## Kế hoạch
 
@@ -137,3 +137,7 @@ Kiểm tra sau sửa và cập nhật dữ liệu tuần 2: **72/72 pytest PASS*
 - **Còn yếu (FAIL có kiểm soát):** A-TLM vẫn viết `description` quá 15 từ dù được nhắc số từ, và dẫn bằng chứng ở file không tồn tại (`manifest.json`). Schema không được nới để tăng tỷ lệ PASS. Lượt đo trung gian (`b5v2-*`, trước khi chuẩn hóa định dạng) chỉ cho A-SLM 6/9 vì model lặp mã MITRE. Đây là kết quả trên 3 fixture, không phải độ chính xác trên npm.
 - **PASS — sandbox tái hiện ngày 03/11:** build lại `agent-npm-sandbox:local`; ba fixture đều `ok`, `returncode=0`, `strace` không bị cắt; canary ghi nhận `ssh` và `environment`. Cả ba fixture có 4 lời gọi `connect()` là npm tự tra nscd/DNS và bị chặn bởi `--network none`. Tách lời gọi của npm khỏi lời gọi của gói là việc tuần 5.
 - **Viewer VIZ-1 G3–G4:** xong replay/live tiếng Việt trong `viewer/static/`. Kiểm tra trên trình duyệt: replay 8/8 sự kiện, live nối sự kiện của run đang chạy, chuỗi XSS hiện dạng chữ, không cuộn ngang ở 375px. Chờ PO nghiệm thu demo.
+
+## Nghiệm thu ngày 2026-11-04
+
+- **TV2 Phạm Minh Triết** xác nhận trong chat đã review code agent và **ký nghiệm thu tuần 03**. Claude ghi lại theo lời PO, không ký thay.

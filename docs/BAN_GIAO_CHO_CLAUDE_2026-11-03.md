@@ -7,7 +7,7 @@ Tài liệu này là điểm bắt đầu cho người tiếp tục dự án. C�
 - Đồ án: agent kiểm tra hành vi cài đặt của gói npm, đặc biệt `preinstall`, `install`, `postinstall` và `binding.gyp`; trả verdict có bằng chứng `file:dòng`, rồi áp luật quyết định độc lập với mô hình.
 - Ba cấu hình Ollama: A-LLM = `qwen3.5:9b`, A-SLM = `qwen3.5:4b`, A-TLM = `qwen3.5:0.8b`; mỗi cấu hình giới hạn 15 bước, ngưỡng approve/deny 0,8.
 - Thành viên được ghi trong báo cáo nhóm: Lê Đặng Thiên Phước, Phạm Minh Triết, Nguyễn Đình Thiên. Phạm Minh Triết là TV2 và PO trong các phê duyệt hiện có. Kế hoạch phân TV1 phụ trách dữ liệu/công cụ đọc/quyết định, TV2 phụ trách model/agent/schema, TV3 phụ trách sandbox/baseline/metrics. Không suy tên thật của TV1/TV3 nếu chưa có bảng phân vai xác nhận.
-- Kế hoạch gốc 10 tuần ở [`../KE_HOACH.md`](../KE_HOACH.md); nhật ký từng tuần ở [`../ke-hoach-nhat-ky-tuan/`](../ke-hoach-nhat-ky-tuan/). Mỗi tuần chỉ duy trì **một** file nhật ký và **một** file báo cáo tương ứng; sửa file hiện có khi cập nhật, không tạo bản `v2`, `final`, `new`.
+- Kế hoạch gốc 10 tuần ở [`../ke-hoach-nhat-ky-tuan/KE_HOACH.md`](../ke-hoach-nhat-ky-tuan/KE_HOACH.md); nhật ký từng tuần ở [`../ke-hoach-nhat-ky-tuan/`](../ke-hoach-nhat-ky-tuan/). Mỗi tuần chỉ duy trì **một** file nhật ký và **một** file báo cáo tương ứng; sửa file hiện có khi cập nhật, không tạo bản `v2`, `final`, `new`.
 
 ## 2. Đọc trước khi làm việc
 
@@ -155,7 +155,7 @@ Không chạy Docker với đường dẫn gói npm thật trong phạm vi hiệ
 - **Owner:** TV1 chạy lô, TV3 baseline/metrics, TV2 agent; mỗi phần có reviewer khác owner.
 - Sau H1–H3, thiết kế chạy lô có resume và `run_meta.json`: commit, phiên bản Python/npm/Ollama/model, config, hash dataset, thời điểm, lỗi từng gói. Một gói lỗi không dừng cả lô. Chạy chỉ trên tập đã duyệt, không lẫn dev/test, không dùng nhãn thật trong prompt.
 - Chốt ngưỡng trên dev **trước** khi chạy test. Trên test, công bố confusion matrix, Precision/Recall/F1/FPR, tỷ lệ `review`, JSON hợp lệ, timeout, thời gian và tài nguyên; báo khoảng tin cậy hoặc ít nhất cỡ mẫu/cụm. So A-LLM/A-SLM/A-TLM với GuardDog trên cùng mẫu và điều kiện.
-- Cập nhật báo cáo và nhật ký tuần **trong file hiện có**. Ảnh SVG tổng hợp phải ghi là hình tổng hợp, ảnh chụp thật ghi nguồn/ngày; không bịa ảnh buổi báo cáo, nhận xét hay câu hỏi của thầy. Báo cáo tuần 3 cho giảng viên đang ở [`../ke-hoach-nhat-ky-tuan/bao-cao-tuan-03-2026-10-24.md`](../ke-hoach-nhat-ky-tuan/bao-cao-tuan-03-2026-10-24.md).
+- Cập nhật báo cáo và nhật ký tuần **trong file hiện có**. Ảnh SVG tổng hợp phải ghi là hình tổng hợp, ảnh chụp thật ghi nguồn/ngày; không bịa ảnh buổi báo cáo, nhận xét hay câu hỏi của thầy. Báo cáo tuần 3 cho giảng viên đang ở [`../ke-hoach-nhat-ky-tuan/BaoCaoTienDo_Tuan03.md`](../ke-hoach-nhat-ky-tuan/BaoCaoTienDo_Tuan03.md).
 - **DoD:** có script/lệnh tái hiện, bộ nhãn chốt và reviewer, bảng lỗi/giới hạn, slide/demo nhất quán với số liệu; chưa đạt bước nào thì ghi đúng trạng thái, không chuyển việc tồn sang tuần sau bằng cách đổi tên.
 
 ## 11. Hướng dẫn demo ngay khi cần

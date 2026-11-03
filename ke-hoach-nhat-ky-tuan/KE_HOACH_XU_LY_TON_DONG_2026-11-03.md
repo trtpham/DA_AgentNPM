@@ -1,6 +1,6 @@
 # Kế hoạch xử lý tồn đọng — Claude tiếp nhận ngày 03/11/2026
 
-Kế hoạch này bổ sung cho [bàn giao](BAN_GIAO_CHO_CLAUDE_2026-11-03.md) (H0–H4). Thứ tự làm như sau: **đóng tồn đọng và vá lỗi đã xác minh trước**, sau đó mới cải thiện dần. Mỗi mục ghi Owner, Reviewer, điều kiện bắt đầu, DoD và việc cần PO quyết. Chưa có mục nào được đánh dấu xong.
+Kế hoạch này bổ sung cho [bàn giao](../docs/BAN_GIAO_CHO_CLAUDE_2026-11-03.md) (H0–H4). Thứ tự làm như sau: **đóng tồn đọng và vá lỗi đã xác minh trước**, sau đó mới cải thiện dần. Mỗi mục ghi Owner, Reviewer, điều kiện bắt đầu, DoD và việc cần PO quyết. Chưa có mục nào được đánh dấu xong.
 
 ## 0. Cơ sở của kế hoạch (đã kiểm ngày 03/11)
 

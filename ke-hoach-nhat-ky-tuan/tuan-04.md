@@ -55,3 +55,7 @@ Agent hoàn thành ca phân tích tĩnh trên tập dev nhỏ; lưu kết quả 
   - đo Recall/F1 và so với GuardDog trên mẫu độc: cần nhãn v1 đã kiểm tra chéo và chạy trong VM;
   - phân biệt `.node` của gói phụ với "quét thiếu" chung;
   - tách lời gọi mạng của npm khỏi lời gọi của gói trong sandbox.
+
+## Nghiệm thu ngày 2026-11-04
+
+- **TV2 Phạm Minh Triết** xác nhận trong chat đã review code agent và **ký nghiệm thu tuần 04**. Claude ghi lại theo lời PO, không ký thay.

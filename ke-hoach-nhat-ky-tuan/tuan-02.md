@@ -1,6 +1,6 @@
 # Tuần 02 — Dữ liệu và hợp đồng công cụ
 
-[Báo cáo tuần 02](noi-dung-lms-tuan-02-2026-10-25.md)
+[Báo cáo tuần 02](BaoCaoTienDo_Tuan02.md)
 
 ## Kế hoạch
 
@@ -150,3 +150,8 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 - **PASS — công cụ:** `data/review_sheet.py` sinh bốn phiếu trong [`data/review_rounds/`](../data/review_rounds/): lượt 1 có 20 dòng lành; lượt 2 có 18 `npm-token-worm`; lượt 3 có 18 `shai-hulud`; lượt 4 có 17 `mut-4831` + `exnesss` + 2 nghi vấn. Tổng 76/76 dòng. Lệnh `check` từ chối các trường hợp: người duyệt là Codex/Claude, thiếu ngày, quyết định ngoài `verified/revise/exclude`, hoặc thiếu lý do khi `revise/exclude`.
 - **Giới hạn đại diện đã ghi** trong [hồ sơ nhãn](../data/REVIEW_WEEK2.md): `test` chủ yếu đo một chiến dịch độc (`mut-4831`) và một họ lành (`esbuild`); cỡ mẫu hiệu dụng gần với số cụm (3) hơn là số dòng (28).
 - **Vẫn BLOCKED — chỉ người thật làm được:** điền và ký bốn phiếu. Lượt 2–4 cần ZIP Datadog trong VM. Claude không ký thay reviewer. Mốc dữ liệu v1 chưa đạt cho tới khi `check` trả `complete: True` cho cả bốn phiếu.
+
+## Nghiệm thu ngày 2026-11-04
+
+- **TV2 Phạm Minh Triết** xác nhận trong chat đã review code agent và **ký nghiệm thu tuần 02**. Claude ghi lại theo lời PO, không ký thay.
+- Mốc dữ liệu v1 vẫn chờ 4 phiếu kiểm tra chéo trong `data/review_rounds/` được người kiểm tra điền; nghiệm thu này không thay cho phiếu đó.

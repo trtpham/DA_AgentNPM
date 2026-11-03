@@ -1,10 +1,8 @@
-# Báo cáo tuần 02 để nộp LMS
-
-**Đề tài:** AI Agent kiểm tra gói npm
+# Báo cáo tiến độ tuần 02 — AI Agent kiểm tra gói npm
 
 **Thành viên:** Lê Đặng Thiên Phước · Phạm Minh Triết · Nguyễn Đình Thiên
 
-**Ngày báo cáo:** 25/10/2026 · **Bổ sung tiến độ:** 01/11/2026
+**Giai đoạn:** Dữ liệu và hợp đồng công cụ · **Ngày báo cáo:** 25/10/2026 · **Cập nhật:** 04/11/2026 · **Nghiệm thu:** TV2 Phạm Minh Triết, 04/11/2026
 
 ## 1. Nội dung buổi báo cáo tuần
 
@@ -33,8 +31,14 @@ Nhóm quên chụp ảnh trong buổi báo cáo nên **không có ảnh chụp t
 
 **Định hướng chung:** Ưu tiên **dữ liệu đúng và có thể kiểm tra lại** hơn là chỉ tăng số lượng. Mục tiêu tiếp theo là biến danh sách ứng viên thành bộ dữ liệu có nhãn rõ ràng, sau đó mới đo kết quả và mở rộng quy mô. Mã nguồn, dữ liệu và báo cáo tuần 02 đã được cập nhật trên GitHub.
 
-## Tiến độ bổ sung sau buổi báo cáo
+## 5. Tiến độ sau buổi báo cáo (cập nhật 04/11/2026)
 
-Nhóm đã đối chiếu metadata của cả **450 gói** theo từng batch 18 gói. Trong đó 445 gói còn thông tin phát hành và 5 gói không còn; danh sách này vẫn là **ứng viên**, chưa tự động trở thành nhãn. Bảng nhãn riêng hiện có **76 dòng** (20 lành, 2 nghi vấn, 54 độc hại) kèm nguồn và vị trí mã cần kiểm tra. Nhóm cũng chia lại theo họ gói để cả tập thử có đủ ba nhóm nhãn mà không trộn cùng một họ vào hai tập.
+| Việc | Trạng thái |
+| --- | --- |
+| Đối chiếu metadata 450 ứng viên | Xong: 25 batch × 18 gói. 445 gói còn thông tin phát hành, 5 gói không còn. Danh sách vẫn chỉ là **ứng viên**, không tự trở thành nhãn. |
+| Bảng nhãn có bằng chứng | 76 dòng: 20 lành, 2 nghi vấn, 54 độc hại. Mỗi dòng có nguồn và vị trí `file:dòng`. Chia dev/test theo họ gói, không họ nào nằm ở cả hai tập. |
+| Phiếu kiểm tra chéo | Đã tạo 4 phiếu cho 4 lượt (20 + 18 + 18 + 20 = 76 dòng) trong `data/review_rounds/`. Công cụ kiểm tra phiếu từ chối các trường hợp: người duyệt chính là người gán nhãn, thiếu ngày, thiếu lý do loại dòng. |
+| Bằng chứng cho người kiểm tra | Đã chuẩn bị đủ 4 lượt. Gói được đọc tĩnh trong container dùng một lần, mẫu độc không chạm máy thật. Cả 76/76 dòng không có lỗi tự động phát hiện: đúng tên và phiên bản, đúng hash, dòng trích dẫn có trong file. |
+| Người kiểm tra chéo điền phiếu | **Đang chờ.** Đây là bước bắt buộc trước khi chốt **bộ nhãn v1** và tính Recall/F1. Hệ thống không tự điền thay người kiểm tra. |
 
-Việc còn cần người kiểm tra chéo là đối chiếu lại mã gốc ở đúng `file:dòng` trước khi dùng 76 dòng làm đáp án chuẩn để tính độ chính xác. Vì vậy báo cáo này chưa công bố accuracy; việc bổ sung dữ liệu sẽ tiếp tục theo từng batch an toàn.
+**Giới hạn cần nói rõ với thầy.** Tập `test` hiện chủ yếu gồm một chiến dịch mã độc (`mut-4831`) và một họ gói lành (`esbuild`). Các phiên bản trong cùng một họ không độc lập với nhau, nên số mẫu "thật sự khác nhau" gần với số họ (3) hơn là số dòng (28). Nhóm sẽ bổ sung họ và chiến dịch mới **trước** khi chạy tập test, không đổi cách chia sau khi đã xem kết quả.

@@ -1,6 +1,6 @@
 # DA_AgentNPM
 
-[Kế hoạch thực hiện 10 tuần](KE_HOACH.md)
+[Kế hoạch thực hiện 10 tuần](ke-hoach-nhat-ky-tuan/KE_HOACH.md)
 
 [Kế hoạch và nhật ký theo tuần](ke-hoach-nhat-ky-tuan/README.md)
 
@@ -77,3 +77,9 @@ Mở `http://127.0.0.1:8765/`, chọn run rồi chọn gói. **Phát lại**, **
 - **Hành động (`tools/actions.py`):** `apply_decision` chỉ lập lệnh `npm approve-scripts`/`deny-scripts` ở chế độ dry-run. `dry_run=False` bị từ chối cho tới khi có gate riêng.
 - **GuardDog (`experiments/baseline_guarddog.py`):** build một lần bằng `docker build -t agent-npm-guarddog:2.6.0 experiments/guarddog`, sau đó `rtk proxy py -3.14 -m experiments.baseline_guarddog <run_id> --labels data/labels.csv --split dev --name @swc/core`. Quét trong container tắt mạng, mount chỉ đọc. Trên Windows, semgrep của GuardDog không chạy native và GuardDog còn bỏ qua đường dẫn chứa `tests`, nên không dùng bản pip trên host.
 - **Chỉ số (`experiments/metrics.py`):** `rtk proxy py -3.14 -m experiments.metrics reports/<run_id>` (thêm `--source guarddog` cho `reports/<run_id>/guarddog`). Lệnh in confusion matrix, Precision/Recall/F1/FPR, tỷ lệ review, JSON hợp lệ, lỗi, số bước và thời gian. Lượt chạy lỗi được tính là bỏ sót, không bị loại khỏi mẫu số.
+
+## Kiểm tra chéo nhãn và test phát lại
+
+- **Phiếu:** `rtk proxy py -3.14 -m data.review_sheet build <1-4>` tạo `data/review_rounds/round-N.csv`; `… check data/review_rounds/round-N.csv` kiểm tra phiếu đã điền. Cột `decision`, `reviewer`, `reviewed_at` chỉ do người kiểm tra chéo điền.
+- **Bằng chứng cho người kiểm tra:** `rtk proxy py -3.14 -m data.review_evidence <1-4>` chạy trong container `python:3.12-slim` dùng một lần (`--read-only`, `--cap-drop ALL`, chỉ mount script). Container tải tarball/ZIP vào bộ nhớ, kiểm tra integrity và `tên@phiên bản`, rồi trích các dòng được dẫn dưới dạng chữ vào `data/review_rounds/evidence/round-N.md` (Git ignore). Không chạy mã gói.
+- **Test phát lại:** `tests/fixtures/replays/*.json` lưu nguyên văn phản hồi Ollama của các lượt chạy ngày 04/11 trên fixture vô hại. `tests/test_replay.py` phát lại chúng và kiểm tra cùng luật cuối, nên lỗi riêng của từng model trở thành test hồi quy không cần Ollama.
