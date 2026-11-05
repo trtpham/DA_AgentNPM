@@ -266,3 +266,15 @@ EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 04/11 cho [`../..
 - Thư viện: Three.js ghim phiên bản, chép vào `viewer/static/vendor/` kèm LICENSE (MIT), không dùng CDN.
 - Điều kiện bắt đầu: đạt mốc nghiệm thu tuần 5. O-6 cần W5-6 xong.
 - Owner: Claude. Reviewer: TV2 (dữ liệu trace), TV3 (an toàn hiển thị O-3), PO (O-0, O-5, O-7). Rollback: revert commit.
+
+## Gate B0 — Văn phòng 3D: đổi thời điểm bắt đầu và cho tải Three.js (2026-11-05)
+
+DECISION: APPROVED — START NOW (thay điều kiện "sau mốc tuần 5" của Gate ngày 04/11)
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-05 Asia/Saigon
+EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 05/11: “1. Ok 2. Ok” cho hai câu hỏi “Đổi Gate: làm 3D ngay, O-6 chờ W5-6” và “Cho tải 3 file Three.js 0.170.0”.
+
+- Làm O-0 → O-5, O-7 ngay. **O-6 (phòng sandbox) vẫn chờ W5-6.**
+- Được tải đúng 3 file từ `https://cdn.jsdelivr.net/npm/three@0.170.0/`: `build/three.module.min.js`, `examples/jsm/controls/OrbitControls.js`, `LICENSE`; chép vào `viewer/static/vendor/`, ghi SHA-256. Trang không gọi CDN khi chạy.
+- Việc tuần 5 có kết quả từ TV3/người kiểm tra nhãn thì được ưu tiên; 3D tạm dừng.
+- Không mở trang 3D khi đang đo tốc độ model.

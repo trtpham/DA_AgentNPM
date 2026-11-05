@@ -14,7 +14,15 @@ PACKAGE = re.compile(r"(?:@[a-z0-9._-]+/)?[a-z0-9._-]+@[A-Za-z0-9._+-]+\Z")
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/index.html": ("index.html", "text/html; charset=utf-8"),
           "/app.js": ("app.js", "text/javascript; charset=utf-8"),
-          "/style.css": ("style.css", "text/css; charset=utf-8")}
+          "/style.css": ("style.css", "text/css; charset=utf-8"),
+          # 3D office (KE_HOACH_VAN_PHONG_3D.md): read-only view of the same traces; Three.js is vendored.
+          "/office": ("office.html", "text/html; charset=utf-8"),
+          "/office.html": ("office.html", "text/html; charset=utf-8"),
+          "/office.css": ("office.css", "text/css; charset=utf-8"),
+          **{f"/office/{name}": (f"office/{name}", "text/javascript; charset=utf-8")
+             for name in ("main.mjs", "scene.mjs", "events.mjs")},
+          **{f"/vendor/{name}": (f"vendor/{name}", "text/javascript; charset=utf-8")
+             for name in ("three.module.min.js", "OrbitControls.js")}}
 SAMPLE_RUN = "sample_traces"
 
 

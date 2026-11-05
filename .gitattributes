@@ -1,3 +1,4 @@
 sandbox/*.sh text eol=lf
 sandbox/Dockerfile text eol=lf
 experiments/guarddog/Dockerfile text eol=lf
+viewer/static/vendor/** -text

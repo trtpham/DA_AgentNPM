@@ -141,3 +141,42 @@ def test_ui_assets_are_served_and_never_parse_trace_as_html(viewer):
     assert status == 200 and headers["Content-Type"].startswith("text/css")
     _, _, page = request(server, "GET", "/")
     assert b'src="/app.js"' in page and b"<script>" not in page
+
+
+# --- 3D office (KE_HOACH_VAN_PHONG_3D.md) --------------------------------------------------------
+STATIC_ROOT = Path(__file__).resolve().parent.parent / "viewer" / "static"
+
+
+def test_office_page_and_modules_are_served_with_strict_csp(viewer):
+    server, _ = viewer
+    status, headers, body = request(server, "GET", "/office")
+    assert status == 200 and b"/office/main.mjs" in body
+    assert headers["Content-Security-Policy"] == "default-src 'self'"
+    for path in ("/office/main.mjs", "/office/scene.mjs", "/office/events.mjs",
+                 "/vendor/three.module.min.js", "/vendor/OrbitControls.js"):
+        status, headers, _ = request(server, "GET", path)
+        assert status == 200 and headers["Content-Type"].startswith("text/javascript"), path
+    # Only whitelisted files: no directory walking into vendor/ or office/.
+    for path in ("/vendor/LICENSE", "/vendor/README.md", "/office/", "/office/../server.py", "/vendor/%2e%2e/app.js"):
+        assert request(server, "GET", path)[0] == 404, path
+
+
+def test_office_sources_never_inject_trace_text_as_html():
+    """O-3 groundwork: trace strings are untrusted and must reach the page with textContent only."""
+    sources = [*(STATIC_ROOT / "office").glob("*.mjs"), STATIC_ROOT / "office.html"]
+    for source in sources:
+        text = source.read_text(encoding="utf-8")
+        for banned in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "new Function"):
+            assert banned not in text, f"{source.name} uses {banned}"
+    assert "<script>" not in (STATIC_ROOT / "office.html").read_text(encoding="utf-8")  # CSP forbids inline
+
+
+def test_vendored_three_matches_recorded_hashes():
+    import hashlib
+
+    readme = (STATIC_ROOT / "vendor" / "README.md").read_text(encoding="utf-8")
+    for name in ("three.module.min.js", "LICENSE"):
+        digest = hashlib.sha256((STATIC_ROOT / "vendor" / name).read_bytes()).hexdigest()
+        assert digest in readme, name
+    patched = hashlib.sha256((STATIC_ROOT / "vendor" / "OrbitControls.js").read_bytes()).hexdigest()
+    assert f"SHA-256 sau sửa: `{patched}`" in readme

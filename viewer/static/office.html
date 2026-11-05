@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Văn phòng agent</title>
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/office.css">
+<script type="module" src="/office/main.mjs"></script>
+<body>
+<main class="shell office-shell">
+  <header class="masthead">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>NPM AGENT <small>/ văn phòng 3D</small></span></div>
+    <a class="office-link" href="/">Dòng thời gian 2D</a>
+  </header>
+  <div class="office-bar">
+    <label for="run-select">Run</label><select id="run-select"></select>
+    <label for="package-select">Gói</label><select id="package-select"></select>
+    <button type="button" id="previous">Bước trước</button><button type="button" class="primary" id="play">Phát lại</button><button type="button" id="next">Bước tiếp</button>
+    <label for="speed">Tốc độ</label><select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+    <span id="position" class="count">0 / 0</span>
+  </div>
+  <div class="office-stage">
+    <div class="office-view">
+      <canvas id="office-canvas" aria-label="Văn phòng 3D: nhân viên agent đi qua các phòng theo từng sự kiện"></canvas>
+      <div id="room-labels" class="room-labels" aria-hidden="true"></div>
+    </div>
+    <aside class="office-panel" aria-live="polite">
+      <small>PHÒNG HIỆN TẠI</small>
+      <h2 id="room-name">—</h2>
+      <p id="room-step" class="count"></p>
+      <p id="event-text">Đang tải…</p>
+      <small>QUYẾT ĐỊNH</small>
+      <p id="decision" class="office-decision">Chưa có quyết định</p>
+      <p class="result-note">Quyết định cuối do luật trong <code>agent/decide.py</code>, luôn dry-run. Chữ trên trang lấy từ trace và chỉ hiển thị dạng văn bản.</p>
+    </aside>
+  </div>
+</main>
