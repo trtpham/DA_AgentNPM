@@ -144,7 +144,7 @@ function animate(lane, event) {
           }
         }, 450);
       }, `✔ ${good}  ✘ ${checks.length - good}`);
-      office.focus("decision", 0.62);
+      office.focus("decision", 0.36);
       clearTimeout(closeUp);
       closeUp = setTimeout(() => office.focus(lanes.length > 1 ? null : lane.rooms[lane.index], 0.78), 3200);
       break;
@@ -175,7 +175,7 @@ function advance(lane, now, scrubbing) {
   } else {
     if (event.type !== "decision") stampFor(lane, decisionOf(lane), false);
     animate(lane, event);
-    if (lanes.length === 1 && event.type !== "decision") office.focus(lane.rooms[next], 0.72);
+    if (lanes.length === 1 && event.type !== "decision") office.focus(lane.rooms[next], 0.42);
   }
   return true;
 }

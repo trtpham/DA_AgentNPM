@@ -118,3 +118,9 @@
 .npc-tag{position:absolute;left:0;top:0;padding:1px 7px;border-radius:99px;background:#09111dcc;border:1px solid #39516580;color:var(--muted);font-size:.66rem;font-weight:600;white-space:nowrap}
 .room-label.wing{border-style:dashed}
 .room-label.wing strong{color:var(--accent)}
+
+/* --- label detail by zoom (set by scene.mjs on .office-view) --------------------------------- */
+.office-view[data-zoom="far"] .robot-tag,.office-view[data-zoom="far"] .npc-tag,.office-view[data-zoom="far"] .room-label small,
+.office-view[data-zoom="far"] .room-screen{display:none}
+.office-view[data-zoom="mid"] .npc-tag,.office-view[data-zoom="mid"] .room-label small{display:none}
+.office-view[data-zoom="far"] .room-label{padding:2px 8px;font-size:.74rem}

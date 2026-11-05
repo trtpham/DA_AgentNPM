@@ -203,11 +203,12 @@ export function serverRack(accent) {
   const group = new THREE.Group();
   group.add(at(box(0.9, 2.2, 0.8, "#1a2230", { metalness: 0.4, roughness: 0.4 }), 0, 1.1, 0));
   const leds = [];
-  for (let unit = 0; unit < 9; unit += 1) {
-    group.add(at(box(0.8, 0.16, 0.02, "#2b3646", { shadow: false }), 0, 0.35 + unit * 0.21, 0.41));
-    for (let index = 0; index < 4; index += 1) {
-      const led = box(0.04, 0.04, 0.02, accent, { emissive: accent, emissiveIntensity: 0.4, shadow: false });
-      leds.push(at(led, -0.3 + index * 0.07, 0.35 + unit * 0.21, 0.43));
+  // 6 units x 3 LEDs: every LED is its own mesh (one draw call), so the server room stays cheap.
+  for (let unit = 0; unit < 6; unit += 1) {
+    group.add(at(box(0.8, 0.24, 0.02, "#2b3646", { shadow: false }), 0, 0.4 + unit * 0.3, 0.41));
+    for (let index = 0; index < 3; index += 1) {
+      const led = box(0.06, 0.05, 0.02, accent, { emissive: accent, emissiveIntensity: 0.4, shadow: false });
+      leds.push(at(led, -0.3 + index * 0.1, 0.4 + unit * 0.3, 0.43));
       group.add(led);
     }
   }

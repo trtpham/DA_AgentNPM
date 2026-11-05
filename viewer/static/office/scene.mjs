@@ -4,33 +4,41 @@ import * as THREE from "../vendor/three.module.min.js";
 import { OrbitControls } from "../vendor/OrbitControls.js";
 import { ROOMS } from "./events.mjs";
 import { at, box, mesh, personMesh, robotMesh } from "./people.mjs";
+import { createCampus } from "./outdoor.mjs";
 import { barrierGate, chair, coffeeBar, desk, monitor, plant, printer, rug, serverRack, shelf, sofa,
          textures, waterCooler, wallPoster, workstation } from "./props.mjs";
 
-// An irregular floor: every area has its own size, rows are staggered, two wings are turned a little,
-// and walls come in three kinds (glass, solid, open plan). The hallway runs along z = HALL_Z.
-// The six step rooms follow the agent; the four wings hold the npm gate, the local GPU server,
-// the human reviewer and the pantry.
-const HALL_Z = 0.3;
+// A wide one-storey HQ (about 61 x 29 m) laid out along the agent's workflow as a clockwise loop
+// around one main hallway: in at the west gate -> reception -> code floor -> intel library (north
+// row, analysis), then back west along the south row: sandbox lab -> evidence -> pantry ->
+// reviewer -> courtroom (decision) -> out through the gate. The Ollama server room sits next to
+// the code floor it serves. Rooms differ in size and depth, so the rows are staggered.
+const HALL_Z = 0;
 const AREAS = {
-  gate: { at: [-15.2, -4.0], size: [4.8, 5.2], walls: "glass" },
-  reception: { at: [-9.0, -4.4], size: [6.6, 5.0], walls: "glass" },
-  code: { at: [-1.2, -5.0], size: [8.2, 6.0], walls: "glass" },
-  intel: { at: [6.4, -4.2], size: [4.6, 4.4], walls: "glass" },
-  server: { at: [12.6, -5.2], size: [5.6, 5.6], walls: "solid" },
-  reviewer: { at: [-15.0, 4.6], size: [4.6, 4.2], walls: "open", turn: 0.08 },
-  decision: { at: [-8.6, 5.2], size: [7.0, 5.8], walls: "glass" },
-  evidence: { at: [-1.0, 4.4], size: [5.6, 4.4], walls: "glass" },
-  lab: { at: [5.6, 4.9], size: [5.0, 5.0], walls: "solid" },
-  pantry: { at: [12.8, 4.3], size: [6.2, 4.6], walls: "open", turn: -0.1 },
+  gate: { at: [-33.5, 0], size: [8, 10], walls: "open" },
+  reception: { at: [-21, -7.5], size: [11, 10], walls: "glass" },
+  code: { at: [-6, -8.5], size: [17, 12], walls: "glass" },
+  intel: { at: [8.5, -7], size: [10, 9], walls: "glass" },
+  server: { at: [19.5, -8], size: [10, 11], walls: "solid" },
+  meeting: { at: [28.5, -7], size: [7, 9], walls: "glass" },
+  decision: { at: [-21, 8], size: [11, 11], walls: "glass" },
+  reviewer: { at: [-11, 6.5], size: [7, 8], walls: "open" },
+  pantry: { at: [-1.5, 6.5], size: [10, 8], walls: "open" },
+  evidence: { at: [10, 7], size: [11, 9], walls: "glass" },
+  lab: { at: [21.5, 7.5], size: [10, 10], walls: "solid" },
+  wc: { at: [29.5, 6], size: [5, 7], walls: "solid" },
 };
 const LAYOUT = { ...Object.fromEntries(Object.entries(AREAS).map(([id, area]) => [id, area.at])), hallway: [0, HALL_Z] };
-const BOUNDS = { minX: -18, maxX: 16, minZ: -8.7, maxZ: 8.4 };
+const BOUNDS = { minX: -27.5, maxX: 33, minZ: -14.5, maxZ: 13.5 };   // the building
+const FRAME = { minX: -38, maxX: 33, minZ: -14.5, maxZ: 13.5 };     // what the default camera shows
+const HALL = { minX: -27.5, maxX: 33, width: 5 };
 const WINGS = {
   gate: { name: "Cổng npm", step: "npm pack · barie theo quyết định" },
   server: { name: "Máy chủ Ollama", step: "Mô hình chạy cục bộ trên GPU" },
+  meeting: { name: "Phòng họp", step: "Nhóm trao đổi" },
   reviewer: { name: "Bàn người xem", step: "Ca R7/R8 cần duyệt tay" },
   pantry: { name: "Pantry", step: "Nghỉ giải lao" },
+  wc: { name: "WC", step: "Vệ sinh" },
 };
 // A three-quarter view from the south-west reads less like a floor plan than a straight front view.
 const VIEW_DIRECTION = new THREE.Vector3(-5, 17, 15).normalize();
@@ -38,10 +46,11 @@ const inside = (id, dx, dz) => [AREAS[id].at[0] + dx, AREAS[id].at[1] + dz];
 export const ACCENT = {
   reception: "#61e8c2", code: "#7cc4ff", intel: "#b79cff", lab: "#8a98a8", evidence: "#ffd08a",
   decision: "#ff8e83", hallway: "#6f8597", gate: "#f4b860", server: "#ff7ad9", reviewer: "#e8f4ff", pantry: "#c99a5b",
+  meeting: "#9fd8ff", wc: "#8a98a8",
 };
 const FLOORS = {
   gate: "tiles", reception: "wood", code: "#2c4a6b", intel: "#43386b", server: "tiles",
-  reviewer: "#3a4656", decision: "wood", evidence: "#5a4a2c", lab: "tiles", pantry: "wood",
+  reviewer: "#3a4656", decision: "wood", evidence: "#5a4a2c", lab: "tiles", pantry: "wood", meeting: "#33475c", wc: "tiles",
 };
 const ACTION_COLORS = { approve: "#2fe0a8", review: "#ffaa1a", deny: "#ff4a3d" }; // saturated: ACES tone mapping washes pale tints to white
 const ease = (value) => 1 - (1 - value) ** 3;
@@ -110,9 +119,9 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.08;
   const scene = new THREE.Scene();
-  scene.background = colors.bg;
-  scene.fog = new THREE.Fog(colors.bg, 48, 95);
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 220);
+  scene.background = new THREE.Color("#132233");
+  scene.fog = new THREE.Fog("#132233", 110, 260);
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 600);
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.42; // never under the floor
@@ -120,47 +129,51 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
 
   scene.add(new THREE.HemisphereLight(0xe6f2ff, 0x101a26, 1.3));
   const sun = new THREE.DirectionalLight(0xfff1dc, 2.2);
-  sun.position.set(-10, 22, -8);
+  sun.position.set(-26, 46, -18);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1536, 1536);
-  Object.assign(sun.shadow.camera, { left: -19, right: 19, top: 10, bottom: -10, near: 1, far: 60 });
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -48, right: 48, top: 34, bottom: -34, near: 1, far: 130 });
   sun.shadow.bias = -0.0005;
   scene.add(sun);
 
-  // Building: slab, city skyline behind the north windows, an uneven hallway with an atrium.
-  scene.add(at(box(BOUNDS.maxX - BOUNDS.minX + 0.8, 0.3, BOUNDS.maxZ - BOUNDS.minZ + 0.4, "#0e1824", { shadow: false }),
-               (BOUNDS.minX + BOUNDS.maxX) / 2, -0.2, (BOUNDS.minZ + BOUNDS.maxZ) / 2));
+  // Campus around the building (lawn, roads, parking, plaza, trees, traffic), then the building itself.
+  const campus = createCampus(BOUNDS);
+  scene.add(campus.group);
   const glowing = (item, strength) => {
     item.material.emissive = new THREE.Color("#ffffff");
     item.material.emissiveMap = item.material.map;
     item.material.emissiveIntensity = strength;
     return item;
   };
-  scene.add(at(glowing(mesh(new THREE.PlaneGeometry(40, 7), "#ffffff", { map: textures.skyline(), shadow: false }), 0.55), -1, 3, -9.1));
-  for (let x = -17.6; x <= 15.8; x += 2.6 + Math.abs(Math.sin(x)) * 1.4) scene.add(at(box(0.18, 3.4, 0.18, "#2a3d52"), x, 1.7, -8.75));
-  scene.add(at(box(34, 0.18, 0.2, "#2a3d52"), -1, 3.4, -8.75));
-  const hallway = box(34, 0.06, 3.4, "#9aa0a8", { shadow: false, map: textures.wood([10, 1]) });
-  hallway.position.set(-1, 0, HALL_Z);
+  scene.add(at(box(BOUNDS.maxX - BOUNDS.minX + 0.6, 0.34, BOUNDS.maxZ - BOUNDS.minZ + 0.6, "#2a3644", { shadow: false }),
+               (BOUNDS.minX + BOUNDS.maxX) / 2, -0.2, (BOUNDS.minZ + BOUNDS.maxZ) / 2));
+  const hallLength = HALL.maxX - HALL.minX;
+  const hallway = box(hallLength, 0.06, HALL.width, "#9aa0a8", { shadow: false, map: textures.wood([18, 1.5]) });
+  hallway.position.set((HALL.minX + HALL.maxX) / 2, 0, HALL_Z);
   scene.add(hallway);
-  scene.add(at(rug(9, 1.1, "#2b4a5c"), -11.5, 0.05, HALL_Z));
-  scene.add(at(rug(7.5, 1.1, "#3a2f4f"), 9.6, 0.05, HALL_Z + 0.1));
-  const atrium = mesh(new THREE.CircleGeometry(1.7, 40), "#ffffff", { map: textures.carpet("#2f5b55", [2, 2]), shadow: false });
+  scene.add(at(rug(14, 1.4, "#2b4a5c"), -18.5, 0.05, HALL_Z));
+  scene.add(at(rug(12, 1.4, "#3a2f4f"), 15, 0.05, HALL_Z));
+  const atrium = mesh(new THREE.CircleGeometry(2.3, 48), "#ffffff", { map: textures.carpet("#2f5b55", [2, 2]), shadow: false });
   atrium.rotation.x = -Math.PI / 2;
-  scene.add(at(atrium, 2.6, 0.05, HALL_Z));
-  const tree = plant(1.9);
-  scene.add(at(tree, 2.6, 0, -1.15));
-  scene.add(at(sofa("#2f5b55"), -4.2, 0, 1.75).rotateY(Math.PI));
-  for (const [x, z, size] of [[-12.6, -1.15, 1], [-6.1, 1.8, 0.7], [7.8, -1.1, 1.2], [11.4, 1.85, 0.8], [-17.2, 1.6, 1.3]]) scene.add(at(plant(size), x, 0, z));
-  scene.add(at(waterCooler(), 15.6, 0, 1.6));
-  for (const [x, z] of [[-2.2, -1.2], [8.9, 1.85]]) scene.add(at(mesh(new THREE.CylinderGeometry(0.2, 0.17, 0.45, 12), "#5c6b7a"), x, 0.22, z));
-  scene.add(at(glowing(mesh(new THREE.PlaneGeometry(4.2, 0.8), "#ffffff", { map: textures.sign("NPM AGENT HQ", "#61e8c2"), shadow: false }), 0.8),
-               -15.2, 2.6, -6.5));
+  scene.add(at(atrium, 3.5, 0.05, HALL_Z));
+  scene.add(at(plant(2.2), 3.5, 0, -1.9));
+  for (const [x, z, size] of [[-25, -2, 1.1], [-9.5, 2.0, 0.8], [6.8, 2.0, 1.2], [13.2, -2.0, 0.9], [24.5, 2.0, 1], [31.5, -2, 1.3]]) scene.add(at(plant(size), x, 0, z));
+  scene.add(at(sofa("#2f5b55"), -14, 0, 1.95).rotateY(Math.PI));
+  scene.add(at(sofa("#4a3f6b"), 22.5, 0, -1.95));
+  scene.add(at(waterCooler(), 32.2, 0, 1.6));
+  for (const [x, z] of [[-4.5, -2.0], [16.5, 2.0], [-23, 2.0]]) scene.add(at(mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.5, 12), "#5c6b7a"), x, 0.25, z));
+  // Entrance: glass doors in the west wall and the HQ sign above them.
+  for (const z of [-1.35, 1.35]) scene.add(at(box(0.1, 2.3, 2.5, "#9fd8ff", { opacity: 0.3, roughness: 0.05, shadow: false }), HALL.minX, 1.15, z));
+  for (const z of [-2.65, 2.65]) scene.add(at(box(0.4, 3, 0.4, "#2a3d52"), HALL.minX, 1.5, z));
+  scene.add(at(box(0.4, 0.5, 5.7, "#2a3d52"), HALL.minX, 3.1, 0));
+  scene.add(at(glowing(mesh(new THREE.PlaneGeometry(5.2, 1), "#ffffff", { map: textures.sign("NPM AGENT HQ", "#61e8c2"), shadow: false }), 0.9),
+               HALL.minX - 0.25, 3.1, 0).rotateY(-Math.PI / 2));
 
   const rooms = {};
   for (const id of [...Object.keys(ROOMS), ...Object.keys(WINGS)]) {
     if (id === "hallway") {
-      rooms[id] = { floor: hallway, base: hallway.material.color.clone(), x: 0, z: HALL_Z, accent: new THREE.Color(ACCENT.hallway),
-                    labelAt: [-17.3, 0.5, HALL_Z], info: ROOMS.hallway };
+      rooms[id] = { floor: hallway, base: hallway.material.color.clone(), x: HALL.minX + 1.5, z: HALL_Z, accent: new THREE.Color(ACCENT.hallway),
+                    labelAt: [HALL.minX + 2.5, 0.5, HALL_Z + 1.6], info: ROOMS.hallway };
       continue;
     }
     const room = roomShell(id);
@@ -169,111 +182,153 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     rooms[id] = room;
   }
   const add = (room, item, x, y, z, turn = 0) => { item.position.set(x, y, z); item.rotation.y = turn; rooms[room].group.add(item); return item; };
+  const legs = (room, width, depth, x, z, top = 0.74) => {
+    for (const dx of [-1, 1]) for (const dz of [-1, 1]) add(room, box(0.08, top, 0.08, "#26384a"), x + dx * (width / 2 - 0.1), top / 2, z + dz * (depth / 2 - 0.1));
+  };
 
-  // Gate: a door in the west wall, the barrier, parcels and the guard's desk.
-  add("gate", box(0.12, 2.2, 1.6, "#3a5068"), -2.35, 1.1, -0.4);
-  add("gate", box(0.06, 2, 1.4, "#9fd8ff", { opacity: 0.35, shadow: false }), -2.32, 1, -0.4);
-  const gate = add("gate", barrierGate(), 0.8, 0, 2.0, Math.PI);
-  add("gate", desk(1.2, 0.6), 1.3, 0, -1.6, 0.15);
-  add("gate", monitor("#f4b860", 0.6), 1.3, 0.92, -1.75, 0.15);
-  add("gate", plant(1.1), -1.9, 0, -2.1);
-  for (let index = 0; index < 3; index += 1) add("gate", box(0.5, 0.4, 0.45, "#c99a5b"), -1.5 + index * 0.12, 0.2 + index * 0.4, -1.3, index * 0.3);
+  // Gate (outdoor terrace by the entrance): guard booth, barrier across the path, parcels.
+  add("gate", box(2.4, 2.3, 2.4, "#34495f"), -2.2, 1.15, -3.2);
+  add("gate", box(2.42, 0.5, 2.0, "#9fd8ff", { opacity: 0.45, emissive: "#9fd8ff", emissiveIntensity: 0.25, shadow: false }), -2.2, 1.6, -3.2);
+  add("gate", box(2.7, 0.15, 2.7, "#22344a"), -2.2, 2.35, -3.2);
+  const gate = add("gate", barrierGate(), 2.6, 0, -1.6, -Math.PI / 2);
+  for (let index = 0; index < 4; index += 1) add("gate", box(0.6, 0.45, 0.5, "#c99a5b"), -3 + index * 0.2, 0.23 + (index % 2) * 0.45, 3.4, index * 0.4);
+  add("gate", plant(1.3), 3.3, 0, 4.2);
 
-  // Reception: a curved counter, a waiting sofa, plants and a safety poster.
-  const counter = mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.95, 24, 1, true, Math.PI * 0.15, Math.PI * 0.7), "#e8e1d4", { roughness: 0.6 });
+  // Reception: a long curved counter, a waiting lounge, posters and plants.
+  const counter = mesh(new THREE.CylinderGeometry(2, 2, 1, 32, 1, true, Math.PI * 0.12, Math.PI * 0.76), "#e8e1d4", { roughness: 0.6 });
   counter.material.side = THREE.DoubleSide;
-  add("reception", counter, 0.4, 0.48, 0.2);
-  add("reception", box(2.4, 0.06, 0.5, "#61e8c2", { emissive: "#61e8c2", emissiveIntensity: 0.4 }), 0.4, 0.98, -1.1);
-  add("reception", plant(), -2.8, 0, -1.9);
-  add("reception", plant(0.8), 2.9, 0, -1.7);
-  add("reception", sofa("#4a6a7a"), -2.1, 0, 1.1, 0.35);
-  add("reception", wallPoster("AN TOÀN", ["Không chạy mã gói", "trên máy thật.", "Chỉ npm pack", "+ đọc file."], "#61e8c2"), -1.7, 1.15, -2.42);
+  add("reception", counter, 1.6, 0.5, 0.2);
+  add("reception", box(3.2, 0.06, 0.5, "#61e8c2", { emissive: "#61e8c2", emissiveIntensity: 0.4 }), 1.6, 1.02, -1.6);
+  add("reception", sofa("#4a6a7a"), -3.3, 0, 2.2, 0.25);
+  add("reception", sofa("#4a6a7a"), -3.6, 0, -1.6, -0.1);
+  add("reception", box(1.2, 0.4, 0.7, "#c9b48f"), -3.4, 0.2, 0.3, 0.1);
+  for (const [x, z, size] of [[-4.9, -4.3, 1.2], [4.8, -4.2, 0.9], [4.9, 3.9, 1.3], [-0.9, -4.3, 0.8]]) add("reception", plant(size), x, 0, z);
+  add("reception", wallPoster("AN TOÀN", ["Không chạy mã gói", "trên máy thật.", "Chỉ npm pack", "+ đọc file."], "#61e8c2"), -2.6, 1.25, -4.9);
+  add("reception", wallPoster("QUY TRÌNH", ["Nhận diện", "Phân tích", "Kiểm chứng", "Quyết định"], "#7cc4ff"), 2.8, 1.25, -4.9);
   const parcel = new THREE.Group();
   parcel.add(box(0.7, 0.5, 0.55, "#c99a5b", { roughness: 0.9 }));
   parcel.add(at(box(0.72, 0.06, 0.12, "#e8e1d4", { shadow: false }), 0, 0.25, 0));
-  add("reception", parcel, 1.6, 1.25, 0.3, 0.4);
+  add("reception", parcel, 2.9, 1.28, 0.6, 0.4);
 
-  // Code room: an open-plan cluster of four desks, a whiteboard and a tall plant.
+  // Code floor: an open-plan office with three desk pods, a whiteboard, a printer and plants.
   const screens = [];
-  for (const [x, z, turn] of [[-2.7, -1.9, 0], [-0.7, -2.0, 0.06], [2.0, -1.4, -0.4], [2.9, 0.7, -1.35]]) {
-    screens.push(add("code", workstation(ACCENT.code), x, 0, z, turn).userData.screen);
+  for (const [cx, cz, tilt] of [[-5, -3.4, 0.05], [2.2, -3.1, -0.08], [-1.6, 1.4, 0.1]]) {
+    for (const [dx, dz, turn] of [[-0.85, -0.6, 0], [0.85, -0.6, 0], [-0.85, 0.6, Math.PI], [0.85, 0.6, Math.PI]]) {
+      const cos = Math.cos(tilt);
+      const sin = Math.sin(tilt);
+      screens.push(add("code", workstation(ACCENT.code), cx + dx * cos + dz * sin, 0, cz - dx * sin + dz * cos, turn + tilt).userData.screen);
+    }
   }
-  add("code", mesh(new THREE.PlaneGeometry(2.4, 1.2), "#ffffff", { map: textures.whiteboard(), shadow: false }), -1.6, 1.05, -2.9);
-  add("code", plant(1.4), 3.6, 0, -2.5);
-  add("code", mesh(new THREE.CylinderGeometry(0.18, 0.15, 0.4, 12), "#5c6b7a"), -3.6, 0.2, 0.9);
+  add("code", mesh(new THREE.PlaneGeometry(3, 1.5), "#ffffff", { map: textures.whiteboard(), shadow: false }), 5.8, 1.15, -5.9);
+  add("code", printer(), -7.4, 0, -5.0, 0.2);
+  for (const [x, z, size] of [[7.6, -5.2, 1.5], [-7.7, 4.6, 1.2], [7.4, 4.5, 1], [-7.6, -2.0, 0.9]]) add("code", plant(size), x, 0, z);
+  add("code", mesh(new THREE.CylinderGeometry(0.2, 0.16, 0.45, 12), "#5c6b7a"), 4.6, 0.22, 2.4);
 
-  // Intel room: a small library with two shelves, a globe and a reading chair.
-  add("intel", shelf(ACCENT.intel), -1.0, 0, -1.75);
-  add("intel", shelf(ACCENT.intel), 1.0, 0, -1.75);
-  add("intel", mesh(new THREE.CylinderGeometry(0.06, 0.25, 0.7, 8), "#5b4636"), -1.1, 0.35, 0.6);
-  const globe = add("intel", mesh(new THREE.IcosahedronGeometry(0.42, 1), "#7cc4ff", { roughness: 0.4, metalness: 0.1 }), -1.1, 1.05, 0.6);
-  add("intel", chair("#5b4636"), 1.3, 0, 0.8, -0.7);
+  // Intel library: a wall of shelves, a side shelf, a reading table, a globe.
+  for (const x of [-3.7, -1.7, 0.3]) add("intel", shelf(ACCENT.intel), x, 0, -3.9);
+  add("intel", shelf(ACCENT.intel), 4.4, 0, -1.6, -Math.PI / 2);
+  add("intel", desk(2.2, 1), -1.4, 0, 1.0);
+  add("intel", chair("#5b4636"), -2.0, 0, 1.9, Math.PI);
+  add("intel", chair("#5b4636"), -0.8, 0, 0.1);
+  add("intel", mesh(new THREE.CylinderGeometry(0.07, 0.3, 0.8, 8), "#5b4636"), 2.4, 0.4, 1.4);
+  const globe = add("intel", mesh(new THREE.IcosahedronGeometry(0.5, 1), "#7cc4ff", { roughness: 0.4, metalness: 0.1 }), 2.4, 1.2, 1.4);
+  add("intel", plant(1.1), 4.2, 0, 3.4);
 
-  // Server room: GPU racks whose lights follow the models that are thinking, and an operator desk.
-  const racks = [[-2.0, -2.1, 0], [-0.9, -2.1, 0], [0.2, -2.15, 0.04]].map(([x, z, turn]) => add("server", serverRack(ACCENT.server), x, 0, z, turn));
-  add("server", glowing(mesh(new THREE.PlaneGeometry(2.6, 0.5), "#ffffff", { map: textures.sign("OLLAMA · GPU 6 GB", "#ff7ad9"), shadow: false }), 0.9),
-      -0.9, 2.5, -2.7);
-  add("server", desk(1.3, 0.7), 1.9, 0, -0.4, -Math.PI / 2);
-  add("server", monitor("#ff7ad9", 0.7), 1.75, 0.92, -0.4, -Math.PI / 2);
-  for (let index = 0; index < 4; index += 1) add("server", box(0.08, 0.05, 2.2, "#ffd08a", { shadow: false }), -2.0 + index * 0.75, 0.07, -0.6);
+  // Ollama server room: two rows of GPU racks (a hot and a cold aisle) and the operator desk.
+  const racks = [];
+  for (let index = 0; index < 3; index += 1) {
+    racks.push(add("server", serverRack(ACCENT.server), -3.6 + index * 1.15, 0, -4.4));
+    racks.push(add("server", serverRack(ACCENT.server), -3.6 + index * 1.15, 0, -1.7, Math.PI));
+  }
+  add("server", glowing(mesh(new THREE.PlaneGeometry(3.2, 0.6), "#ffffff", { map: textures.sign("OLLAMA · GPU 6 GB", "#ff7ad9"), shadow: false }), 0.9),
+      -1.5, 2.6, -5.4);
+  add("server", desk(1.6, 0.8), 2.8, 0, 1.4, -Math.PI / 2);
+  add("server", monitor("#ff7ad9", 0.8), 2.6, 0.92, 1.4, -Math.PI / 2);
+  for (let index = 0; index < 4; index += 1) add("server", box(0.08, 0.05, 4.2, "#ffd08a", { shadow: false }), -4 + index * 1.1, 0.07, 1.2);
+  add("server", box(1.2, 1.9, 0.8, "#5c6b7a", { metalness: 0.4 }), 3.8, 0.95, -4.4);
   const leds = racks.flatMap((rack) => rack.userData.leds);
-  const gpuGlow = add("server", new THREE.PointLight(0xff7ad9, 0, 6, 1.6), -0.9, 1.6, -0.8);
+  const gpuGlow = add("server", new THREE.PointLight(0xff7ad9, 0, 9, 1.6), -1.5, 1.8, -3);
+
+  // Meeting room: a long table with chairs and a wall screen.
+  add("meeting", box(1.6, 0.08, 4.4, "#c9b48f"), 0, 0.76, -0.6);
+  legs("meeting", 1.6, 4.4, 0, -0.6);
+  for (const z of [-2.2, -0.6, 1.0]) {
+    add("meeting", chair("#33475c"), -1.25, 0, z, Math.PI / 2);
+    add("meeting", chair("#33475c"), 1.25, 0, z, -Math.PI / 2);
+  }
+  add("meeting", monitor("#9fd8ff", 2.2), 0, 1.1, -4.3);
+  add("meeting", plant(1.1), 2.8, 0, 3.6);
 
   // Sandbox lab: sealed until W5-6 connects the sandbox to the agent.
-  add("lab", box(2.4, 1.6, 1.6, "#9fd8ff", { opacity: 0.25, roughness: 0.05, metalness: 0.3, shadow: false }), 0.3, 0.85, 0.7);
-  add("lab", box(1, 0.6, 0.7, "#5c6b7a"), 0.3, 0.35, 0.7);
-  for (let index = 0; index < 7; index += 1) {
-    add("lab", box(0.45, 0.06, 0.12, index % 2 ? "#141c26" : "#ffd08a", { shadow: false }), -1.6 + index * 0.45, 0.06, -2.2);
+  add("lab", box(3, 1.8, 2, "#9fd8ff", { opacity: 0.25, roughness: 0.05, metalness: 0.3, shadow: false }), 0.6, 0.95, 1.4);
+  add("lab", box(1.2, 0.7, 0.9, "#5c6b7a"), 0.6, 0.4, 1.4);
+  add("lab", box(2.2, 0.9, 0.7, "#c9cdd2", { metalness: 0.4 }), -3.2, 0.45, 3.2);
+  add("lab", box(2.2, 0.9, 0.7, "#c9cdd2", { metalness: 0.4 }), 3.4, 0.45, 3.4, 0.1);
+  for (let index = 0; index < 10; index += 1) {
+    add("lab", box(0.45, 0.06, 0.12, index % 2 ? "#141c26" : "#ffd08a", { shadow: false }), -2.2 + index * 0.45, 0.06, -4.6);
   }
   const lock = new THREE.Group();
   lock.add(box(0.36, 0.3, 0.12, "#ffd08a", { metalness: 0.6, roughness: 0.3 }));
   lock.add(at(mesh(new THREE.TorusGeometry(0.12, 0.035, 8, 16, Math.PI), "#c9cdd2", { metalness: 0.8 }), 0, 0.15, 0));
-  add("lab", lock, 1.4, 1.1, -2.5);
+  add("lab", lock, 2.6, 1.1, -5.0);
 
-  // Evidence room: a long table where one sheet per evidence check appears, plus a file cabinet.
-  add("evidence", box(3.6, 0.08, 1.2, "#c9b48f"), -0.2, 0.76, 0.5, 0.05);
-  for (const x of [-1.8, 1.4]) for (const z of [0, 1.0]) add("evidence", box(0.08, 0.74, 0.08, "#26384a"), x, 0.37, z);
-  add("evidence", box(0.6, 1.3, 0.55, "#5c6b7a", { metalness: 0.4 }), 2.3, 0.65, 1.5, -0.2);
-  const papers = add("evidence", new THREE.Group(), -0.2, 0.81, 0.5, 0.05);
+  // Evidence room: the long evidence table (one sheet per check appears), a side table, cabinets.
+  add("evidence", box(4.2, 0.08, 1.3, "#c9b48f"), -1.5, 0.76, 1.0, 0.04);
+  legs("evidence", 4.2, 1.3, -1.5, 1.0);
+  const papers = add("evidence", new THREE.Group(), -1.3, 0.81, 1.0, 0.04);
+  add("evidence", desk(2, 1), 3.2, 0, -1.2, 0.3);
+  add("evidence", chair("#26384a"), 3.0, 0, -0.2, Math.PI + 0.3);
+  for (const x of [3.6, 4.4]) add("evidence", box(0.7, 1.4, 0.6, "#5c6b7a", { metalness: 0.4 }), x, 0.7, 3.6);
+  add("evidence", plant(1.2), -4.8, 0, 3.6);
 
-  // Decision room: a courtroom with a raised bench, three lamps and benches for the public.
-  add("decision", box(3.6, 0.25, 1.8, "#2b3b4e"), 0, 0.12, 1.3);
-  add("decision", box(3.0, 1.05, 0.7, "#5b4636", { roughness: 0.5 }), 0, 0.77, 1.1);
+  // Courtroom: a raised bench with three lamps, public benches, plants.
+  add("decision", box(5, 0.25, 2.2, "#2b3b4e"), 0, 0.12, 3.2);
+  add("decision", box(4, 1.05, 0.8, "#5b4636", { roughness: 0.5 }), 0, 0.77, 2.9);
   const lamps = {};
   Object.entries(ACTION_COLORS).forEach(([action, color], index) => {
-    add("decision", mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), "#26384a"), -0.9 + index * 0.9, 1.5, 1.1);
-    lamps[action] = add("decision", mesh(new THREE.SphereGeometry(0.22, 18, 14), color, { emissive: color, emissiveIntensity: 0.05, roughness: 0.3 }),
-                        -0.9 + index * 0.9, 1.85, 1.1);
+    add("decision", mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.45, 8), "#26384a"), -1.2 + index * 1.2, 1.55, 2.9);
+    lamps[action] = add("decision", mesh(new THREE.SphereGeometry(0.28, 18, 14), color, { emissive: color, emissiveIntensity: 0.05, roughness: 0.3 }),
+                        -1.2 + index * 1.2, 1.95, 2.9);
   });
-  for (const [x, z, turn] of [[-2.4, -1.1, 0], [2.3, -0.9, 0.12]]) {
+  for (const z of [-2.6, -1.0, 0.6]) for (const x of [-2.4, 2.4]) {
     const pew = new THREE.Group();
-    pew.add(at(box(1.8, 0.1, 0.5, "#7a5236"), 0, 0.45, 0), at(box(1.8, 0.5, 0.08, "#7a5236"), 0, 0.72, -0.22));
-    add("decision", pew, x, 0, z, turn);
+    pew.add(at(box(2.6, 0.1, 0.5, "#7a5236"), 0, 0.45, 0), at(box(2.6, 0.5, 0.08, "#7a5236"), 0, 0.72, -0.22));
+    add("decision", pew, x, 0, z, x > 0 ? 0.04 : -0.03);
   }
-  add("decision", plant(1.2), 3.0, 0, 2.3);
-  const lampLight = new THREE.PointLight(0xffffff, 0, 7, 1.6);
-  lampLight.position.set(LAYOUT.decision[0], 2.4, LAYOUT.decision[1] + 1.0);
+  for (const x of [-4.8, 4.8]) add("decision", plant(1.3), x, 0, 4.6);
+  const lampLight = new THREE.PointLight(0xffffff, 0, 9, 1.6);
+  lampLight.position.set(LAYOUT.decision[0], 2.6, LAYOUT.decision[1] + 2.9);
   scene.add(lampLight);
-  const alarm = new THREE.SpotLight(0xff3b30, 0, 14, Math.PI / 7, 0.5, 1.2);
-  alarm.position.set(LAYOUT.decision[0], 3.4, LAYOUT.decision[1]);
+  const alarm = new THREE.SpotLight(0xff3b30, 0, 18, Math.PI / 6, 0.5, 1.2);
+  alarm.position.set(LAYOUT.decision[0], 4, LAYOUT.decision[1]);
   scene.add(alarm, alarm.target);
 
-  // Reviewer (open plan): a desk with two screens, an inbox tray, a printer and a rug.
-  add("reviewer", rug(3.6, 3.0, "#3a4656"), 0, 0.06, 0.3);
-  add("reviewer", desk(2, 0.8, "#e8e1d4"), 0, 0, 0.4, Math.PI);
-  add("reviewer", monitor("#e8f4ff", 0.7), -0.45, 0.92, 0.6, Math.PI);
-  add("reviewer", monitor("#ffd08a", 0.7), 0.45, 0.92, 0.6, Math.PI - 0.15);
-  add("reviewer", printer(), 1.8, 0, 1.3, -0.3);
-  add("reviewer", plant(1.2), -1.9, 0, 1.5);
-  const inbox = add("reviewer", new THREE.Group(), 0.9, 0.8, 0.25);
+  // Reviewer (open plan): two desks, an inbox tray, a printer.
+  add("reviewer", rug(5, 4.4, "#3a4656"), 0, 0.06, 0.6);
+  add("reviewer", desk(2, 0.8, "#e8e1d4"), 0, 0, 0.7, Math.PI);
+  add("reviewer", monitor("#e8f4ff", 0.7), -0.45, 0.92, 0.9, Math.PI);
+  add("reviewer", monitor("#ffd08a", 0.7), 0.45, 0.92, 0.9, Math.PI - 0.15);
+  add("reviewer", desk(1.4, 0.7, "#e8e1d4"), -2.3, 0, 2.4, Math.PI / 2);
+  add("reviewer", printer(), 2.6, 0, 2.9, -0.3);
+  add("reviewer", plant(1.2), -2.8, 0, -2.8);
+  const inbox = add("reviewer", new THREE.Group(), 0.9, 0.8, 0.5);
 
-  // Pantry (open plan): coffee bar, sofa, a round table with stools.
-  add("pantry", coffeeBar(), 0.3, 0, 1.6, Math.PI);
-  add("pantry", sofa("#7a5c8f"), -1.7, 0, -0.9, 0.2);
-  add("pantry", mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.05, 20), "#e8e1d4"), 1.6, 0.72, -0.4);
-  add("pantry", mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 8), "#26384a"), 1.6, 0.36, -0.4);
-  for (const angle of [0.4, 2.3, 4.1]) add("pantry", mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.45, 12), "#c99a5b"), 1.6 + Math.cos(angle) * 0.8, 0.22, -0.4 + Math.sin(angle) * 0.8);
-  add("pantry", plant(1.5), 2.7, 0, -1.8);
+  // Pantry (open plan): coffee bar, lounge sofas, round tables with stools, a fridge.
+  add("pantry", coffeeBar(), 1.5, 0, 3.0, Math.PI);
+  add("pantry", box(0.8, 1.8, 0.7, "#dde5ec", { metalness: 0.3 }), 4.4, 0.9, 3.3);
+  add("pantry", sofa("#7a5c8f"), -3.3, 0, -1.6, 0.2);
+  add("pantry", sofa("#7a5c8f"), -3.6, 0, 1.6, Math.PI - 0.2);
+  for (const [tx, tz] of [[1.0, -1.5], [3.6, 0.4]]) {
+    add("pantry", mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.05, 20), "#e8e1d4"), tx, 0.72, tz);
+    add("pantry", mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 8), "#26384a"), tx, 0.36, tz);
+    for (const angle of [0.4, 2.3, 4.1]) add("pantry", mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.45, 12), "#c99a5b"), tx + Math.cos(angle) * 0.85, 0.22, tz + Math.sin(angle) * 0.85);
+  }
+  add("pantry", plant(1.4), -4.4, 0, 3.4);
+
+  // WC: stall partitions and a sink counter.
+  for (const x of [-1.3, 0, 1.3]) add("wc", box(0.08, 1.7, 1.8, "#c9d3dc"), x, 0.85, 1.8);
+  add("wc", box(3.6, 0.9, 0.5, "#e8e1d4"), 0, 0.45, -2.6);
+  add("wc", box(3.4, 0.6, 0.04, "#9fd8ff", { metalness: 0.8, roughness: 0.05 }), 0, 1.4, -2.9);
 
   // Room labels and DOM screens (textContent only) placed over the canvas.
   const screensDom = {};
@@ -295,9 +350,10 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     overlayLayer.append(screen);
     screensDom[id] = screen;
   }
-  const screenAt = { code: [AREAS.code.at[0] - 0.6, 2.6, AREAS.code.at[1] - 1.6],
-                     evidence: [AREAS.evidence.at[0], 1.7, AREAS.evidence.at[1] + 1.0], reception: [AREAS.reception.at[0] + 0.4, 2.5, AREAS.reception.at[1] + 0.5],
-                     server: [AREAS.server.at[0] - 0.6, 3.1, AREAS.server.at[1] - 1.8], reviewer: [AREAS.reviewer.at[0], 2.2, AREAS.reviewer.at[1] + 0.6] };
+  const screenAt = {
+    code: [AREAS.code.at[0] + 4.8, 3.0, AREAS.code.at[1] + 1.2], evidence: [AREAS.evidence.at[0] - 1.5, 1.9, AREAS.evidence.at[1] + 1.0],
+    reception: [AREAS.reception.at[0] + 1.6, 2.7, AREAS.reception.at[1] + 0.6], server: [AREAS.server.at[0] - 1.5, 3.4, AREAS.server.at[1] - 4.0],
+    reviewer: [AREAS.reviewer.at[0], 2.3, AREAS.reviewer.at[1] + 0.8] };
 
   const overlay = (className, text, accent) => {
     const tag = document.createElement("div");
@@ -310,27 +366,31 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
 
   // --- staff: robots for deterministic code, people for the human roles around it ----------------
   const ROBOTS = {
-    reception: { name: "read_manifest", at: inside("reception", -1.2, -0.8), face: 0.2, gear: { clipboard: true } },
-    code: { name: "read_file · extract_indicators · deobfuscate", at: inside("code", 0.6, -0.4), face: -0.3, gear: {} },
-    intel: { name: "OSV · npm Registry (chạy trước)", at: inside("intel", 1.0, -0.5), face: -0.5, gear: { book: true } },
-    lab: { name: "Sandbox (khóa đến W5-6)", at: inside("lab", -1.6, -1.4), face: Math.PI + 0.3, gear: { shield: true } },
-    evidence: { name: "Kiểm chứng file:dòng", at: inside("evidence", -0.2, 1.6), face: Math.PI, gear: { magnifier: true } },
-    decision: { name: "Luật R1–R8 (thẩm phán)", at: inside("decision", 0, 2.15), face: Math.PI, lift: 0.25, gear: { gavel: true, robe: "#1a1f26" } },
+    reception: { name: "read_manifest", at: inside("reception", 1.4, -1.3), face: 0.2, gear: { clipboard: true } },
+    code: { name: "read_file · extract_indicators · deobfuscate", at: inside("code", 4.8, 1.2), face: -0.4, gear: {} },
+    intel: { name: "OSV · npm Registry (chạy trước)", at: inside("intel", 1.8, -1.0), face: -0.5, gear: { book: true } },
+    lab: { name: "Sandbox (khóa đến W5-6)", at: inside("lab", -3.0, -2.6), face: Math.PI + 0.3, gear: { shield: true } },
+    evidence: { name: "Kiểm chứng file:dòng", at: inside("evidence", -1.5, 2.1), face: Math.PI, gear: { magnifier: true } },
+    decision: { name: "Luật R1–R8 (thẩm phán)", at: inside("decision", 0, 4.1), face: Math.PI, lift: 0.25, gear: { gavel: true, robe: "#1a1f26" } },
   };
   const STAFF = {
-    courier: { role: "📦 Giao hàng npm", at: inside("gate", -1.6, 0.9), face: Math.PI / 2,
+    courier: { role: "📦 Giao hàng npm", at: inside("gate", -3.4, -2.2), face: Math.PI / 2,
                look: { shirt: "#c99a5b", pants: "#5b4636", hair: "cap", capColor: "#8a5a2b", hold: "none", skin: "#d9a77c" } },
-    guard: { role: "🛡️ Bảo vệ cổng", at: inside("gate", 0.2, 1.2), face: 0.4,
+    guard: { role: "🛡️ Bảo vệ cổng", at: inside("gate", 1.2, -2.6), face: Math.PI / 2,
              look: { shirt: "#22344a", pants: "#1a1f26", hair: "cap", capColor: "#1a1f26", vest: "#30475f", hold: "none", skin: "#b97f55" } },
-    tech: { role: "🧑‍💻 Kỹ thuật GPU", at: inside("server", 2.5, -0.4), face: -Math.PI / 2,
+    tech: { role: "🧑‍💻 Kỹ thuật GPU", at: inside("server", 3.6, 1.4), face: -Math.PI / 2,
             look: { shirt: "#3a2b4f", hair: "short", hairColor: "#5b3a24", glasses: true, hold: "tablet", badge: "#ff7ad9" } },
-    reviewer: { role: "👁 Người xem (duyệt tay)", at: inside("reviewer", 0, 1.25), face: Math.PI,
+    reviewer: { role: "👁 Người xem (duyệt tay)", at: inside("reviewer", 0, 1.6), face: Math.PI,
                 look: { shirt: "#f4f8f5", tie: "#2b7de9", hair: "short", hairColor: "#1a1f26", glasses: true, hold: "clipboard", skin: "#f5d3b3" } },
-    po: { role: "⭐ PO (trưởng nhóm)", at: inside("pantry", -0.3, -0.5), face: -0.6,
+    po: { role: "⭐ PO (trưởng nhóm)", at: inside("pantry", -0.6, -1.2), face: -0.6,
           look: { shirt: "#61e8c2", pants: "#26384a", hair: "long", hairColor: "#2b2420", hold: "cup", badge: "#ffd08a" } },
-    barista: { role: "☕ Barista", at: inside("pantry", 0.5, 2.15), face: Math.PI,
+    barista: { role: "☕ Barista", at: inside("pantry", 1.8, 3.75), face: Math.PI,
                look: { shirt: "#e8e1d4", apron: "#5b4636", hair: "bun", hairColor: "#8a5a2b", hold: "none", skin: "#d9a77c" } },
-    janitor: { role: "🧹 Lao công", at: [-16, HALL_Z + 1.45], face: Math.PI / 2,
+    teamA: { role: "👥 Họp nhóm", at: inside("meeting", -1.25, -2.2), face: Math.PI / 2,
+             look: { shirt: "#7cc4ff", hair: "long", hairColor: "#5b3a24", hold: "tablet", skin: "#f5d3b3" } },
+    teamB: { role: "👥 Họp nhóm", at: inside("meeting", 1.25, 1.0), face: -Math.PI / 2,
+             look: { shirt: "#ffb86b", hair: "short", hairColor: "#1a1f26", glasses: true, hold: "none", skin: "#d9a77c" } },
+    janitor: { role: "🧹 Lao công", at: [HALL.minX + 1.5, HALL_Z + 1.9], face: Math.PI / 2,
                look: { shirt: "#2f7d55", pants: "#26384a", hair: "cap", capColor: "#2f7d55", hold: "mop", vest: "#3f9a6b", skin: "#8d5a3b" } },
   };
 
@@ -355,7 +415,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   const cart = new THREE.Group();
   cart.add(at(box(0.7, 0.5, 0.45, "#3f9a6b"), 0, 0.45, 0), at(box(0.62, 0.3, 0.38, "#7cc4ff"), 0, 0.85, 0));
   for (const x of [-0.28, 0.28]) cart.add(at(mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 10), "#1a1f26"), x, 0.08, 0.2).rotateX(Math.PI / 2));
-  cart.position.set(-15.15, 0, HALL_Z + 1.45);
+  cart.position.set(HALL.minX + 2.35, 0, HALL_Z + 1.9);
   scene.add(cart);
 
   let animating = false; // idle motion only while a replay plays: a paused office leaves the GPU idle
@@ -640,9 +700,9 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   let fitDistance = 30;
   const director = { on: false, target: new THREE.Vector3(), distance: 30 };
 
-  const fitTarget = new THREE.Vector3((BOUNDS.minX + BOUNDS.maxX) / 2, 0, (BOUNDS.minZ + BOUNDS.maxZ) / 2 + 0.6);
+  const fitTarget = new THREE.Vector3((FRAME.minX + FRAME.maxX) / 2, 0, (FRAME.minZ + FRAME.maxZ) / 2 + 0.6);
   const corners = [];
-  for (const x of [BOUNDS.minX, BOUNDS.maxX]) for (const y of [0, 2.4]) for (const z of [BOUNDS.minZ + 1.2, BOUNDS.maxZ]) corners.push(new THREE.Vector3(x, y, z));
+  for (const x of [FRAME.minX, FRAME.maxX]) for (const y of [0, 2.4]) for (const z of [FRAME.minZ, FRAME.maxZ]) corners.push(new THREE.Vector3(x, y, z));
 
   function fit() {
     const { clientWidth: width, clientHeight: height } = canvas.parentElement;
@@ -665,8 +725,8 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       if (fits) far = distance; else near = distance;
     }
     fitDistance = far;
-    controls.maxDistance = fitDistance * 1.5;
-    controls.minDistance = fitDistance * 0.22;
+    controls.maxDistance = fitDistance * 2.4;   // zoom out to see the campus, roads and park
+    controls.minDistance = fitDistance * 0.12;
     dirty = true;
   }
 
@@ -728,7 +788,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     for (const worker of workers.values()) {
       if (worker.path.length) {
         const target = worker.path[0];
-        const step = reduced ? Infinity : 5.5 * delta * speed.value;
+        const step = reduced ? Infinity : 11 * delta * speed.value; // the hallway is ~60 m long
         const offset = target.clone().sub(worker.person.position);
         if (offset.length() <= step) {
           worker.person.position.copy(target);
@@ -765,13 +825,15 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       }
       staff.barista.arms[1].rotation.x = -0.9 + Math.sin(idleTime * 5) * 0.35;
       if (!staff.tech.action) staff.tech.arms[1].rotation.x = thinkingColors.length ? -1 + Math.sin(idleTime * 16) * 0.2 : -0.7;
-      const patrol = (idleTime * 0.9) % 60;
-      const forward = patrol < 30;
-      const x = forward ? -16.5 + patrol : 13.5 - (patrol - 30);
-      staff.janitor.person.position.set(x, 0, HALL_Z + 1.45);
+      const span = HALL.maxX - HALL.minX - 4;
+      const patrol = (idleTime * 1.4) % (span * 2);
+      const forward = patrol < span;
+      const x = HALL.minX + 1.5 + (forward ? patrol : span - (patrol - span));
+      staff.janitor.person.position.set(x, 0, HALL_Z + 1.9);
       staff.janitor.person.rotation.y = forward ? Math.PI / 2 : -Math.PI / 2;
       walkCycle(staff.janitor, idleTime * 7, 0.35);
-      cart.position.set(x + (forward ? 0.85 : -0.85), 0, HALL_Z + 1.45);
+      cart.position.set(x + (forward ? 0.85 : -0.85), 0, HALL_Z + 1.9);
+      campus.update(delta);
       // GPU racks: lights flicker in the colours of the models that are thinking right now.
       if (thinkingColors.length) {
         leds.forEach((led, index) => {
@@ -867,6 +929,10 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       if (shake) camera.position.add(new THREE.Vector3((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake, 0));
       renderer.render(scene, camera);
       camera.position.copy(rest);
+      // Label detail by zoom: far shows room names only, mid adds robots, near adds staff and captions.
+      const ratio = camera.position.distanceTo(controls.target) / fitDistance;
+      const zoom = ratio > 0.78 ? "far" : ratio > 0.45 ? "mid" : "near";
+      if (canvas.parentElement.dataset.zoom !== zoom) canvas.parentElement.dataset.zoom = zoom;
       for (const room of Object.values(rooms)) place(room.label, room.labelAt);
       for (const [id, point] of Object.entries(screenAt)) place(screensDom[id], point);
       for (const robot of Object.values(robots)) {
