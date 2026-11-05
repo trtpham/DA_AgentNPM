@@ -170,7 +170,9 @@ Sandbox trả kết quả có thể tái hiện và không chạm secret thật;
 - **Sửa (chỉ qua cấu hình, nhờ W5-9):** thêm `num_gpu: 99` vào `experiments/configs/A-LLM.yaml`. Ollama đưa toàn bộ model lên GPU (VRAM 5,9/6,1 GB).
 - **Đánh giá DoD:**
   - So với lần đo cùng ngày, cùng code (85,1 s): **−45%**, kết luận giữ nguyên 13/13 → đạt.
-  - So với con số cố định 50,7 s trong DoD: chỉ **−7% → FAIL theo chữ của DoD**. Mốc 50,7 s đo ở phiên bản code và điều kiện máy khác; lần đo I3 trước đó cùng code cũ đã ra 82–83 s. PO quyết định dùng mốc nào.
+  - So với con số cố định 50,7 s trong DoD: chỉ **−7% → FAIL theo chữ của DoD**. Mốc 50,7 s đo ở phiên bản code và điều kiện máy khác; lần đo I3 trước đó cùng code cũ đã ra 82–83 s.
+  - **Quyết định của PO (05/11/2026, Phạm Minh Triết): dùng mốc A — lần đo cùng ngày, cùng code (85,1 s).** Lý do: mốc 50,7 s đo trước các thay đổi I1–I4 và không tái hiện được (cùng code đó đo lại ra 82–83 s); so cùng ngày, cùng code mới tách được tác dụng của đúng một dòng cấu hình.
+  - **Kết luận W5-8: PASS** (−45%, kết luận giống mốc 13/13). I3 của kế hoạch cải thiện được đóng.
 - **Rủi ro:** VRAM sát trần. Nếu ứng dụng khác chiếm GPU, Ollama có thể lỗi; khi đó agent rơi về `review` (R2), không tự approve. Nên tắt ứng dụng nặng GPU (trình duyệt 3D, game) khi chạy lô.
 
 ### W5-9 — tham số chat nằm trong YAML (AGENTS §6.7) (2026-11-04)
@@ -193,6 +195,15 @@ Sandbox trả kết quả có thể tái hiện và không chạm secret thật;
   - Vẫn bị chặn (`oom`, mã 137) nhưng rộng gấp đôi thiết kế.
   - Đề xuất thêm `--memory-swap 256m` vào `sandbox/run.py`; chờ TV3 duyệt.
 - Kiểm chứng: `py -3.14 -m pytest` → **139 PASS, 8 SKIP**.
+
+### Giao việc W5-5 và W5-10 (2026-11-05)
+
+- **W5-8:** PO chốt mốc A (cùng ngày, cùng code) → **PASS**, xem mục W5-8.
+- **W5-5:** đã soạn hướng dẫn và checklist nghiệm thu cho TV3: [giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md](giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md). Trạng thái: **chờ TV3** (hạn đề xuất 07/11). W5-6 vẫn khóa.
+- **W5-10:** đã soạn hướng dẫn kiểm tra chéo: [giao-viec/W5-10_KIEM_TRA_CHEO_NHAN.md](giao-viec/W5-10_KIEM_TRA_CHEO_NHAN.md).
+  - Phân công đề xuất: TV1 lượt 1 + 4 (40 dòng), TV3 lượt 2 + 3 (36 dòng); TV2 chốt.
+  - Hiện trạng: `check` cả 4 phiếu đều `pending` (20/18/18/20). Trạng thái: **chờ người kiểm tra** (hạn đề xuất 09/11).
+- Tin nhắn soạn sẵn: [giao-viec/TIN_NHAN_GUI_NHOM.md](giao-viec/TIN_NHAN_GUI_NHOM.md). Claude không gửi tin nhắn thay nhóm.
 
 ## Ảnh kết quả
 

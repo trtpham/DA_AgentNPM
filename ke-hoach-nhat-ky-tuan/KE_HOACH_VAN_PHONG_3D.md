@@ -1,4 +1,4 @@
-# Kế hoạch: "Văn phòng 3D" — trực quan hóa agent (bản đề xuất, chờ PO duyệt)
+# Kế hoạch: "Văn phòng 3D" — trực quan hóa agent (đã duyệt 04/11/2026)
 
 Ngày lập: 04/11/2026. Trạng thái: **ĐÃ DUYỆT 04/11/2026 — bắt đầu sau khi tuần 5 ổn định; chưa viết code.**
 

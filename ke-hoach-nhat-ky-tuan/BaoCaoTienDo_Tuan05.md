@@ -100,7 +100,7 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
   - Đo riêng từng lượt gọi model: **86% thời gian là sinh câu trả lời**, chỉ 12 token/giây.
   - Nguyên nhân: Ollama chỉ đưa khoảng 55% model lên GPU 6 GB, phần còn lại chạy bằng CPU. Giảm `num_ctx` từ 16384 xuống 8192 không giúp (104,5 giây/gói).
   - Sửa bằng một dòng cấu hình `num_gpu: 99`: tốc độ sinh tăng lên **27,6 token/giây**, thời gian **85,1 → 47,0 giây/gói**, kết luận giữ nguyên 13/13.
-  - DoD gốc so với mốc cố định 50,7 giây (đo ở phiên bản code cũ) thì mới giảm 7%. **Chờ PO chốt mốc so sánh.**
+  - DoD gốc ghi mốc cố định 50,7 giây, đo trước các thay đổi I1–I4 và không tái hiện được (cùng code đo lại ra 82–83 giây). Ngày 05/11, PO chốt so với lần đo cùng ngày, cùng code: **giảm 45% → W5-8 ĐẠT**. Nếu so với 50,7 giây thì chỉ giảm 7%; báo cáo ghi cả hai để minh bạch.
 - **Agent bỏ qua công cụ giải rối mã:**
   - Gói thử mã rút gọn cho thấy: khi một dòng quá dài bị cắt, agent coi như "đã đọc xong" và chuyển ngay sang kết luận, không còn cơ hội gọi `deobfuscate`.
   - Sau khi sửa, agent được thêm tối đa 2 lượt để giải rối và đọc bản đã định dạng; kết quả đọc file có gợi ý rõ phải làm gì.
