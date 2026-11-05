@@ -154,3 +154,16 @@ def test_orphan_exec_in_truncated_trace_is_not_taken_as_npm():
     trace = '50 execve("/bin/sleep", ["sleep", "5"], 0x1 /* 3 vars */) = 0\n50 connect(3, {}, 16) = -1 ENETUNREACH\n'
     actors = attribute_events(trace)
     assert actors["npm"]["network_count"] == 0 and actors["unknown"]["network_count"] == 1
+
+
+def test_demo_table_row_reads_outcome_actor_and_canary():
+    from experiments.demo_sandbox import row, table
+
+    result = {"ok": False, "error": "sandbox timed out", "data": {
+        "outcome": "timeout", "returncode": 124, "canary_touched": ["ssh"],
+        "stdout": {"untrusted": True,
+                   "content": "noise\nW5RESULT allocated_mb=32\nW5RESULT allocated_mb=64 waiting=120\n"},
+        "by_actor": {"npm": {"network_count": 4}, "package": {"network_count": 0}, "unknown": {"network_count": 0}}}}
+    assert row("timeout", result)[2:] == ("allocated_mb=64 waiting=120", "timeout", "✘", "124", "4/0/0", "ssh")
+    assert row("network", {"ok": False, "error": "Docker failed", "data": None})[3] == "lỗi: Docker failed"
+    assert "outcome" in table([row("timeout", result)]).splitlines()[0]
