@@ -1,0 +1,9 @@
+{
+  "name": "sim-crc-native",
+  "version": "1.2.0",
+  "description": "Native CRC32",
+  "license": "MIT",
+  "scripts": {
+    "install": "node-gyp rebuild"
+  }
+}

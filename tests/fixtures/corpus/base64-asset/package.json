@@ -1,0 +1,9 @@
+{
+  "name": "sim-icon-font",
+  "version": "2.0.0",
+  "description": "Icon font",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node unpack.js"
+  }
+}

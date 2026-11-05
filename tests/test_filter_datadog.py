@@ -4,7 +4,7 @@ import json
 import tarfile
 import zipfile
 
-from data.filter_datadog import filter_archives
+from data.scripts.filter_datadog import filter_archives
 
 
 def test_filter_archives_uses_package_manifest_not_nested_dependency(tmp_path):
@@ -54,7 +54,7 @@ def test_filter_archives_ignores_dependency_binding_gyp(tmp_path):
 
 
 def test_filter_archives_limits_source_bytes_from_untrusted_zip(tmp_path, monkeypatch):
-    monkeypatch.setattr("data.filter_datadog.MAX_SOURCE_BYTES", 5, raising=False)
+    monkeypatch.setattr("data.scripts.filter_datadog.MAX_SOURCE_BYTES", 5, raising=False)
     source = tmp_path / "input"
     source.mkdir()
     with zipfile.ZipFile(source / "large.zip", "w") as archive:

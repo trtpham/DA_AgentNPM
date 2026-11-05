@@ -34,7 +34,7 @@ def test_null_writer_creates_no_file(tmp_path):
 
 
 def test_agent_writes_read_only_trace_for_fixture(tmp_path):
-    package_dir = str(Path(__file__).parent / "fixtures" / "benign-package")
+    package_dir = str(Path(__file__).parent / "fixtures" / "packages/benign-package")
     verdict = {
         "package": "benign-install-fixture@1.0.0", "label": "benign", "confidence": 0.9,
         "description": "Installation writes only a fixed local test marker",
@@ -78,7 +78,7 @@ def test_synthetic_samples_are_valid_and_bounded():
 
 
 def test_step_limit_closes_trace(tmp_path):
-    package_dir = str(Path(__file__).parent / "fixtures" / "benign-package")
+    package_dir = str(Path(__file__).parent / "fixtures" / "packages/benign-package")
     writer = TraceWriter(tmp_path / "run-limit", "benign-install-fixture@1.0.0")
     with pytest.raises(RuntimeError, match="no valid evidence-backed verdict"):
         analyze(package_dir, "fake-model", max_steps=1,

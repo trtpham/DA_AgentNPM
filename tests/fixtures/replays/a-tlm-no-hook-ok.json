@@ -1,13 +1,14 @@
 {
  "recorded": "2026-11-04",
  "variant": "A-TLM",
- "fixture": "no-hook-package",
+ "fixture": "packages/no-hook-package",
  "source_run": "i3",
  "expected": {
   "valid": true,
-  "steps": 3,
+  "steps": 4,
   "rule": "R7_review",
-  "final": "benign/review"
+  "final": "benign/review",
+  "note": "L3 (2026-11-05): cited lines do not show the claimed technique; the model is asked once to fix it, the replay repeats its answer, and the mismatched evidence is not counted."
  },
  "replies": [
   {

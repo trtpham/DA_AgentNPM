@@ -1,7 +1,7 @@
 {
  "recorded": "2026-11-04",
  "variant": "A-LLM",
- "fixture": "benign-package",
+ "fixture": "packages/benign-package",
  "source_run": "i3",
  "expected": {
   "valid": true,

@@ -1,0 +1,8 @@
+{
+  "name": "probe-twin-a",
+  "version": "1.0.0",
+  "description": "Build helper",
+  "scripts": {
+    "postinstall": "node setup.js"
+  }
+}

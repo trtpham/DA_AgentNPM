@@ -1,0 +1,9 @@
+{
+  "name": "sim-build-flags",
+  "version": "1.4.2",
+  "description": "Build flags helper",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node configure.js"
+  }
+}

@@ -1,7 +1,7 @@
-// node --test tests/office_explain.test.mjs — plain-language input/process/output for each trace event.
+// node --test tests/js/office_explain.test.mjs — plain-language input/process/output for each trace event.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { explainStep, previewText, argsText, TOOL_INFO, ERROR_INFO } from "../viewer/static/office/explain.mjs";
+import { explainStep, previewText, argsText, TOOL_INFO, ERROR_INFO } from "../../viewer/static/office/explain.mjs";
 
 const events = [
   { type: "run_start", package: "canary-fixture@1.0.0", model: "qwen3.5:9b", max_steps: 15 },

@@ -1,0 +1,9 @@
+{
+  "name": "sim-fast-image",
+  "version": "3.1.0",
+  "description": "Fast image resizing with a prebuilt native addon",
+  "license": "MIT",
+  "scripts": {
+    "install": "node install.js"
+  }
+}

@@ -20,9 +20,12 @@ def test_recorded_replies_reach_the_same_outcome(path, tmp_path):
     record = json.loads(path.read_text(encoding="utf-8"))
     replies = iter(record["replies"])
     writer = TraceWriter(tmp_path / "run", "replay")
+    last = record["replies"][-1]
 
     def chat(*_args, **_kwargs):
-        return json.loads(json.dumps(next(replies)))  # analyze mutates replies; keep the record intact
+        # Past the recording the model repeats its last answer (L3 asks once to fix a mismatched claim).
+        # analyze mutates replies; json round-trip keeps the record intact.
+        return json.loads(json.dumps(next(replies, last)))
 
     expected = record["expected"]
     if expected["valid"]:

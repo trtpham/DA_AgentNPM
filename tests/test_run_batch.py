@@ -39,7 +39,7 @@ def offline(monkeypatch):
 
 
 def test_batch_isolates_failures_records_meta_and_resumes(tmp_path):
-    inputs = batch.select_inputs(None, None, [], [FIXTURES / "benign-package", FIXTURES / "canary-package"], False)
+    inputs = batch.select_inputs(None, None, [], [FIXTURES / "packages" / "benign-package", FIXTURES / "packages" / "canary-package"], False)
     counts = batch.run_batch("run-1", "A-TLM", inputs, tmp_path, analyze=fake_analyze)
     assert counts == {"done": 2, "skipped": 0, "errors": 1}
     run_dir = tmp_path / "run-1"
@@ -103,7 +103,7 @@ def test_run_meta_matches_yaml_options(tmp_path, monkeypatch):
         seen.update(kwargs["options"])
         return fake_analyze(package, model, max_steps, trace, **kwargs)
 
-    inputs = batch.select_inputs(None, None, [], [FIXTURES / "benign-package"], False)
+    inputs = batch.select_inputs(None, None, [], [FIXTURES / "packages" / "benign-package"], False)
     batch.run_batch("run-opts", "A-SLM", inputs, tmp_path, analyze=recording_analyze)
     meta = json.loads((tmp_path / "run-opts" / "run_meta.json").read_text(encoding="utf-8"))
     yaml_options = batch.load_config("A-SLM")["options"]

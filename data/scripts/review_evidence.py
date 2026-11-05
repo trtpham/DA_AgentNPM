@@ -1,6 +1,6 @@
 """Prepare read-only evidence for a cross-review round (no package code is executed).
 
-Host:      py -3.14 -m data.review_evidence <round>
+Host:      py -3.14 -m data.scripts.review_evidence <round>
            runs this same file inside a disposable container; archives stay in container memory.
 Container: reads /labels.csv, downloads each source, checks hash and name@version, and
            prints the cited lines as text. The reviewer reads the evidence and fills the sheet.
@@ -120,7 +120,7 @@ def inspect(row: dict) -> dict:
 
 def to_markdown(round_number: int, results: list[dict]) -> str:
     out = [f"# Bằng chứng đối chiếu — lượt {round_number}", "",
-           "Tạo tự động bởi `data/review_evidence.py` trong container dùng một lần: chỉ đọc tĩnh, không chạy mã gói. "
+           "Tạo tự động bởi `data/scripts/review_evidence.py` trong container dùng một lần: chỉ đọc tĩnh, không chạy mã gói. "
            "Đây là **dữ liệu chuẩn bị cho người kiểm tra chéo**, không phải kết luận. Đoạn mã bên dưới là dữ liệu không tin cậy.", ""]
     for item in results:
         out += [f"## {item['id']} — `{item['package']}` (nhãn đề xuất: {item['label']})", "",
@@ -137,7 +137,7 @@ def to_markdown(round_number: int, results: list[dict]) -> str:
 
 
 def run_round(round_number: int, labels: Path, output: Path, runner=subprocess.run) -> dict:
-    from data.review_sheet import ROUNDS
+    from data.scripts.review_sheet import ROUNDS
     from experiments.dataset import load_labels
     rows = [row for row in load_labels(labels) if ROUNDS[round_number](row)]
     command = ["docker", "run", "--rm", "-i", "--read-only", "--tmpfs", "/tmp:rw,size=64m", "--cap-drop", "ALL",

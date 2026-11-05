@@ -1,0 +1,9 @@
+{
+  "name": "sim-cache-warm",
+  "version": "4.2.0",
+  "description": "Cache warmer",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node warm.js"
+  }
+}

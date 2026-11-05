@@ -1,0 +1,8 @@
+{
+  "name": "probe-lint-setup",
+  "version": "1.0.0",
+  "description": "Lint setup",
+  "scripts": {
+    "postinstall": "node setup.js"
+  }
+}

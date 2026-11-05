@@ -1,0 +1,6 @@
+{
+  "name": "sim-http-client",
+  "version": "7.1.0",
+  "description": "HTTP client",
+  "license": "MIT"
+}

@@ -168,7 +168,7 @@ def test_scan_names_each_reason_the_install_path_is_incomplete(tmp_path):
 
 def test_complete_scan_reports_no_reasons():
     from pathlib import Path
-    data = extract_indicators(str(Path(__file__).parent / "fixtures" / "benign-package"))["data"]
+    data = extract_indicators(str(Path(__file__).parent / "fixtures" / "packages/benign-package"))["data"]
     assert (data["truncated"], data["incomplete"]) == (False, [])
 
 
@@ -178,7 +178,7 @@ def test_w5_7_minified_base64_fixture_is_readable_through_pretty_view():
 
     from tools.static import deobfuscate, extract_indicators
 
-    package = str(Path(__file__).parent / "fixtures" / "obfuscated-package")
+    package = str(Path(__file__).parent / "fixtures" / "packages/obfuscated-package")
     found = extract_indicators(package)
     assert found["ok"] and {item["type"] for item in found["data"]["indicators"]} >= {"decode", "base64"}
     pretty = deobfuscate(package, "install.min.js")

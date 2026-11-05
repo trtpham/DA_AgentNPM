@@ -1,10 +1,10 @@
-// node --test tests/office_scenarios.test.mjs — truck scenarios cover every outcome, simulations are labelled.
+// node --test tests/js/office_scenarios.test.mjs — truck scenarios cover every outcome, simulations are labelled.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { composeScenario, SCENARIOS, synthesize } from "../viewer/static/office/scenarios.mjs";
-import { buildTruck } from "../viewer/static/office/truck.mjs";
-import { explainStep } from "../viewer/static/office/explain.mjs";
-import { roomFor } from "../viewer/static/office/events.mjs";
+import { composeScenario, SCENARIOS, synthesize } from "../../viewer/static/office/scenarios.mjs";
+import { buildTruck } from "../../viewer/static/office/truck.mjs";
+import { explainStep } from "../../viewer/static/office/explain.mjs";
+import { roomFor } from "../../viewer/static/office/events.mjs";
 
 const fakeTrace = (pkg, action, rule) => [
   { type: "run_start", ts: "2026-11-05T00:00:00Z", package: pkg },

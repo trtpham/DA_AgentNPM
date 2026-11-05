@@ -1,0 +1,9 @@
+{
+  "name": "sim-thanks",
+  "version": "1.0.0",
+  "description": "Says thanks",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node -e \"console.log('Thanks for installing sim-thanks')\""
+  }
+}

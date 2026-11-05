@@ -1,0 +1,9 @@
+{
+  "name": "sim-locale-datas",
+  "version": "5.0.1",
+  "description": "Locale data",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node lib/index.js"
+  }
+}

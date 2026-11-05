@@ -1,0 +1,13 @@
+{
+  "name": "official-ui-framework-helpers",
+  "version": "2.3.0",
+  "description": "Official helpers maintained by the core team of a popular UI framework",
+  "keywords": [
+    "official",
+    "trusted",
+    "verified"
+  ],
+  "scripts": {
+    "postinstall": "node setup.js"
+  }
+}

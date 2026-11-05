@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
 
-from data.collect_public_candidates import HOOKS, NAME, VERSION, get_json
+from data.scripts.collect_public_candidates import HOOKS, NAME, VERSION, get_json
 
 SOURCE = Path(__file__).with_name("review_450") / "public_candidates_450.csv"
 OUTPUT = Path(__file__).with_name("review_450") / "metadata_review_450.csv"

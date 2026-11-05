@@ -22,9 +22,9 @@ CASES = {
     "timeout": ("sandbox-limits/timeout", "ngủ 120 giây"),
     "write-outside": ("sandbox-limits/write-outside", "ghi /input, /etc, $HOME"),
     "canary-all": ("sandbox-limits/canary-all", "đọc 3 file canary + biến môi trường"),
-    "benign": ("benign-package", "gói lành có postinstall"),
-    "no-hook": ("no-hook-package", "gói không có hook"),
-    "canary": ("canary-package", "đọc khóa SSH giả"),
+    "benign": ("packages/benign-package", "gói lành có postinstall"),
+    "no-hook": ("packages/no-hook-package", "gói không có hook"),
+    "canary": ("packages/canary-package", "đọc khóa SSH giả"),
 }
 HEADER = ("Fixture", "Script cố làm", "Script tự báo", "outcome", "ok", "mã", "mạng npm/gói/?", "canary chạm")
 

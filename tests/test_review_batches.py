@@ -2,8 +2,8 @@ import csv
 
 import pytest
 
-from data.review_batches import BATCH_SIZE, run_batches
-from data.review_public_candidates import EXTRA, FIELDS
+from data.scripts.review_batches import BATCH_SIZE, run_batches
+from data.scripts.review_public_candidates import EXTRA, FIELDS
 
 
 def test_batches_cover_450_once_and_resume_without_refetch(tmp_path):

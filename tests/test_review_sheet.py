@@ -2,7 +2,7 @@ import csv
 
 import pytest
 
-from data.review_sheet import COPIED, REVIEW, build_sheet, check_sheet
+from data.scripts.review_sheet import COPIED, REVIEW, build_sheet, check_sheet
 from experiments.dataset import FIELDS
 
 

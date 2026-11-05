@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from data.review_public_candidates import EXTRA, FIELDS, SOURCE, review_row
+from data.scripts.review_public_candidates import EXTRA, FIELDS, SOURCE, review_row
 
 BATCH_SIZE = 18
 OUTPUT_DIR = Path(__file__).with_name("review_450") / "batches"

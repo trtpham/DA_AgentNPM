@@ -1,7 +1,7 @@
 {
  "recorded": "2026-11-04",
  "variant": "A-TLM",
- "fixture": "no-hook-package",
+ "fixture": "packages/no-hook-package",
  "source_run": "i2base",
  "expected": {
   "valid": false,

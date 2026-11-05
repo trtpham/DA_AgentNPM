@@ -201,7 +201,7 @@ Trong container Python dùng một lần, chỉ đọc từ npm Registry và kh�
 
 ## Phiếu kiểm tra chéo và giới hạn đại diện — 2026-11-03
 
-Claude tạo bốn phiếu trong [`review_rounds/`](review_rounds/) bằng `py -3.14 -m data.review_sheet build <lượt>`: lượt 1 có 20 dòng lành; lượt 2 có 18 dòng `npm-token-worm-2026-03`; lượt 3 có 18 dòng `shai-hulud-2-2025-11`; lượt 4 có 20 dòng (17 `mut-4831`, 1 `exnesss`, 2 nghi vấn). Tổng 76/76 dòng. Phiếu chỉ chép những gì người ghi nhãn ban đầu đã ghi. Các cột `decision`, `reviewer`, `reviewed_at`, `observed_behavior` và `note` để trống cho **người kiểm tra chéo** điền sau khi đọc mã trong VM/container. Lệnh `check` từ chối các trường hợp sau: người duyệt là Codex/Claude, thiếu ngày, quyết định ngoài `verified/revise/exclude`, hoặc `revise/exclude` không ghi lý do. Phiếu không ghi đè được.
+Claude tạo bốn phiếu trong [`review_rounds/`](review_rounds/) bằng `py -3.14 -m data.scripts.review_sheet build <lượt>`: lượt 1 có 20 dòng lành; lượt 2 có 18 dòng `npm-token-worm-2026-03`; lượt 3 có 18 dòng `shai-hulud-2-2025-11`; lượt 4 có 20 dòng (17 `mut-4831`, 1 `exnesss`, 2 nghi vấn). Tổng 76/76 dòng. Phiếu chỉ chép những gì người ghi nhãn ban đầu đã ghi. Các cột `decision`, `reviewer`, `reviewed_at`, `observed_behavior` và `note` để trống cho **người kiểm tra chéo** điền sau khi đọc mã trong VM/container. Lệnh `check` từ chối các trường hợp sau: người duyệt là Codex/Claude, thiếu ngày, quyết định ngoài `verified/revise/exclude`, hoặc `revise/exclude` không ghi lý do. Phiếu không ghi đè được.
 
 **Giới hạn đại diện của cách chia hiện tại (phải nêu khi báo cáo chỉ số):**
 

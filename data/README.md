@@ -1,5 +1,10 @@
 # Bộ nhãn
 
+Bố cục (sắp xếp lại ngày 05/11/2026):
+- Thư mục `data/` chỉ chứa **dữ liệu**: `labels.csv`, `candidates.csv`, `review_450/`, `review_rounds/`.
+- Mọi script nằm trong `data/scripts/` và chạy bằng `py -3.14 -m data.scripts.<tên>`, ví dụ `py -3.14 -m data.scripts.review_sheet check data/review_rounds/round-1.csv`.
+- `data/samples/` (mẫu độc thật) bị Git ignore và chỉ mở trong VM.
+
 ## File nào dùng để làm gì?
 
 | Đường dẫn | Vai trò |
@@ -16,14 +21,14 @@ Các script `.py` ở thư mục này tạo/lọc/kiểm tra dữ liệu; `REVIE
 
 `candidates.csv` lưu **metadata ứng viên**. `source_label=malicious` là nhãn advisory; `unlabeled` nghĩa là nguồn không khẳng định benign. `review_status=needs_independent_review` nghĩa là nhóm chưa kiểm tra chéo. GitHub Advisory và bản OSV tương ứng có cùng nguồn gốc nên không tính là hai lượt kiểm tra độc lập. Chỉ chuyển dòng sang `labels.csv` sau khi TV2 hoặc người được TV2 ủy quyền xác minh đúng tên, phiên bản, install hook, hành vi và ghi người kiểm tra/quyết định vào [hồ sơ tuần 2](REVIEW_WEEK2.md). Không tải hoặc đưa tarball độc vào Git.
 
-Theo phân công trong `ke-hoach-nhat-ky-tuan/KE_HOACH.md`, TV1 phụ trách dữ liệu và Phạm Minh Triết (TV2) phụ trách kiểm tra chéo. Ngày 29/10/2026, TV2 ủy quyền Codex duyệt các gói lành; hồ sơ ghi Codex là người thực hiện, không coi đây là chữ ký kiểm tra trực tiếp của TV2.
+Theo phân công trong `docs/tien-do/KE_HOACH.md`, TV1 phụ trách dữ liệu và Phạm Minh Triết (TV2) phụ trách kiểm tra chéo. Ngày 29/10/2026, TV2 ủy quyền Codex duyệt các gói lành; hồ sơ ghi Codex là người thực hiện, không coi đây là chữ ký kiểm tra trực tiếp của TV2.
 
 Với mỗi ứng viên trong `candidates.csv`, người kiểm tra chéo ghi: `package@version`, bằng chứng install hook, nhãn đề xuất, hành vi chính và lý do kèm nguồn. Xác minh từng mục trước khi chuyển vào `labels.csv`.
 
 Hai ứng viên lành có install hook đã được Codex kiểm tra tĩnh và gán nhãn `benign` theo ủy quyền. Việc không có advisory tự nó không đủ để kết luận benign; xem giới hạn và bằng chứng trong [hồ sơ tuần 2](REVIEW_WEEK2.md).
 
 ```powershell
-rtk proxy python -c "from pathlib import Path; from data.prepare_labels import prepare_labels; print(prepare_labels(Path('data/labels.csv'), Path('data/labels-prepared.csv')))"
+rtk proxy python -c "from pathlib import Path; from data.scripts.prepare_labels import prepare_labels; print(prepare_labels(Path('data/labels.csv'), Path('data/labels-prepared.csv')))"
 ```
 
 Không chạy lệnh trên nếu đích đã chứa nhãn thủ công cần giữ; hàm ghi đè file đích.
@@ -38,11 +43,11 @@ Toàn bộ dòng có `source_label=unlabeled` và `review_status=needs_independe
 
 ## Đối chiếu theo batch
 
-`data/review_batches.py` chia danh sách cố định thành **25 batch, mỗi batch 18 gói**. Mỗi batch ghi một CSV riêng trong [`review_batches/`](review_450/batches/) sau khi hoàn tất; chạy lại sẽ kiểm tra và bỏ qua batch đã có để tiếp tục từ chỗ dừng. Nếu mạng gây `fetch_error`, batch đó chưa được ghi và có thể chạy lại. Lượt chạy ngày 29/10/2026 có 450 dòng duy nhất, 445 manifest khớp và 5 manifest HTTP 404; các trường kết quả khớp [`metadata_review_450.csv`](review_450/metadata_review_450.csv). Đây là lượt đối chiếu metadata và lệnh lifecycle, không phải AI scan hay kết luận nhãn.
+`data/scripts/review_batches.py` chia danh sách cố định thành **25 batch, mỗi batch 18 gói**. Mỗi batch ghi một CSV riêng trong [`review_batches/`](review_450/batches/) sau khi hoàn tất; chạy lại sẽ kiểm tra và bỏ qua batch đã có để tiếp tục từ chỗ dừng. Nếu mạng gây `fetch_error`, batch đó chưa được ghi và có thể chạy lại. Lượt chạy ngày 29/10/2026 có 450 dòng duy nhất, 445 manifest khớp và 5 manifest HTTP 404; các trường kết quả khớp [`metadata_review_450.csv`](review_450/metadata_review_450.csv). Đây là lượt đối chiếu metadata và lệnh lifecycle, không phải AI scan hay kết luận nhãn.
 
 ```powershell
-rtk proxy python -m data.review_batches --batch 1
-rtk proxy python -m data.review_batches
+rtk proxy python -m data.scripts.review_batches --batch 1
+rtk proxy python -m data.scripts.review_batches
 ```
 
 Không thực thi nội dung trong cột `hook_commands`: đó là văn bản không tin cậy do nhà phát hành gói cung cấp. Quyết định nhãn mới nhất nằm ở `labels.csv` và [hồ sơ tuần 2](REVIEW_WEEK2.md); các batch là ảnh chụp metadata tại thời điểm chạy.

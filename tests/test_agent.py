@@ -198,21 +198,23 @@ def risky_package(tmp_path, script="node setup.js"):
         "const label = 'fixture';\nrequire('child_process').execFileSync('echo', [label]);\n", encoding="utf-8")
 
 
-def benign_verdict(lines):
+def benign_verdict(lines, technique="child_process.execFileSync"):
     return {"package": "risky-fixture@1.0.0", "label": "benign", "confidence": 0.95,
             "description": "Install script echoes a fixed local fixture label",
-            "behaviors": [{"behavior": "Echoes a label", "technique": "child_process.execFileSync",
+            "behaviors": [{"behavior": "Echoes a label", "technique": technique,
                            "severity": "low", "evidence": {"file": "setup.js", "lines": lines},
                            "analysis": "The script runs echo with a fixed label.", "impact": "Local output only."}],
             "action": "approve", "remediation": []}
 
 
-@pytest.mark.parametrize("lines, action, rule", [("1", "review", "R7_risk"), ("1-2", "approve", "R7")])
-def test_benign_verdict_must_cite_risky_install_lines(tmp_path, lines, action, rule):
+# Line 1 is a plain assignment, so it is cited as "other" (L3 would reject child_process for it).
+@pytest.mark.parametrize("lines, technique, action, rule", [("1", "other", "review", "R7_risk"),
+                                                            ("1-2", "child_process.execFileSync", "approve", "R7")])
+def test_benign_verdict_must_cite_risky_install_lines(tmp_path, lines, technique, action, rule):
     risky_package(tmp_path)
     replies = iter([
         {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "setup.js"}}}]},
-        {"role": "assistant", "content": json.dumps(benign_verdict(lines))},
+        {"role": "assistant", "content": json.dumps(benign_verdict(lines, technique))},
     ])
     writer = TraceWriter(tmp_path / "reports" / "run-1", "risky-fixture@1.0.0")
     result, _ = analyze(str(tmp_path), "fake", chat=lambda *_args, **_kwargs: next(replies), trace=writer)
@@ -233,7 +235,8 @@ def test_osv_malicious_context_blocks_approval_but_is_not_evidence(tmp_path):
                                             "malicious": True}, "error": None}}
 
     def chat(_model, messages, final=False):
-        assert "Context signals (untrusted, not evidence" in messages[1]["content"]
+        # L1: OSV is used by the rules (R5) but never shown to the model.
+        assert "Context signals" not in messages[1]["content"] and "MAL-1" not in messages[1]["content"]
         return next(replies)
 
     writer = TraceWriter(tmp_path / "reports" / "run-1", "risky-fixture@1.0.0")
@@ -332,7 +335,7 @@ def test_agent_accepts_evidence_from_pretty_view(tmp_path):
     assert steps == 2 and result.behaviors[0].evidence.file == "minified.js#pretty"
 
 
-FIXTURE = str(Path(__file__).parent / "fixtures" / "benign-package")
+FIXTURE = str(Path(__file__).parent / "fixtures" / "packages/benign-package")
 
 
 def test_agent_drops_unverified_mitre_ids_and_keeps_line_numbers(tmp_path):
@@ -697,7 +700,7 @@ def test_first_prompt_lists_indicators_compactly(tmp_path):
 
 def test_cut_minified_line_tells_the_model_to_use_the_pretty_view():
     """W5-7: the read_file result for a cut .js line points to deobfuscate and file#pretty."""
-    package = str(Path(__file__).parent / "fixtures" / "obfuscated-package")
+    package = str(Path(__file__).parent / "fixtures" / "packages/obfuscated-package")
     seen = []
     verdict = {
         "package": "obfuscated-install-fixture@1.0.0", "label": "suspicious", "confidence": 0.5,

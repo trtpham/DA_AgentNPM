@@ -1,7 +1,7 @@
-// node --test tests/office_events.test.mjs — pure mapping of trace events to office rooms.
+// node --test tests/js/office_events.test.mjs — pure mapping of trace events to office rooms.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ROOMS, roomFor } from "../viewer/static/office/events.mjs";
+import { ROOMS, roomFor } from "../../viewer/static/office/events.mjs";
 
 test("every room has a Vietnamese name and step", () => {
   for (const room of Object.values(ROOMS)) assert.ok(room.name && room.step);

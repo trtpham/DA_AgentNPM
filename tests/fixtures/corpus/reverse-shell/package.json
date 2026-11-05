@@ -1,0 +1,9 @@
+{
+  "name": "sim-ts-compiler",
+  "version": "0.9.1",
+  "description": "Compile helper",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node scripts/build.js"
+  }
+}

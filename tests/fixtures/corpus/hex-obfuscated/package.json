@@ -1,0 +1,9 @@
+{
+  "name": "sim-color-util",
+  "version": "2.2.2",
+  "description": "Color helpers",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node i.js"
+  }
+}

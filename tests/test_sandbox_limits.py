@@ -86,7 +86,7 @@ def test_every_fake_canary_is_detected():
 
 @pytest.mark.parametrize("name", ["benign-package", "no-hook-package"])
 def test_harmless_fixtures_have_no_package_network(name):
-    result = run_sandbox(Path(__file__).parent / "fixtures" / name)
+    result = run_sandbox(Path(__file__).parent / "fixtures" / "packages" / name)
     assert result["ok"] and result["data"]["outcome"] == "ok"
     actors = result["data"]["by_actor"]
     assert actors["package"]["network_count"] == 0 and actors["npm"]["network_count"] > 0

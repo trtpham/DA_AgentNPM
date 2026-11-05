@@ -3,7 +3,7 @@ import json
 import tarfile
 import zipfile
 
-from data import review_evidence as evidence
+from data.scripts import review_evidence as evidence
 
 
 def tgz(files):

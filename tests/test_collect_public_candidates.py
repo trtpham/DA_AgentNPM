@@ -1,6 +1,6 @@
 import pytest
 
-from data import collect_public_candidates as collector
+from data.scripts import collect_public_candidates as collector
 
 
 def test_manifest_records_only_hook_names_and_exact_source(monkeypatch):
@@ -22,7 +22,7 @@ def test_registry_request_rejects_non_path_url():
 
 
 def test_metadata_review_checks_scoped_hook_without_assigning_label():
-    from data.review_public_candidates import review_row
+    from data.scripts.review_public_candidates import review_row
 
     row = {"package": "@scope/example", "version": "1.2.3", "source_label": "unlabeled",
            "install_hook": "postinstall", "source_url": "https://registry.npmjs.org/%40scope%2Fexample/1.2.3",
@@ -48,7 +48,7 @@ def test_metadata_review_checks_scoped_hook_without_assigning_label():
 
 
 def test_metadata_review_reports_changed_or_unavailable_manifest():
-    from data.review_public_candidates import review_row
+    from data.scripts.review_public_candidates import review_row
 
     row = {"package": "example", "version": "1.2.3", "source_label": "unlabeled",
            "install_hook": "postinstall", "source_url": "https://registry.npmjs.org/example/1.2.3",

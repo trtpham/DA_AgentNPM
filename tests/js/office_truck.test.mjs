@@ -1,7 +1,7 @@
-// node --test tests/office_truck.test.mjs — "truck" mode: one install request, many parcels.
+// node --test tests/js/office_truck.test.mjs — "truck" mode: one install request, many parcels.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildTruck, currentParcel, finalAction, GAP, hasInstallHooks, INTRO, parcelZone, tally, truckPhase } from "../viewer/static/office/truck.mjs";
+import { buildTruck, currentParcel, finalAction, GAP, hasInstallHooks, INTRO, parcelZone, tally, truckPhase } from "../../viewer/static/office/truck.mjs";
 
 const at = (seconds) => new Date(Date.UTC(2026, 10, 5, 0, 0, seconds)).toISOString();
 const trace = (name, action, length = 10) => ({

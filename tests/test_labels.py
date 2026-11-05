@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from data.prepare_labels import prepare_labels
+from data.scripts.prepare_labels import prepare_labels
 from experiments.dataset import FIELDS, load_labels
 
 
