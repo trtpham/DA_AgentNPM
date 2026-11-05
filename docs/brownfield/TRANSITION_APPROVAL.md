@@ -228,3 +228,41 @@ EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “tôi đ�
 - **Phạm vi I2–I4** theo [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md`](../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md): tách hàm `analyze()` và thêm test phát lại trace; ổn định A-TLM/A-SLM không nới schema; đo token và giảm đầu vào. Không đổi luật approve/deny, không thêm công cụ agent, chỉ đo trên 3 fixture và 10 bản swc dev.
 - **Bằng chứng phiếu kiểm tra chéo:** chỉ đọc tĩnh trong container dùng một lần (`--read-only`, `--cap-drop ALL`, không mount thư mục nào ngoài `labels.csv` chỉ đọc). Tarball/ZIP chỉ nằm trong bộ nhớ container, không chạy mã gói. Đầu ra là đoạn mã dạng chữ tại các dòng được trích, ghi vào `data/review_rounds/evidence/` (Git ignore). Claude **không** điền `decision`, `reviewer`, `reviewed_at`; người kiểm tra chéo điền sau khi đọc bằng chứng.
 - Owner: Claude. Reviewer: TV2. Rollback: revert commit tương ứng.
+
+## Gate B0 — tuần 5: W5-1 (fixture thử vượt giới hạn sandbox) và W5-8 (đo A-LLM) (2026-11-04)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-04 Asia/Saigon
+EVIDENCE_REFERENCES: trả lời trong chat với Claude “Bắt đầu W5-1, W5-8” cho kế hoạch tuần 5 trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../../ke-hoach-nhat-ky-tuan/tuan-05.md).
+
+- Phạm vi W5-1: thêm 6 fixture vô hại trong `tests/fixtures/sandbox-limits/` và test chạy chúng **chỉ trong container** `agent-npm-sandbox:local`. Không sửa `sandbox/` ở bước này. Test chỉ chạy khi đặt `RUN_SANDBOX_TESTS=1`.
+- Phạm vi W5-8: đo thời gian từng lượt Ollama của A-LLM trên 3 fixture và 10 bản swc dev đã duyệt; so `num_ctx`. Chỉ đổi code agent sau khi có số đo và báo PO.
+- Giới hạn: không chạy fixture hay gói nào trên host; không dùng gói npm thật hay mẫu độc trong sandbox.
+- Owner: Claude. Reviewer: TV3 (sandbox), TV2 (agent). Rollback: revert commit.
+
+## Gate B0 — tuần 5: W5-2, W5-3, W5-4, W5-7, W5-9 (2026-11-04)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-04 Asia/Saigon
+EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “triển khai công việc tuần 5”, cho bảng kế hoạch trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../../ke-hoach-nhat-ky-tuan/tuan-05.md).
+
+- W5-2/W5-3: sửa `sandbox/run.py` (thêm `outcome`, cây PID và `by_actor`); giữ hợp đồng `{ok, data, error}` và các trường cũ. TV3 review.
+- W5-4: chạy lại fixture trong container `agent-npm-sandbox:local`; chỉ fixture vô hại của nhóm.
+- W5-7: thêm 1 fixture vô hại có mã rút gọn/base64; chỉ sửa code nếu fixture lộ lỗi.
+- W5-9: `num_ctx`/`temperature` đọc từ `experiments/configs/*.yaml`.
+- **Không** gồm W5-6 (nối sandbox vào agent): vẫn cần TV3 nghiệm thu (W5-5) và Gate riêng. Không gồm W5-10 (cần người kiểm tra nhãn).
+- Owner: Claude. Reviewer: TV3 (sandbox), TV2 (agent/config). Rollback: revert commit.
+
+## Gate B0 — Văn phòng 3D (O-0 → O-7) (2026-11-04)
+
+DECISION: APPROVED — START AFTER WEEK 5 MILESTONE
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-04 Asia/Saigon
+EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 04/11 cho [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_VAN_PHONG_3D.md`](../../ke-hoach-nhat-ky-tuan/KE_HOACH_VAN_PHONG_3D.md): “1. Sau khi tuần 5 ổn định 2. Có 3. Đầy đủ”.
+
+- Phạm vi: `viewer/server.py` (route `/office`, header CSP, không thêm API) và `viewer/static/office*`. Chỉ đọc trace, không sửa agent, công cụ, sandbox hay luật quyết định.
+- Thư viện: Three.js ghim phiên bản, chép vào `viewer/static/vendor/` kèm LICENSE (MIT), không dùng CDN.
+- Điều kiện bắt đầu: đạt mốc nghiệm thu tuần 5. O-6 cần W5-6 xong.
+- Owner: Claude. Reviewer: TV2 (dữ liệu trace), TV3 (an toàn hiển thị O-3), PO (O-0, O-5, O-7). Rollback: revert commit.
