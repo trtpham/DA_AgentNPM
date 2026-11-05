@@ -15,19 +15,23 @@
 
   <section class="office-bar" aria-label="Chọn lượt chạy và điều khiển phát lại">
     <div class="office-pick">
-      <label for="run-select">Run</label><select id="run-select"></select>
+      <label for="mode">Chế độ</label>
+      <select id="mode"><option value="single">Một model</option><option value="compare">Đua 3 model</option></select>
+      <label for="run-select" id="run-label">Run</label><select id="run-select"></select>
       <label for="package-select">Gói</label><select id="package-select"></select>
     </div>
     <div class="office-transport">
-      <button type="button" id="previous" aria-label="Bước trước (phím ←)">◀</button>
+      <button type="button" id="previous" aria-label="Sự kiện trước (phím ←)">◀</button>
       <button type="button" class="primary" id="play">Phát lại</button>
-      <button type="button" id="next" aria-label="Bước tiếp (phím →)">▶</button>
-      <label for="speed">Tốc độ</label><select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+      <button type="button" id="next" aria-label="Sự kiện tiếp (phím →)">▶</button>
+      <label for="rate">Tốc độ</label>
+      <select id="rate"><option value="1">1× thật</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option><option value="16">16×</option></select>
+      <label class="toggle"><input type="checkbox" id="director"> Máy quay tự động</label>
       <button type="button" id="reset-view">Góc nhìn chuẩn</button>
     </div>
     <div class="office-progress">
-      <input type="range" id="progress" min="0" max="0" value="0" aria-label="Vị trí trong trace">
-      <span id="position" class="count">0 / 0</span>
+      <input type="range" id="progress" min="0" max="0" value="0" aria-label="Thời điểm trong trace">
+      <span id="clock" class="count">0.0 s</span>
     </div>
   </section>
 
@@ -40,10 +44,10 @@
 
   <div class="office-stage">
     <div class="office-view">
-      <canvas id="office-canvas" aria-label="Văn phòng 3D: nhân viên agent đi qua các phòng theo từng sự kiện"></canvas>
+      <canvas id="office-canvas" aria-label="Văn phòng 3D: nhân viên agent đi qua các phòng theo từng sự kiện của trace"></canvas>
       <div id="room-labels" class="room-labels" aria-hidden="true"></div>
       <div id="worker-layer" class="room-labels" aria-hidden="true"></div>
-      <div class="office-legend" aria-hidden="true"><span class="ok">✔ bằng chứng có thật</span><span class="bad">✘ bằng chứng sai</span><span>Kéo để xoay · cuộn để thu phóng</span></div>
+      <div class="office-legend" aria-hidden="true"><span class="ok">✔ bằng chứng có thật</span><span class="bad">✘ bằng chứng sai</span><span>Kéo để xoay · cuộn để thu phóng · phím cách để phát</span></div>
     </div>
 
     <aside class="office-panel">
@@ -52,10 +56,11 @@
         <h2 id="package-name">—</h2>
         <p id="package-meta" class="count"></p>
         <div class="now"><span id="room-dot" class="room-dot"></span><div><strong id="room-name">—</strong><p id="event-text" class="count">Đang tải…</p></div></div>
+        <ol id="board" class="board" aria-label="Tiến độ từng model"></ol>
       </section>
 
       <section class="panel-block">
-        <small>QUYẾT ĐỊNH CUỐI (LUẬT CỨNG)</small>
+        <small id="detail-title">QUYẾT ĐỊNH CUỐI (LUẬT CỨNG)</small>
         <p id="decision" class="office-decision">Chưa có quyết định</p>
         <ul id="reasons" class="plain-list"></ul>
         <small>MÔ HÌNH ĐỀ XUẤT</small>
@@ -66,7 +71,7 @@
         <p class="result-note">Luật trong <code>agent/decide.py</code> quyết định, luôn dry-run. Chữ lấy từ trace là dữ liệu không tin cậy, chỉ hiển thị dạng văn bản.</p>
       </section>
 
-      <section class="panel-block">
+      <section class="panel-block" id="log-block">
         <small>NHẬT KÝ SỰ KIỆN</small>
         <ol id="event-log" class="event-log"></ol>
       </section>
