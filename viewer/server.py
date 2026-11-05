@@ -20,7 +20,7 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/office.html": ("office.html", "text/html; charset=utf-8"),
           "/office.css": ("office.css", "text/css; charset=utf-8"),
           **{f"/office/{name}": (f"office/{name}", "text/javascript; charset=utf-8")
-             for name in ("main.mjs", "scene.mjs", "events.mjs", "explain.mjs")},
+             for name in ("main.mjs", "scene.mjs", "events.mjs", "explain.mjs", "people.mjs", "props.mjs")},
           **{f"/vendor/{name}": (f"vendor/{name}", "text/javascript; charset=utf-8")
              for name in ("three.module.min.js", "OrbitControls.js")}}
 SAMPLE_RUN = "sample_traces"

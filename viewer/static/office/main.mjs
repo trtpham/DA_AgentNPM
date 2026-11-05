@@ -95,8 +95,13 @@ function animate(lane, event) {
   const worker = () => lane.actor.head();
   switch (event.type) {
     case "run_start":
-      office.robotReact("reception", "receive");
-      office.sendPacket(office.robotHead("reception"), worker(), "#c99a5b", null, `📦 ${short(lane.pkg, 22)}`);
+      // The courier hands the tarball from npm pack to reception; reception gives it to the model.
+      office.staffReact("courier", "handover");
+      office.sendPacket(office.staffHead("courier"), office.robotHead("reception"), "#c99a5b", () => {
+        if (!alive()) return;
+        office.robotReact("reception", "receive");
+        office.sendPacket(office.robotHead("reception"), worker(), "#c99a5b", null, `📦 ${short(lane.pkg, 22)}`);
+      }, "📦 npm pack — chưa chạy script");
       break;
     case "tool_call":
       office.sendPacket(worker(), office.robotHead(room), lane.color,
@@ -129,6 +134,14 @@ function animate(lane, event) {
           if (!alive()) return;
           stampFor(lane, event, true);
           office.celebrate(event.final_action);
+          if (event.final_action === "review") {
+            // A case for a human: the file goes to the reviewer's desk.
+            office.sendPacket(office.robotHead("decision"), office.staffHead("reviewer"), "#ffd08a",
+                              () => alive() && office.staffReact("reviewer", "raise"), `👁 ${lane.name}: cần duyệt tay`);
+          } else {
+            office.staffReact("guard", "salute");
+            office.staffReact("po", "thumbs");
+          }
         }, 450);
       }, `✔ ${good}  ✘ ${checks.length - good}`);
       office.focus("decision", 0.62);
@@ -274,17 +287,29 @@ function renderScene() {
   const checks = decisions.flatMap((decision) => decision?.evidence_checks || []);
   office.setScreen("evidence", checks.length ? `✔ ${checks.filter((check) => check.exists).length}  ✘ ${checks.filter((check) => !check.exists).length}` : "");
   office.setScreen("reception", lead ? `📦 ${lead.pkg}` : "");
+  // The npm gate barrier follows the selected model's final action (approve/deny-scripts, dry-run).
+  office.setGate(decisionOf(lead)?.final_action || null);
+  const waiting = decisions.filter((decision) => decision?.final_action === "review").length;
+  office.setInbox(waiting);
+  office.setScreen("reviewer", waiting ? `📥 ${waiting} ca chờ duyệt tay` : "");
 }
 
 function render() {
   if (!lanes.length) return;
   $("clock").textContent = `${seconds(clock.t)} / ${seconds(clock.duration)} thời gian thật`;
   $("progress").value = String(Math.round(clock.t * 10));
+  const busyLanes = [];
   for (const lane of lanes) {
     const busy = thinking(lane);
     lane.actor.think(busy);
-    if (busy) lane.actor.say(`💭 đang suy nghĩ ${seconds(clock.t - lane.offsets[lane.index])}`, true);
+    if (busy) {
+      lane.actor.say(`💭 đang suy nghĩ ${seconds(clock.t - lane.offsets[lane.index])}`, true);
+      busyLanes.push(lane);
+    }
   }
+  // The GPU racks light up in the colours of the models generating right now (all local, no cloud).
+  office.setThinking(busyLanes.map((lane) => lane.color));
+  office.setScreen("server", busyLanes.length ? `⚡ GPU: ${busyLanes.map((lane) => lane.name).join(", ")} đang sinh` : "");
   const phase = Math.max(...lanes.map((lane) => {
     const seen = lane.rooms.slice(0, lane.index + 1).reverse().map((id) => PHASE[id]).find((value) => value !== undefined);
     return seen ?? -1;

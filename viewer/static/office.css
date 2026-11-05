@@ -113,3 +113,8 @@
 .lane-card.focused{border-color:var(--worker);box-shadow:0 0 0 2px color-mix(in srgb,var(--worker) 30%,transparent)}
 .lane-now{font-size:.86rem;color:var(--ink)}
 @media (max-width:900px){.caption-flow{grid-template-columns:1fr}.caption-arrow{transform:rotate(90deg);justify-self:center}}
+
+/* --- staff tags and wing areas ------------------------------------------------------------- */
+.npc-tag{position:absolute;left:0;top:0;padding:1px 7px;border-radius:99px;background:#09111dcc;border:1px solid #39516580;color:var(--muted);font-size:.66rem;font-weight:600;white-space:nowrap}
+.room-label.wing{border-style:dashed}
+.room-label.wing strong{color:var(--accent)}
