@@ -29,11 +29,29 @@ CONFIGS = Path("experiments/configs")
 RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
 
 
-def load_config(variant: str) -> dict:
-    path = CONFIGS / f"{variant}.yaml"
-    values = dict(line.split(": ", 1) for line in path.read_text(encoding="utf-8").splitlines() if ": " in line)
+# num_gpu: layers Ollama puts on the GPU; its own estimate left A-LLM half on CPU (W5-8).
+OPTION_TYPES = {"num_ctx": int, "temperature": float, "num_gpu": int}
+
+
+def load_config(variant: str, configs: Path = CONFIGS) -> dict:
+    """Read the flat YAML subset used by experiments/configs (AGENTS §6.7), with one `options:` block."""
+    values, options, section = {}, {}, None
+    for line in (configs / f"{variant}.yaml").read_text(encoding="utf-8").splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        key, _, value = line.strip().partition(":")
+        value = value.strip().strip('"')
+        if not line.startswith((" ", "	")):
+            section = key if not value else None
+            if value:
+                values[key] = value
+        elif section == "options":
+            if key not in OPTION_TYPES:
+                raise ValueError(f"{variant}: unknown option {key}")
+            options[key] = OPTION_TYPES[key](value)
     return {"name": values["name"], "model": values["model"], "max_steps": int(values["max_steps"]),
-            "deny_threshold": float(values["deny_threshold"]), "approve_threshold": float(values["approve_threshold"])}
+            "deny_threshold": float(values["deny_threshold"]), "approve_threshold": float(values["approve_threshold"]),
+            "options": options}
 
 
 def result_name(package: str) -> str:
@@ -66,7 +84,7 @@ def run_meta(run_id: str, config: dict, inputs: list[dict], labels: Path | None)
         "python": platform.python_version(), "platform": platform.platform(),
         "ollama_version": (_ollama("/api/version") or {}).get("version"),
         "model": config["model"], "model_digest": model.get("digest"),
-        "config": config, "chat_options": agent_run.CHAT_OPTIONS,
+        "config": config, "chat_options": {**agent_run.CHAT_OPTIONS, **config["options"]},
         "labels_sha256": hashlib.sha256(labels.read_bytes()).hexdigest() if labels else None,
         "inputs": [item["package"] for item in inputs],
     }
@@ -112,7 +130,8 @@ def run_one(item: dict, run_dir: Path, config: dict, contexts: Path | None, anal
         try:
             verdict, steps = analyze(package_dir, config["model"], config["max_steps"], trace=writer,
                                      deny_threshold=config["deny_threshold"],
-                                     approve_threshold=config["approve_threshold"], context=context)
+                                     approve_threshold=config["approve_threshold"], context=context,
+                                     options=config["options"])
             result.update(status="ok", steps=steps, verdict=verdict.model_dump())
         except Exception as error:  # the trace already holds the R2 fallback decision
             result.update(status="error", error=str(error)[:300])

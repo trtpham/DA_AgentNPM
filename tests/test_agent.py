@@ -517,13 +517,16 @@ def test_truncated_source_cannot_be_approved(tmp_path):
     }
     replies = iter([
         {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "minified.js"}}}]},
+        # W5-7: two turns stay open for deobfuscate/#pretty; text replies here only get a nudge.
+        {"role": "assistant", "content": json.dumps(verdict)},
+        {"role": "assistant", "content": json.dumps(verdict)},
         {"role": "assistant", "content": json.dumps(verdict)},
         {"role": "assistant", "content": json.dumps(verdict | {
             "label": "suspicious", "action": "review", "remediation": ["Inspect the complete source in isolation."]})},
     ])
-    result, steps = analyze(str(package), "fake-model", max_steps=3,
+    result, steps = analyze(str(package), "fake-model", max_steps=5,
                             chat=lambda *_args, **_kwargs: next(replies))
-    assert (result.label, result.action, steps) == ("suspicious", "review", 3)
+    assert (result.label, result.action, steps) == ("suspicious", "review", 5)
 
 
 def test_agent_must_read_cited_lines_and_can_call_tool_after_evidence_error(tmp_path):
@@ -690,3 +693,33 @@ def test_first_prompt_lists_indicators_compactly(tmp_path):
         analyze(str(tmp_path), "fake", chat=chat)
     assert "setup.js:2 child_process: require('child_process').execFileSync('echo', [label]);" in prompts[0]
     assert '"snippet"' not in prompts[0]
+
+
+def test_cut_minified_line_tells_the_model_to_use_the_pretty_view():
+    """W5-7: the read_file result for a cut .js line points to deobfuscate and file#pretty."""
+    package = str(Path(__file__).parent / "fixtures" / "obfuscated-package")
+    seen = []
+    verdict = {
+        "package": "obfuscated-install-fixture@1.0.0", "label": "suspicious", "confidence": 0.5,
+        "description": "Minified install script needs the formatted view first",
+        "behaviors": [{"behavior": "Minified code", "technique": "minification", "severity": "low",
+                       "evidence": {"file": "install.min.js", "lines": "1"},
+                       "analysis": "Line was cut.", "impact": "Unknown until formatted."}],
+        "action": "review", "remediation": ["Read the formatted view"],
+    }
+    read = {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "install.min.js"}}}]}
+    finals = []
+
+    def chat(_model, messages, final=False, **_kwargs):
+        seen.append([dict(item) for item in messages])
+        finals.append(final)
+        return read if len(seen) == 1 else {"role": "assistant", "content": json.dumps(verdict)}
+
+    result, steps = analyze(package, "fake", max_steps=6, chat=chat)
+    tool = next(json.loads(item["content"]) for item in seen[1] if item["role"] == "tool")
+    assert tool["data"]["truncated"] and "deobfuscate" in tool["data"]["hint"]
+    assert "install.min.js#pretty" in tool["data"]["hint"]
+    # Tools stay available for two turns after the cut read, then the final turn comes; never approve.
+    assert finals[:3] == [False, False, False] and finals[3] is True
+    assert "deobfuscate" in seen[2][-1]["content"]
+    assert result.action == "review" and steps == 4

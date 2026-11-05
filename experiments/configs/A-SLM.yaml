@@ -3,3 +3,6 @@ model: qwen3.5:4b
 max_steps: 15
 deny_threshold: 0.8
 approve_threshold: 0.8
+options:
+  num_ctx: 16384
+  temperature: 0

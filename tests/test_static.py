@@ -170,3 +170,18 @@ def test_complete_scan_reports_no_reasons():
     from pathlib import Path
     data = extract_indicators(str(Path(__file__).parent / "fixtures" / "benign-package"))["data"]
     assert (data["truncated"], data["incomplete"]) == (False, [])
+
+
+def test_w5_7_minified_base64_fixture_is_readable_through_pretty_view():
+    """W5-7: one harmless minified install script with a base64 string on the install path."""
+    from pathlib import Path
+
+    from tools.static import deobfuscate, extract_indicators
+
+    package = str(Path(__file__).parent / "fixtures" / "obfuscated-package")
+    found = extract_indicators(package)
+    assert found["ok"] and {item["type"] for item in found["data"]["indicators"]} >= {"decode", "base64"}
+    pretty = deobfuscate(package, "install.min.js")
+    assert pretty["ok"] and pretty["data"]["pretty_file"] == "install.min.js#pretty"
+    assert pretty["data"]["lines"] > 1
+    assert any("inside the package directory only" in item["preview"] for item in pretty["data"]["decoded"])

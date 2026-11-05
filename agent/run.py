@@ -1,6 +1,7 @@
 """Read-only Ollama agent for an extracted npm package."""
 
 import argparse
+import functools
 import json
 import re
 import sqlite3
@@ -31,7 +32,8 @@ SYSTEM += " Analyze in four passes: identify the install entry point; trace sour
 SYSTEM += " A benign verdict must cite every child_process, network, eval, decode, or secret-path indicator line as a behavior and explain why it is legitimate."
 
 
-# Recorded in run_meta.json by experiments.run_batch; the YAML configs hold only tag, steps and thresholds.
+# Defaults; `options:` in experiments/configs/*.yaml overrides num_ctx/temperature (AGENTS §6.7).
+# experiments.run_batch records the merged values in run_meta.json.
 CHAT_OPTIONS = {"temperature": 0, "num_ctx": 16384, "num_predict_tool": 900, "num_predict_final": 4096,
                 "retry_temperature": 0.4}
 
@@ -60,12 +62,16 @@ def _format_schema() -> dict:
 FORMAT_SCHEMA = _format_schema()
 
 
-def _chat(model: str, messages: list[dict], final: bool = False, retry: int = 0) -> dict:
-    options = {"temperature": CHAT_OPTIONS["temperature"], "num_ctx": CHAT_OPTIONS["num_ctx"],
-               "num_predict": CHAT_OPTIONS["num_predict_final" if final else "num_predict_tool"]}
+def _chat(model: str, messages: list[dict], final: bool = False, retry: int = 0,
+          overrides: dict | None = None) -> dict:
+    settings = {**CHAT_OPTIONS, **(overrides or {})}
+    options = {"temperature": settings["temperature"], "num_ctx": settings["num_ctx"],
+               "num_predict": settings["num_predict_final" if final else "num_predict_tool"]}
+    if "num_gpu" in settings:
+        options["num_gpu"] = settings["num_gpu"]
     if retry:
         # Identical context at temperature 0 repeats the same invalid answer; a seeded retry stays reproducible.
-        options.update(temperature=CHAT_OPTIONS["retry_temperature"], seed=retry)
+        options.update(temperature=settings["retry_temperature"], seed=retry)
     payload = {"model": model, "messages": messages, "stream": False, "think": False, "options": options}
     if final:
         payload["format"] = FORMAT_SCHEMA
@@ -291,6 +297,8 @@ class _Session:
         self.inspected = {"package.json"}
         self.seen_ranges = {"package.json": [(line, line) for line in metadata["script_lines"].values()]}
         self.pretty_totals, self.inspected_truncated, self.hard_truncated = {}, set(), set()
+        self.pretty_done: set[str] = set()  # originals whose #pretty view was seen in full
+        self.tool_turns, self.cut_at = 0, {}  # model turns so far; turn in which each target was first read cut
         self.inspected_source = bool(set(scripts) & set(LIFECYCLE)) and not self.targets
         self.final = self.inspected_source
         self.pending_repair = None
@@ -347,6 +355,7 @@ class _Session:
 
     # --- tool calls ------------------------------------------------------------------------------
     def run_tools(self, step: int, message: dict) -> None:
+        self.tool_turns += 1
         if message.get("content"):
             self.writer.emit("thought", text=message["content"])
         self.messages.append(message)
@@ -355,6 +364,12 @@ class _Session:
             name, arguments = function.get("name"), function.get("arguments", {})
             started = self.start_tool(name, arguments)
             result = _tool(self.package, name, arguments)
+            if (name == "read_file" and result["ok"] and result["data"].get("truncated")
+                    and str(arguments.get("file", "")).endswith((".js", ".cjs", ".mjs"))):
+                # W5-7: A-LLM re-read a cut minified line three times instead of using the pretty view.
+                file = arguments["file"]
+                result["data"]["hint"] = (f"Long lines were cut. Call deobfuscate with file {file}, "
+                                          f"then read_file {file}#pretty and cite {file}#pretty:line.")
             content = json.dumps(result, ensure_ascii=False)
             if len(content) > 16000:
                 result = {"ok": False, "data": None, "error": "tool result too large; request fewer lines"}
@@ -375,6 +390,7 @@ class _Session:
                 self.incomplete += [reason for reason in _incomplete_reasons(result, self.scripts, self.metadata, set())
                                     if reason not in self.incomplete]
             self.messages.append({"role": "tool", "tool_name": str(name or "invalid"), "content": content})
+        self.update_inspected_source()
         self.final = self.inspected_source
 
     def legacy_tool(self, step: int, name, arguments, result: dict) -> None:
@@ -394,8 +410,14 @@ class _Session:
                     sources=[_source(target, start, source_text)] if source_text else [])
 
     def update_inspected_source(self) -> None:
-        self.inspected_source = (self.targets <= {file.removeprefix("./") for file in self.inspected}
-                                 if self.targets else True)
+        # W5-7: a target whose lines were cut keeps tools available for two more turns (deobfuscate,
+        # then read file#pretty) unless its #pretty view was seen in full. Before this, the session
+        # jumped straight to the final turn and the model could no longer call deobfuscate.
+        # Cut sources still cannot be approved (see verify).
+        done = {file.removeprefix("./") for file in self.inspected
+                if file not in self.hard_truncated or file in self.pretty_done
+                or self.tool_turns - self.cut_at.get(file, self.tool_turns) >= 2}
+        self.inspected_source = self.targets <= done if self.targets else True
 
     def track_read(self, arguments: dict, data: dict) -> None:
         file = arguments["file"]
@@ -406,11 +428,13 @@ class _Session:
         if data.get("truncated"):
             self.inspected_truncated.add(file)
             self.hard_truncated.add(file)
+            self.cut_at.setdefault(file, self.tool_turns)
         if file.endswith("#pretty"):
             if (file in self.pretty_totals and file not in self.hard_truncated and
                     _covered(self.seen_ranges[file], 1, self.pretty_totals[file])):
                 self.inspected_truncated.discard(file)
                 self.inspected.add(file.removesuffix("#pretty"))
+                self.pretty_done.add(file.removesuffix("#pretty"))
         elif (last < arguments.get("end", 150) and file not in self.hard_truncated and
               _covered(self.seen_ranges[file], 1, last)):
             # shortcut: a short read proves EOF; exact range boundaries stay in review.
@@ -427,6 +451,7 @@ class _Session:
             self.inspected_truncated.add(pretty_file)
         else:
             self.inspected.add(arguments["file"])
+            self.pretty_done.add(arguments["file"])
         self.update_inspected_source()
 
     def ask_for_source(self, step: int, message: dict) -> None:
@@ -435,9 +460,19 @@ class _Session:
                     what="Tạm hoãn verdict vì agent mới xem manifest.",
                     how="Yêu cầu mô hình đọc file script cần thiết trước khi kết luận.",
                     found="Chưa có đoạn mã nguồn để đối chiếu nhận định.")
-        self.messages.extend([message, {"role": "user", "content":
-                              f"Call read_file on required source files {missing} before giving a verdict."
-                              if missing else "Call read_file on package.json or relevant package source before giving a verdict."}])
+        cut = sorted(file for file in self.cut_at if file not in self.pretty_done)
+        if missing:
+            request = f"Call read_file on required source files {missing} before giving a verdict."
+        elif cut:
+            request = (f"Lines of {cut} were cut. Call deobfuscate on them, then read_file the #pretty view "
+                       "before giving a verdict.")
+        else:
+            request = "Call read_file on package.json or relevant package source before giving a verdict."
+        self.messages.extend([message, {"role": "user", "content": request}])
+        # A text reply also spends one of the turns granted to a cut source, so the run cannot stall.
+        self.tool_turns += 1
+        self.update_inspected_source()
+        self.final = self.inspected_source
 
     # --- verdict ---------------------------------------------------------------------------------
     def parse(self, content: str) -> tuple[Verdict, dict | None]:
@@ -544,9 +579,11 @@ class _Session:
 
 def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: list[dict] | TraceWriter | None = None,
             deny_threshold: float = 0.8, approve_threshold: float = 0.8,
-            context: dict | None = None) -> tuple[Verdict, int]:
+            context: dict | None = None, options: dict | None = None) -> tuple[Verdict, int]:
     if not 1 <= max_steps <= 15:
         raise ValueError("max_steps must be between 1 and 15")
+    if options and chat is _chat:
+        chat = functools.partial(_chat, overrides=options)
     session = _Session(package, model, max_steps, chat, trace, deny_threshold, approve_threshold, context)
     session.writer.emit("run_start", model=model, config_name=None, max_steps=max_steps)
     session.prepare()
@@ -577,11 +614,12 @@ def main() -> None:
     parser.add_argument("package", help="path to an extracted package")
     parser.add_argument("model", choices=("A-TLM", "A-SLM", "A-LLM"))
     args = parser.parse_args()
-    config = Path("experiments/configs") / f"{args.model}.yaml"
-    values = dict(line.split(": ", 1) for line in config.read_text(encoding="utf-8").splitlines() if ": " in line)
-    verdict, steps = analyze(args.package, values["model"], int(values["max_steps"]),
-                             deny_threshold=float(values["deny_threshold"]),
-                             approve_threshold=float(values["approve_threshold"]))
+    from experiments.run_batch import load_config  # run_batch imports this module
+
+    values = load_config(args.model)
+    verdict, steps = analyze(args.package, values["model"], values["max_steps"],
+                             deny_threshold=values["deny_threshold"], approve_threshold=values["approve_threshold"],
+                             options=values["options"])
     print(json.dumps({"variant": args.model, "model": values["model"], "steps": steps,
                       "verdict": verdict.model_dump()}, ensure_ascii=False, indent=2))
 
