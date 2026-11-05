@@ -141,7 +141,52 @@ function personMesh(color) {
   halo.rotation.x = -Math.PI / 2;
   halo.position.y = 0.06;
   person.add(halo);
-  return { person, legs, arms, folder };
+  // Thinking: a spinning ring of dots over the head while the model generates its answer.
+  const thought = new THREE.Group();
+  for (let index = 0; index < 8; index += 1) {
+    const angle = index / 8 * Math.PI * 2;
+    thought.add(at(mesh(new THREE.SphereGeometry(0.06 + index * 0.008, 8, 6), shirt, { emissive: shirt, emissiveIntensity: 1.4, shadow: false }),
+                   Math.cos(angle) * 0.42, 0, Math.sin(angle) * 0.42));
+  }
+  thought.position.y = 2.15;
+  thought.visible = false;
+  person.add(thought);
+  return { person, legs, arms, folder, thought };
+}
+
+// Robots stand for deterministic code (tools, checks, rules); people stand for the AI models.
+function robotMesh(accent, options = {}) {
+  const robot = new THREE.Group();
+  const metal = { metalness: 0.55, roughness: 0.35 };
+  robot.add(at(box(0.22, 0.55, 0.22, "#5c6b7a", metal), -0.17, 0.28, 0), at(box(0.22, 0.55, 0.22, "#5c6b7a", metal), 0.17, 0.28, 0));
+  robot.add(at(box(0.78, 0.72, 0.5, "#c9d3dc", metal), 0, 0.92, 0));
+  robot.add(at(box(0.4, 0.2, 0.04, accent, { emissive: accent, emissiveIntensity: 0.8, shadow: false }), 0, 1.0, 0.26));
+  const head = new THREE.Group();
+  head.position.set(0, 1.5, 0);
+  head.add(box(0.56, 0.42, 0.46, "#dde5ec", metal));
+  const visor = box(0.44, 0.14, 0.04, accent, { emissive: accent, emissiveIntensity: 1.2, shadow: false });
+  head.add(at(visor, 0, 0.02, 0.24));
+  head.add(at(mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.26, 6), "#5c6b7a"), 0, 0.33, 0));
+  const bulb = at(mesh(new THREE.SphereGeometry(0.07, 10, 8), accent, { emissive: accent, emissiveIntensity: 1.5, shadow: false }), 0, 0.48, 0);
+  head.add(bulb);
+  robot.add(head);
+  const arms = [];
+  for (const side of [-1, 1]) {
+    const arm = new THREE.Group();
+    arm.position.set(side * 0.5, 1.2, 0);
+    arm.add(at(box(0.16, 0.55, 0.16, "#9aa8b5", metal), 0, -0.27, 0));
+    robot.add(arm);
+    arms.push(arm);
+  }
+  if (options.gavel) {
+    const gavel = new THREE.Group();
+    gavel.add(at(mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.55, 6), "#7a5236"), 0, -0.27, 0.12));
+    const hammer = at(mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.3, 10), "#5b3a24", { roughness: 0.5 }), 0, -0.55, 0.12);
+    hammer.rotation.z = Math.PI / 2;
+    gavel.add(hammer);
+    arms[1].add(gavel);
+  }
+  return { robot, head, visor, bulb, arms, accent: new THREE.Color(accent) };
 }
 
 export function createOffice(canvas, labelLayer, overlayLayer) {
@@ -282,6 +327,88 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   }
   const screenAt = { code: [0, 2.3, -4.6], evidence: [0, 1.7, 5.4], reception: [-7, 2.4, -4.0] };
 
+  // --- robots: one per deterministic component --------------------------------------------------
+  const ROBOTS = {
+    reception: { name: "read_manifest", at: [-8.4, -5.5], face: 0 },
+    code: { name: "read_file · extract_indicators · deobfuscate", at: [0, -6.1], face: 0 },
+    intel: { name: "OSV · npm Registry (chạy trước)", at: [8.7, -5.3], face: -0.5 },
+    lab: { name: "Sandbox (khóa đến W5-6)", at: [5.0, 3.2], face: Math.PI },
+    evidence: { name: "Kiểm chứng file:dòng", at: [0, 6.15], face: Math.PI },
+    decision: { name: "Luật R1–R8 (thẩm phán)", at: [-7, 6.35], face: Math.PI, lift: 0.25, gavel: true },
+  };
+  const robots = {};
+  for (const [room, spec] of Object.entries(ROBOTS)) {
+    const body = robotMesh(ACCENT[room], { gavel: spec.gavel });
+    body.robot.position.set(spec.at[0], spec.lift || 0, spec.at[1]);
+    body.robot.rotation.y = spec.face;
+    scene.add(body.robot);
+    const tag = document.createElement("div");
+    tag.className = "robot-tag";
+    tag.style.setProperty("--accent", ACCENT[room]);
+    tag.textContent = `🤖 ${spec.name}`;
+    overlayLayer.append(tag);
+    robots[room] = { ...body, tag, lift: spec.lift || 0, action: null, actionAge: 0, slammed: false };
+  }
+  let animating = false;      // idle motion only while a replay plays: a paused office leaves the GPU idle
+  let idleTime = 0;
+
+  function robotReact(room, action) {
+    const robot = robots[room];
+    if (!robot) return;
+    robot.action = action;
+    robot.actionAge = 0;
+    robot.slammed = false;
+    dirty = true;
+  }
+
+  function robotHead(room) {
+    const robot = robots[room] || robots.decision;
+    return robot.head.getWorldPosition(new THREE.Vector3());
+  }
+
+  // Data packets: a glowing orb with a short trail on an arc; input flows to a robot, output comes back.
+  const packetGeometry = new THREE.SphereGeometry(0.16, 14, 10);
+  function sendPacket(from, to, color, onArrive, label) {
+    const tint = new THREE.Color(color);
+    const orb = new THREE.Mesh(packetGeometry, new THREE.MeshBasicMaterial({ color: tint }));
+    orb.add(new THREE.PointLight(tint, 3, 3, 2));
+    const trail = Array.from({ length: 6 }, (_, index) => {
+      const dot = new THREE.Mesh(packetGeometry, new THREE.MeshBasicMaterial({ color: tint, transparent: true, opacity: 0.5 - index * 0.07 }));
+      dot.scale.setScalar(0.75 - index * 0.1);
+      dot.position.copy(from);
+      scene.add(dot);
+      return dot;
+    });
+    orb.position.copy(from);
+    scene.add(orb);
+    let chip = null;
+    if (label) {
+      chip = document.createElement("div");
+      chip.className = "packet-chip";
+      chip.style.setProperty("--accent", color);
+      chip.textContent = label;
+      overlayLayer.append(chip);
+    }
+    const middle = from.clone().lerp(to, 0.5);
+    middle.y += 1.4 + from.distanceTo(to) * 0.12;
+    const curve = new THREE.QuadraticBezierCurve3(from.clone(), middle, to.clone());
+    const history = [];
+    effects.push({ life: Math.max(0.35, 0.8 / speed.value), age: 0, step() {
+      const point = curve.getPoint(ease(Math.min(1, this.age / this.life)));
+      orb.position.copy(point);
+      history.unshift(point.clone());
+      trail.forEach((dot, index) => dot.position.copy(history[Math.min(history.length - 1, (index + 1) * 2)]));
+      if (chip) placeChip(chip, point);
+    }, end() {
+      scene.remove(orb, ...trail);
+      orb.material.dispose();
+      trail.forEach((dot) => dot.material.dispose());
+      chip?.remove();
+      onArrive?.();
+    } });
+    dirty = true;
+  }
+
   // --- workers -------------------------------------------------------------------------------
   const workers = new Map();
   let laneCount = 1;
@@ -351,6 +478,10 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
         if (action && animate) { void worker.stamp.offsetWidth; worker.stamp.classList.add("slam"); }
         dirty = true;
       },
+      think(on) {
+        if (worker.thought.visible !== on) { worker.thought.visible = on; dirty = true; }
+      },
+      head: () => worker.person.position.clone().add(new THREE.Vector3(0, 1.7, 0)),
       position: () => worker.person.position,
     };
   }
@@ -416,6 +547,12 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
 
   // --- effects: confetti for approve, alarm and shake for deny, amber pulse for review ----------
   const effects = [];
+  const chipPoint = new THREE.Vector3();
+  function placeChip(chip, point) {
+    chipPoint.copy(point).project(camera);
+    const { clientWidth: width, clientHeight: height } = canvas;
+    chip.style.transform = `translate(-50%, -130%) translate(${(chipPoint.x + 1) / 2 * width}px, ${(1 - chipPoint.y) / 2 * height}px)`;
+  }
   const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function celebrate(action) {
@@ -530,7 +667,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   const stats = { frames: 0, fps: 0, since: performance.now(), continuous: false };
   const clock = new THREE.Clock();
   function frame() {
-    const delta = Math.min(clock.getDelta(), 0.1);
+    const delta = Math.min(clock.getDelta(), 0.5);
     const reduced = reducedMotion();
     for (const worker of workers.values()) {
       if (worker.path.length) {
@@ -557,6 +694,47 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       worker.arms[0].rotation.x = -swing * 0.8;
       worker.arms[1].rotation.x = swing * 0.8;
       worker.folder.rotation.x = swing * 0.3;
+    }
+    if (animating && !reduced) {
+      idleTime += delta;
+      for (const [room, robot] of Object.entries(robots)) {
+        if (!robot.action) robot.head.rotation.y = Math.sin(idleTime * 0.9 + room.length) * 0.25;
+        robot.bulb.material.emissiveIntensity = 0.6 + Math.abs(Math.sin(idleTime * 3 + room.length)) * 1.6;
+      }
+      for (const worker of workers.values()) {
+        if (worker.thought.visible) {
+          worker.thought.rotation.y += delta * 3.2;
+          worker.thought.position.y = 2.15 + Math.sin(idleTime * 4) * 0.06;
+        }
+      }
+      dirty = true;
+    }
+    for (const robot of Object.values(robots)) {
+      if (!robot.action) continue;
+      robot.actionAge += delta * Math.max(1, speed.value);
+      const age = robot.actionAge;
+      const pulse = Math.max(0, 1 - age / 0.9);
+      const color = robot.action === "bad" ? "#ff5a4f" : robot.action === "ok" ? "#61e8c2" : null;
+      robot.visor.material.emissive.copy(color ? new THREE.Color(color) : robot.accent);
+      robot.visor.material.emissiveIntensity = 1.2 + pulse * 3;
+      if (robot.action === "work") robot.arms.forEach((arm, index) => { arm.rotation.x = -Math.abs(Math.sin(age * 14 + index * 1.7)) * 0.9 * pulse; });
+      if (robot.action === "ok") robot.head.rotation.x = Math.sin(age * 12) * 0.3 * pulse;
+      if (robot.action === "bad") robot.head.rotation.y = Math.sin(age * 16) * 0.5 * pulse;
+      if (robot.action === "receive") robot.robot.position.y = robot.lift + Math.abs(Math.sin(age * 8)) * 0.15 * pulse;
+      if (robot.action === "gavel") {
+        robot.arms[1].rotation.x = age < 0.35 ? -2.4 * (age / 0.35) : Math.min(0.3, -2.4 + (age - 0.35) / 0.1 * 2.7);
+        if (age >= 0.45 && !robot.slammed) { robot.slammed = true; shake = Math.max(shake, 0.2); }
+      }
+      if (age >= 0.95) {
+        robot.action = null;
+        robot.visor.material.emissive.copy(robot.accent);
+        robot.visor.material.emissiveIntensity = 1.2;
+        robot.head.rotation.x = 0;
+        robot.robot.position.y = robot.lift;
+        robot.arms.forEach((arm) => { arm.rotation.x = 0; });
+        if (robot.slammed && !effects.length) shake = 0;
+      }
+      dirty = true;
     }
     if (!reduced && [...workers.values()].some((worker) => worker.room === "intel")) {
       globe.rotation.y += delta * 0.8;
@@ -585,6 +763,10 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       camera.position.copy(rest);
       for (const room of Object.values(rooms)) place(room.label, room.labelAt);
       for (const [id, point] of Object.entries(screenAt)) place(screensDom[id], point);
+      for (const robot of Object.values(robots)) {
+        const head = robot.head.getWorldPosition(new THREE.Vector3());
+        place(robot.tag, [head.x, head.y + 0.75, head.z]);
+      }
       for (const worker of workers.values()) {
         const { x, z } = worker.person.position;
         // Tags of several workers are stacked by lane so stamps and bubbles never cover each other.
@@ -609,6 +791,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   requestAnimationFrame(frame);
   return {
     addWorker, clearWorkers, setScreen, setEvidence, setLamps, celebrate, setDirector, focus, resetView,
+    robotReact, robotHead, sendPacket, setAnimating: (on) => { animating = on; dirty = true; },
     speed, stats,
     info: () => ({ fps: stats.fps, calls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
                    pixelRatio: renderer.getPixelRatio(), workers: workers.size,

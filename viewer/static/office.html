@@ -16,13 +16,13 @@
   <section class="office-bar" aria-label="Chọn lượt chạy và điều khiển phát lại">
     <div class="office-pick">
       <label for="mode">Chế độ</label>
-      <select id="mode"><option value="single">Một model</option><option value="compare">Đua 3 model</option></select>
-      <label for="run-select" id="run-label">Run</label><select id="run-select"></select>
+      <select id="mode"><option value="compare">Đua 3 model</option><option value="single">Một model</option></select>
+      <label for="run-select" id="run-label">Bộ run</label><select id="run-select"></select>
       <label for="package-select">Gói</label><select id="package-select"></select>
     </div>
     <div class="office-transport">
       <button type="button" id="previous" aria-label="Sự kiện trước (phím ←)">◀</button>
-      <button type="button" class="primary" id="play">Phát lại</button>
+      <button type="button" class="primary" id="play">▶ Phát lại</button>
       <button type="button" id="next" aria-label="Sự kiện tiếp (phím →)">▶</button>
       <label for="rate">Tốc độ</label>
       <select id="rate"><option value="1">1× thật</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option><option value="16">16×</option></select>
@@ -36,26 +36,40 @@
   </section>
 
   <ol class="phase-bar" aria-label="Bốn bước của agent">
-    <li data-phase="0"><b>1</b>Nhận diện</li>
-    <li data-phase="1"><b>2</b>Phân tích</li>
-    <li data-phase="2"><b>3</b>Kiểm chứng</li>
-    <li data-phase="3"><b>4</b>Quyết định</li>
+    <li data-phase="0"><b>1</b>Nhận diện<small>đọc manifest, script cài đặt</small></li>
+    <li data-phase="1"><b>2</b>Phân tích<small>đọc mã, tìm chỉ báo</small></li>
+    <li data-phase="2"><b>3</b>Kiểm chứng<small>bằng chứng file:dòng có thật?</small></li>
+    <li data-phase="3"><b>4</b>Quyết định<small>luật R1–R8, dry-run</small></li>
   </ol>
 
   <div class="office-stage">
-    <div class="office-view">
-      <canvas id="office-canvas" aria-label="Văn phòng 3D: nhân viên agent đi qua các phòng theo từng sự kiện của trace"></canvas>
-      <div id="room-labels" class="room-labels" aria-hidden="true"></div>
-      <div id="worker-layer" class="room-labels" aria-hidden="true"></div>
-      <div class="office-legend" aria-hidden="true"><span class="ok">✔ bằng chứng có thật</span><span class="bad">✘ bằng chứng sai</span><span>Kéo để xoay · cuộn để thu phóng · phím cách để phát</span></div>
+    <div class="office-column">
+      <div class="office-view">
+        <canvas id="office-canvas" aria-label="Văn phòng 3D: người là mô hình AI, robot là công cụ và luật tất định, quả cầu sáng là dữ liệu vào và ra"></canvas>
+        <div id="room-labels" class="room-labels" aria-hidden="true"></div>
+        <div id="worker-layer" class="room-labels" aria-hidden="true"></div>
+        <div class="office-legend" aria-hidden="true">
+          <span>🧑 Người = mô hình AI</span><span>🤖 Robot = mã tất định</span><span>● Quả cầu = dữ liệu vào/ra</span><span>Phím 1/2/3 chọn model · cách: phát</span>
+        </div>
+      </div>
+      <section id="caption" class="caption" aria-live="polite" aria-label="Bước đang diễn ra">
+        <p id="caption-who" class="caption-who">Đang tải…</p>
+        <div class="caption-flow">
+          <div class="caption-box"><small>ĐẦU VÀO</small><p id="caption-in">—</p></div>
+          <span class="caption-arrow" aria-hidden="true">→</span>
+          <div class="caption-box"><small>XỬ LÝ</small><p id="caption-process">—</p></div>
+          <span class="caption-arrow" aria-hidden="true">→</span>
+          <div class="caption-box"><small>ĐẦU RA</small><p id="caption-out">—</p><em class="untrusted-note">dữ liệu từ gói/mô hình — không tin cậy, chỉ hiển thị</em></div>
+        </div>
+      </section>
     </div>
 
     <aside class="office-panel">
-      <section class="panel-block" aria-live="polite">
+      <section class="panel-block">
         <small>GÓI ĐANG XEM</small>
         <h2 id="package-name">—</h2>
         <p id="package-meta" class="count"></p>
-        <div class="now"><span id="room-dot" class="room-dot"></span><div><strong id="room-name">—</strong><p id="event-text" class="count">Đang tải…</p></div></div>
+        <small>CÁC MODEL (bấm để xem chi tiết)</small>
         <ol id="board" class="board" aria-label="Tiến độ từng model"></ol>
       </section>
 

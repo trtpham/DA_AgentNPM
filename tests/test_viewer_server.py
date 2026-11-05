@@ -152,7 +152,7 @@ def test_office_page_and_modules_are_served_with_strict_csp(viewer):
     status, headers, body = request(server, "GET", "/office")
     assert status == 200 and b"/office/main.mjs" in body
     assert headers["Content-Security-Policy"] == "default-src 'self'"
-    for path in ("/office/main.mjs", "/office/scene.mjs", "/office/events.mjs",
+    for path in ("/office/main.mjs", "/office/scene.mjs", "/office/events.mjs", "/office/explain.mjs",
                  "/vendor/three.module.min.js", "/vendor/OrbitControls.js"):
         status, headers, _ = request(server, "GET", path)
         assert status == 200 and headers["Content-Type"].startswith("text/javascript"), path
