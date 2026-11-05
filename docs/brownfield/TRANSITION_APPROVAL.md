@@ -180,7 +180,7 @@ EVIDENCE_REFERENCES: yêu cầu trực tiếp trong chat “duyệt tất cả 4
 DECISION: APPROVED FOR IMPLEMENTATION
 PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-03 Asia/Saigon
-EVIDENCE_REFERENCES: trả lời trực tiếp trong chat với Claude “Duyệt, làm A rồi B” cho kế hoạch [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_XU_LY_TON_DONG_2026-11-03.md`](../../ke-hoach-nhat-ky-tuan/KE_HOACH_XU_LY_TON_DONG_2026-11-03.md), mục 5.1.
+EVIDENCE_REFERENCES: trả lời trực tiếp trong chat với Claude “Duyệt, làm A rồi B” cho kế hoạch [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_XU_LY_TON_DONG_2026-11-03.md`](../tien-do/KE_HOACH_XU_LY_TON_DONG_2026-11-03.md), mục 5.1.
 
 - AS-IS: 72/72 pytest PASS tại `cbdbcc2`. Trace `reports/week3-final-tlm-*` cho thấy A-TLM lặp cùng verdict sai 13 lượt vì vòng sửa xóa lượt sai khỏi ngữ cảnh; `decide()` cho approve chỉ dựa vào nhãn và độ tin cậy của model; lệnh gọi mã ngoài gói (`node-gyp`, `npx`, `curl`) không làm phân tích bị coi là chưa đủ.
 - Phạm vi: `agent/run.py`, `agent/decide.py`, `tools/static.py`, test và fixture vô hại liên quan. Thêm luật chặn approve `R7_risk`; coi lệnh gọi mã ngoài gói là phân tích chưa đủ; code tự điền định danh gói; dừng sớm khi verdict lặp; phân biệt đầu ra bị cắt.
@@ -210,7 +210,7 @@ EVIDENCE_REFERENCES: yêu cầu trong chat với Claude “thực hiện các vi
 DECISION: APPROVED FOR IMPLEMENTATION
 PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-03 Asia/Saigon
-EVIDENCE_REFERENCES: trả lời trong chat với Claude “Duyệt, làm I1” cho [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md`](../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md), mục I1.
+EVIDENCE_REFERENCES: trả lời trong chat với Claude “Duyệt, làm I1” cho [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md`](../tien-do/KE_HOACH_CAI_THIEN_2026-11-03.md), mục I1.
 
 - AS-IS (commit `4ff2132`): `R7_review` chỉ ghi "Install path not fully reviewed". Với 10 bản `@swc/core`, kết quả `review` đúng nhưng đến từ việc bộ quét đánh dấu "thiếu" khi gặp file `.node`, không phải vì nhận ra lệnh `execSync("npm install …")` ở `postinstall.js:125`.
 - Phạm vi: `tools/static.py`, `agent/run.py`, `agent/decide.py`, test liên quan. Bộ quét nêu nguyên nhân quét thiếu (file `.node` nhị phân, file nguồn không đọc được, chạm giới hạn); thêm chỉ báo lệnh tải mã ngoài nằm trong mã đường install; `R7_review` liệt kê nguyên nhân.
@@ -225,7 +225,7 @@ APPROVED_AT: 2026-11-04 Asia/Saigon
 EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “tôi đã review code agent và ký nghiệm thu tuần 1–4”; “hôm nay ít nhất phải xong(100%) từ I1 đến I4”; với lượt 2–4, PO chọn “Docker dùng một lần”.
 
 - **Nghiệm thu:** TV2 Phạm Minh Triết xác nhận đã review code agent (`agent/run.py`, `agent/decide.py`, `tools/static.py`) và ký nghiệm thu tuần 1–4. Claude chỉ ghi lại xác nhận này theo lời PO, không ký thay.
-- **Phạm vi I2–I4** theo [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md`](../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md): tách hàm `analyze()` và thêm test phát lại trace; ổn định A-TLM/A-SLM không nới schema; đo token và giảm đầu vào. Không đổi luật approve/deny, không thêm công cụ agent, chỉ đo trên 3 fixture và 10 bản swc dev.
+- **Phạm vi I2–I4** theo [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_CAI_THIEN_2026-11-03.md`](../tien-do/KE_HOACH_CAI_THIEN_2026-11-03.md): tách hàm `analyze()` và thêm test phát lại trace; ổn định A-TLM/A-SLM không nới schema; đo token và giảm đầu vào. Không đổi luật approve/deny, không thêm công cụ agent, chỉ đo trên 3 fixture và 10 bản swc dev.
 - **Bằng chứng phiếu kiểm tra chéo:** chỉ đọc tĩnh trong container dùng một lần (`--read-only`, `--cap-drop ALL`, không mount thư mục nào ngoài `labels.csv` chỉ đọc). Tarball/ZIP chỉ nằm trong bộ nhớ container, không chạy mã gói. Đầu ra là đoạn mã dạng chữ tại các dòng được trích, ghi vào `data/review_rounds/evidence/` (Git ignore). Claude **không** điền `decision`, `reviewer`, `reviewed_at`; người kiểm tra chéo điền sau khi đọc bằng chứng.
 - Owner: Claude. Reviewer: TV2. Rollback: revert commit tương ứng.
 
@@ -234,7 +234,7 @@ EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “tôi đ�
 DECISION: APPROVED FOR IMPLEMENTATION
 PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-04 Asia/Saigon
-EVIDENCE_REFERENCES: trả lời trong chat với Claude “Bắt đầu W5-1, W5-8” cho kế hoạch tuần 5 trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../../ke-hoach-nhat-ky-tuan/tuan-05.md).
+EVIDENCE_REFERENCES: trả lời trong chat với Claude “Bắt đầu W5-1, W5-8” cho kế hoạch tuần 5 trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../tien-do/tuan-05.md).
 
 - Phạm vi W5-1: thêm 6 fixture vô hại trong `tests/fixtures/sandbox-limits/` và test chạy chúng **chỉ trong container** `agent-npm-sandbox:local`. Không sửa `sandbox/` ở bước này. Test chỉ chạy khi đặt `RUN_SANDBOX_TESTS=1`.
 - Phạm vi W5-8: đo thời gian từng lượt Ollama của A-LLM trên 3 fixture và 10 bản swc dev đã duyệt; so `num_ctx`. Chỉ đổi code agent sau khi có số đo và báo PO.
@@ -246,7 +246,7 @@ EVIDENCE_REFERENCES: trả lời trong chat với Claude “Bắt đầu W5-1, W
 DECISION: APPROVED FOR IMPLEMENTATION
 PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-04 Asia/Saigon
-EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “triển khai công việc tuần 5”, cho bảng kế hoạch trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../../ke-hoach-nhat-ky-tuan/tuan-05.md).
+EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “triển khai công việc tuần 5”, cho bảng kế hoạch trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../tien-do/tuan-05.md).
 
 - W5-2/W5-3: sửa `sandbox/run.py` (thêm `outcome`, cây PID và `by_actor`); giữ hợp đồng `{ok, data, error}` và các trường cũ. TV3 review.
 - W5-4: chạy lại fixture trong container `agent-npm-sandbox:local`; chỉ fixture vô hại của nhóm.
@@ -260,7 +260,7 @@ EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “triển 
 DECISION: APPROVED — START AFTER WEEK 5 MILESTONE
 PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-04 Asia/Saigon
-EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 04/11 cho [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_VAN_PHONG_3D.md`](../../ke-hoach-nhat-ky-tuan/KE_HOACH_VAN_PHONG_3D.md): “1. Sau khi tuần 5 ổn định 2. Có 3. Đầy đủ”.
+EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 04/11 cho [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_VAN_PHONG_3D.md`](../tien-do/KE_HOACH_VAN_PHONG_3D.md): “1. Sau khi tuần 5 ổn định 2. Có 3. Đầy đủ”.
 
 - Phạm vi: `viewer/server.py` (route `/office`, header CSP, không thêm API) và `viewer/static/office*`. Chỉ đọc trace, không sửa agent, công cụ, sandbox hay luật quyết định.
 - Thư viện: Three.js ghim phiên bản, chép vào `viewer/static/vendor/` kèm LICENSE (MIT), không dùng CDN.
@@ -278,3 +278,37 @@ EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 05/11: “1. Ok 2
 - Được tải đúng 3 file từ `https://cdn.jsdelivr.net/npm/three@0.170.0/`: `build/three.module.min.js`, `examples/jsm/controls/OrbitControls.js`, `LICENSE`; chép vào `viewer/static/vendor/`, ghi SHA-256. Trang không gọi CDN khi chạy.
 - Việc tuần 5 có kết quả từ TV3/người kiểm tra nhãn thì được ưu tiên; 3D tạm dừng.
 - Không mở trang 3D khi đang đo tốc độ model.
+
+## Gate B0 — Chống học vẹt cho agent: L1–L4 (2026-11-05)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-05 Asia/Saigon
+EVIDENCE_REFERENCES: yêu cầu trong chat với Claude ngày 05/11: “cải thiện hơn khả năng học cho các Agent, ko được học vẹt”, sau khi Claude báo số đo 309/465 lượt bịa mã MITRE và 97/465 lượt trích dòng chưa đọc.
+
+- **L1 — đánh giá mù:**
+  - Model chỉ thấy bí danh trung tính thay cho tên gói; mô tả, từ khóa, tác giả và repository bị ẩn.
+  - Tín hiệu OSV/Registry không còn trong prompt; luật vẫn dùng chúng (R5).
+- **L2 — từ vựng hành vi cố định cho `technique`:** chỉ ràng buộc lúc model sinh câu trả lời; `Verdict` (AGENTS §6.5) không đổi.
+- **L3 — kiểm chứng ngữ nghĩa bằng chứng:**
+  - Dòng được trích phải chứa dấu hiệu khớp loại hành vi; không khớp thì bằng chứng không được tính.
+  - Chỉ làm việc kiểm bằng chứng **chặt hơn**; ngưỡng và luật approve/deny không đổi.
+- **L4 — bộ đo học vẹt:**
+  - 5 fixture đối chứng vô hại trong `tests/fixtures/probe/` (nay gộp vào `tests/fixtures/corpus/`), đáp án để ở `EXPECTED.json` **ngoài** thư mục gói nên model không đọc được.
+  - Thêm script `experiments/rote_probe.py`.
+- **Giới hạn:** fixture chỉ được đọc tĩnh, không chạy trên host; IP dùng dải tài liệu 203.0.113.0/24. Đo trước và sau trên 3 model; hồi quy 13 gói dev.
+- Owner: Claude. Reviewer: TV2. Rollback: revert commit.
+
+## Gate B0 — Mở rộng dữ liệu mô phỏng, sắp xếp lại repo, đẩy GitHub (2026-11-05)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-05 Asia/Saigon
+EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 05/11: thêm dữ liệu "dùng các gói mô phỏng trước nhưng phải đa dạng gói lành, gói độc; chỉ khi nào đảm bảo hoạt động ổn định hết mới cho các gói thật vào"; mức sắp xếp "Vừa phải"; "Xóa hết" file tạm; "Push lên main".
+
+- **Dữ liệu:** thêm bộ gói mô phỏng `tests/fixtures/corpus/` (lành và độc mô phỏng, theo cặp chỉ khác hành vi). Đáp án ở `EXPECTED.json` ngoài thư mục gói. Mã độc mô phỏng chỉ đọc tĩnh, không chạy; địa chỉ dùng dải tài liệu 192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24 và tên miền `.invalid`; không có khóa thật. Chưa thêm gói thật.
+- **Sắp xếp vừa phải:** giữ nguyên `agent/ tools/ sandbox/ viewer/ experiments/` (AGENTS §5, không đổi import). Tách script khỏi dữ liệu trong `data/` (`data/scripts/`), gom fixture, gom tài liệu vào `docs/`. Cập nhật mọi đường dẫn trong code, test, tài liệu.
+- **Dọn:** xóa `.pytest_week3_fix_tmp/`, `.week2_benign_audit_tmp.py` và worktree đo tạm.
+- **GitHub:** push `main` lên `origin`. Không đưa lên: file LMS `.docx/.pdf`, `.claude/`, `reports/`, `data/samples/`.
+- **Điều kiện xong:** toàn bộ pytest và test Node PASS; chạy agent trên bộ mô phỏng với 3 model.
+- Owner: Claude. Reviewer: TV2. Rollback: revert commit.

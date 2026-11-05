@@ -13,7 +13,7 @@ Bước tiếp theo (W5-6) sẽ cho agent **chạy thật** script cài đặt c
 
 - Mục **"W5-1"** và **"W5-2, W5-3 (chạy thật) và W5-4"** trong [`../tuan-05.md`](../tuan-05.md): bảng 9 fixture × 3 lần.
 - Mục **"W5-11"**: phát hiện trần RAM thực tế là 512 MB do swap.
-- File [`../../sandbox/run.py`](../../sandbox/run.py), đoạn lệnh `docker run` (các cờ `--network none`, `--read-only`, `--cap-drop ALL`, `--pids-limit 64`, `--memory 256m`…).
+- File [`../../sandbox/run.py`](../../../sandbox/run.py), đoạn lệnh `docker run` (các cờ `--network none`, `--read-only`, `--cap-drop ALL`, `--pids-limit 64`, `--memory 256m`…).
 
 ### Bước 2 — Tự chạy lại (khoảng 3 phút máy chạy)
 

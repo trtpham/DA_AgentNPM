@@ -95,7 +95,7 @@ viewer/
 | **O-4** | **So sánh 3 model** (3 làn, bảng tóm tắt) | Claude / TV2 | O-2 | Dùng các run `w58-*`/`i3b-dev-*` có sẵn; số bước, thời gian, nhãn, luật khớp file `reports/<run>/<gói>.json` |
 | **O-5** | **Live + 2D dự phòng + trợ năng** | Claude / PO | O-2 | Live theo trace đang ghi; tắt WebGL thì tự về 2D; `prefers-reduced-motion` tắt chuyển động; khổ 375 px không cuộn ngang |
 | **O-6** | **Phòng thí nghiệm sandbox** | Claude / TV3 | **W5-6 đã xong** | Hiện `outcome`, `canary_touched`, sự kiện theo `actor` (`npm`/`package`) |
-| **O-7** | **Đóng gói cho demo/báo cáo:** ảnh và video ngắn 3 ca (lành, độc, độc có câu lừa); cập nhật README | Claude / PO | O-4, O-5 | Ảnh thật trong `ke-hoach-nhat-ky-tuan/hinh-anh/`; ca độc chỉ chạy trên VM theo quy tắc an toàn |
+| **O-7** | **Đóng gói cho demo/báo cáo:** ảnh và video ngắn 3 ca (lành, độc, độc có câu lừa); cập nhật README | Claude / PO | O-4, O-5 | Ảnh thật trong `docs/tien-do/hinh-anh/`; ca độc chỉ chạy trên VM theo quy tắc an toàn |
 
 Ước lượng: O-0 nửa ngày; O-1 + O-2 khoảng 2 ngày; O-3 nửa ngày; O-4 1 ngày; O-5 1 ngày; O-6 nửa ngày; O-7 nửa ngày. **Tổng khoảng 6 ngày công.** Bản dùng được cho demo cần O-0 → O-4, khoảng 4 ngày.
 
@@ -111,7 +111,7 @@ viewer/
 2. **Three.js:** đồng ý, chép vào repo, ghim phiên bản, kèm LICENSE.
 3. **Phạm vi:** đầy đủ O-0 → O-7. O-6 vẫn phụ thuộc W5-6.
 
-Ghi nhận trong [`../docs/brownfield/TRANSITION_APPROVAL.md`](../docs/brownfield/TRANSITION_APPROVAL.md).
+Ghi nhận trong [`../docs/brownfield/TRANSITION_APPROVAL.md`](../../docs/brownfield/TRANSITION_APPROVAL.md).
 
 ## Chế độ "Xe hàng" — luồng sản phẩm (PO chốt 05/11/2026)
 
@@ -173,5 +173,5 @@ Bước mô phỏng ghi "[MÔ PHỎNG]" trong phụ đề và không bao giờ g
 - R7_risk chưa có kịch bản.
 
 **Kiểm chứng:**
-- `node --test tests/office_scenarios.test.mjs` (4 test): mọi bước mô phỏng đều có nhãn; luật mô phỏng đạt đúng luật minh họa; kết quả từng kịch bản đúng; run không có trong `reports/` thì bị bỏ qua, không bị bịa ra.
+- `node --test tests/js/office_scenarios.test.mjs` (4 test): mọi bước mô phỏng đều có nhãn; luật mô phỏng đạt đúng luật minh họa; kết quả từng kịch bản đúng; run không có trong `reports/` thì bị bỏ qua, không bị bịa ra.
 - Kiểm cả 13 kịch bản trên trình duyệt ngày 05/11.

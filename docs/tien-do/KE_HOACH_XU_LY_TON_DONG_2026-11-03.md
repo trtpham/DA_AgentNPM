@@ -1,6 +1,6 @@
 # Kế hoạch xử lý tồn đọng — Claude tiếp nhận ngày 03/11/2026
 
-Kế hoạch này bổ sung cho [bàn giao](../docs/BAN_GIAO_CHO_CLAUDE_2026-11-03.md) (H0–H4). Thứ tự làm như sau: **đóng tồn đọng và vá lỗi đã xác minh trước**, sau đó mới cải thiện dần. Mỗi mục ghi Owner, Reviewer, điều kiện bắt đầu, DoD và việc cần PO quyết. Chưa có mục nào được đánh dấu xong.
+Kế hoạch này bổ sung cho [bàn giao](../../docs/ban-giao/BAN_GIAO_CHO_CLAUDE_2026-11-03.md) (H0–H4). Thứ tự làm như sau: **đóng tồn đọng và vá lỗi đã xác minh trước**, sau đó mới cải thiện dần. Mỗi mục ghi Owner, Reviewer, điều kiện bắt đầu, DoD và việc cần PO quyết. Chưa có mục nào được đánh dấu xong.
 
 ## 0. Cơ sở của kế hoạch (đã kiểm ngày 03/11)
 
@@ -16,7 +16,7 @@ Kế hoạch này bổ sung cho [bàn giao](../docs/BAN_GIAO_CHO_CLAUDE_2026-11-
 
 - `canary-package`: 13 lượt verdict chỉ cho 2 lỗi khác nhau. Model sinh khoảng 12.000 ký tự lặp ("(403-404)…") đến khi hết `num_predict`, nên JSON bị cắt (`EOF while parsing`).
 - `no-hook-package`: 13 lượt cho đúng **1** lỗi lặp lại: `package` thiếu `@version` (`no-hook-fixture`) và `description` sai số từ.
-- Lỗi gốc của vòng lặp: [run.py:194](../agent/run.py) xóa lượt trả lời sai cùng lời nhắc sửa trước mỗi lượt kế tiếp. Với `temperature=0`, model thấy cùng ngữ cảnh nên sinh lại cùng câu trả lời; 12/15 bước bị lãng phí.
+- Lỗi gốc của vòng lặp: [run.py:194](../../agent/run.py) xóa lượt trả lời sai cùng lời nhắc sửa trước mỗi lượt kế tiếp. Với `temperature=0`, model thấy cùng ngữ cảnh nên sinh lại cùng câu trả lời; 12/15 bước bị lãng phí.
 
 ## Giai đoạn A — Dọn nền và khóa baseline (H0)
 
@@ -57,7 +57,7 @@ Chỉ sửa tài liệu/cấu hình, không đổi logic, nên nằm trong phạ
 
 - **Sửa trong code, không nới lỏng schema:**
   1. **Code tự điền `package`.** Agent đã biết `package_id` từ manifest, nên trước khi validate, ghi đè trường `package` bằng giá trị đúng. Đây là định danh chứ không phải phán đoán của model. Kiểm tra `package mismatch` giữ cho trường hợp model nhắc sai gói trong bằng chứng.
-  2. **Phát hiện lặp.** Nếu nội dung hoặc lỗi validate trùng lượt trước, không gửi lại cùng ngữ cảnh. Lần đầu: giữ lại lượt sai để model thấy lỗi của chính nó (thay cơ chế xóa ở [run.py:194](../agent/run.py)). Lần thứ hai vẫn trùng: dừng sớm, ghi `error kind=repeated_invalid`, trả về luật R2 `suspicious/review`.
+  2. **Phát hiện lặp.** Nếu nội dung hoặc lỗi validate trùng lượt trước, không gửi lại cùng ngữ cảnh. Lần đầu: giữ lại lượt sai để model thấy lỗi của chính nó (thay cơ chế xóa ở [run.py:194](../../agent/run.py)). Lần thứ hai vẫn trùng: dừng sớm, ghi `error kind=repeated_invalid`, trả về luật R2 `suspicious/review`.
   3. **Phát hiện bị cắt.** Đọc `done_reason == "length"` từ phản hồi Ollama; ghi `error kind=truncated_output` thay vì báo chung là `json_invalid`.
   4. Lời nhắc sửa ghi số từ thực tế của `description` (ví dụ "description có 19 từ, cần 5–15").
 - **Test:** model giả trả cùng một verdict sai 3 lần thì dừng ở lượt 3 với `repeated_invalid` và không tốn đủ 15 bước. Model giả trả thiếu `@version` thì verdict vẫn hợp lệ.
@@ -73,7 +73,7 @@ Chỉ sửa tài liệu/cấu hình, không đổi logic, nên nằm trong phạ
 ### B5. Đo lại sau khi vá (cần Ollama)
 
 - Ma trận cố định: 3 fixture (`benign`, `canary`, `no-hook`) × 3 model × **3 lần** mỗi ô, cùng commit và cấu hình. Ghi ở mỗi ô: verdict hợp lệ không, số bước, thời gian, `rule` cuối, loại lỗi.
-- Lưu vào **chính** `ke-hoach-nhat-ky-tuan/tuan-03.md`, kèm `run_id` để viewer mở lại được.
+- Lưu vào **chính** `docs/tien-do/tuan-03.md`, kèm `run_id` để viewer mở lại được.
 - **DoD:** bảng đủ 27 lượt. A-TLM được phép FAIL, miễn kết thúc bằng fallback an toàn và **không còn** 15 bước lặp vô ích. Không suy rộng ra độ chính xác trên npm.
 
 ## Giai đoạn C — Đóng tồn đọng dữ liệu tuần 2 (H1)
@@ -82,7 +82,7 @@ Claude chuẩn bị, **người thật kiểm tra chéo**. Phạm vi "duyệt b�
 
 | ID | Việc | Ghi chú |
 | --- | --- | --- |
-| C1 | Viết `data/review_sheet.py`: sinh phiếu kiểm tra cho từng lượt (ID, gói@phiên bản, nguồn, hash, `file:dòng`, trích đoạn mã, ô trống cho người kiểm tra/ngày/kết luận `verified/revise/exclude`) | Phiếu Markdown/CSV ngoài Git hoặc trong `data/review_rounds/`. Có test với dữ liệu giả |
+| C1 | Viết `data/scripts/review_sheet.py`: sinh phiếu kiểm tra cho từng lượt (ID, gói@phiên bản, nguồn, hash, `file:dòng`, trích đoạn mã, ô trống cho người kiểm tra/ngày/kết luận `verified/revise/exclude`) | Phiếu Markdown/CSV ngoài Git hoặc trong `data/review_rounds/`. Có test với dữ liệu giả |
 | C2 | Lượt 1: 20 nhãn lành. Đã đối chiếu tự động nguồn và dòng; còn phải đọc ngữ nghĩa đường install | Claude điền phần tóm tắt hành vi; reviewer xác nhận |
 | C3 | Lượt 2–4: 18 `npm-token-worm`, 18 `shai-hulud`, 17 `mut-4831` + `exnesss` + 2 nghi vấn | **Bị chặn** cho đến khi biết ZIP Datadog nằm ở đâu và có VM/container dùng một lần. Không đưa ZIP lên host hay Git |
 | C4 | Sau mỗi lượt: `prepare_labels` ra file mới, kiểm tra không rò cụm, đủ 3 lớp ở 2 split | Chỉ sửa `labels.csv` khi đổi nhãn hoặc loại dòng |
@@ -128,9 +128,9 @@ Làm theo thứ tự, mỗi bước cần một Gate B0 riêng nếu đổi hợ
 ### Việc chỉ người thật làm được (không phải nợ kỹ thuật)
 
 1. **TV2 Phạm Minh Triết:** review diff `agent/run.py`, `agent/decide.py`, `tools/static.py` và ký nghiệm thu tuần 1–4.
-2. **Reviewer nhãn khác người gán:** điền 4 phiếu `data/review_rounds/round-*.csv`. Lượt 2–4 đọc ZIP Datadog trong VM. Sau đó chạy `py -3.14 -m data.review_sheet check …` cho từng phiếu.
+2. **Reviewer nhãn khác người gán:** điền 4 phiếu `data/review_rounds/round-*.csv`. Lượt 2–4 đọc ZIP Datadog trong VM. Sau đó chạy `py -3.14 -m data.scripts.review_sheet check …` cho từng phiếu.
 3. **PO:** nghiệm thu demo viewer G3–G4; quyết định 5 mục untracked (A4); quyết định có tách CSS dùng chung giữa `tools/visualize_agent.py` và viewer hay không.
-- **C1 PASS:** `data/review_sheet.py` (`build`/`check`) có 2 test. Đã sinh `data/review_rounds/round-1..4.csv`: 20 + 18 + 18 + 20 = 76 dòng, cột kiểm tra để trống. **C2–C4 BLOCKED:** cần reviewer là người thật, cùng ZIP Datadog/VM cho lượt 2–4.
+- **C1 PASS:** `data/scripts/review_sheet.py` (`build`/`check`) có 2 test. Đã sinh `data/review_rounds/round-1..4.csv`: 20 + 18 + 18 + 20 = 76 dòng, cột kiểm tra để trống. **C2–C4 BLOCKED:** cần reviewer là người thật, cùng ZIP Datadog/VM cho lượt 2–4.
 - **C5 PASS:** giới hạn đại diện của dev/test đã ghi vào `data/REVIEW_WEEK2.md`.
 - **D PASS cục bộ:** `viewer/static/index.html`, `style.css`, `app.js` theo mẫu dashboard `tools/visualize_agent.py`. Đã kiểm tra trên trình duyệt:
   - replay chạy hết 8/8 sự kiện;

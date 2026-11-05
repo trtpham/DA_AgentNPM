@@ -23,7 +23,7 @@ Agent trả verdict hợp lệ với công cụ giả; sandbox ghi dấu vết t
 
 ## Thử agent với A-TLM và A-SLM (2026-10-23)
 
-Đầu vào: `tests/fixtures/benign-package` (`postinstall.js` chỉ ghi marker cục bộ). Vòng lặp agent dùng `read_manifest`/`read_file`, Ollama cục bộ, tối đa 15 bước; không chạy install script.
+Đầu vào: `tests/fixtures/packages/benign-package` (`postinstall.js` chỉ ghi marker cục bộ). Vòng lặp agent dùng `read_manifest`/`read_file`, Ollama cục bộ, tối đa 15 bước; không chạy install script.
 
 | Biến thể | Kết quả | Bằng chứng |
 | --- | --- | --- |
@@ -47,7 +47,7 @@ Kiểm tra mã: `rtk python -m pytest -q` → 10 PASS; `rtk semgrep scan --error
 
 ## Chạy A-TLM và A-LLM qua dashboard (2026-10-23)
 
-Đầu vào: `tests/fixtures/benign-package`; không thực thi `postinstall.js`. Hai lượt chạy tuần tự trên Ollama cục bộ; dashboard trả tiến độ trong lúc chạy và lưu HTML cuối vào `reports/` (bị Git ignore).
+Đầu vào: `tests/fixtures/packages/benign-package`; không thực thi `postinstall.js`. Hai lượt chạy tuần tự trên Ollama cục bộ; dashboard trả tiến độ trong lúc chạy và lưu HTML cuối vào `reports/` (bị Git ignore).
 
 | Biến thể | Kết quả | Báo cáo cục bộ |
 | --- | --- | --- |
@@ -82,7 +82,7 @@ Kết quả này chỉ chứng minh luồng agent trên một fixture vô hại;
 
 ### Bổ sung kiểm chứng trên 3 fixture vô hại (2026-10-30)
 
-Sau khi TV2 cho phép, đã chạy agent Ollama trên đúng `tests/fixtures/benign-package`, `canary-package`, `no-hook-package`; không quét 450 ứng viên hay gói npm thật. Trace được ghi dưới `reports/week3-fixtures-20261030-*` và được Git bỏ qua.
+Sau khi TV2 cho phép, đã chạy agent Ollama trên đúng `tests/fixtures/packages/benign-package`, `canary-package`, `no-hook-package`; không quét 450 ứng viên hay gói npm thật. Trace được ghi dưới `reports/week3-fixtures-20261030-*` và được Git bỏ qua.
 
 | Model | Gói biên dịch lành | Gói canary | Gói chỉ có manifest |
 | --- | --- | --- | --- |

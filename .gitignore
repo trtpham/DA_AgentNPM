@@ -15,3 +15,9 @@ data/labels-prepared.csv
 data/review_rounds/evidence/
 # Đầu ra chạy cục bộ (trace, kết quả lô, dashboard); bằng chứng tóm tắt nằm trong ke-hoach-nhat-ky-tuan/
 reports/
+# Bản LMS nộp trường (docx/pdf) giữ cục bộ, không đưa lên GitHub.
+docs/tien-do/noi-dung-lms-*
+# Cấu hình cá nhân của trợ lý code / IDE.
+.claude/
+.vscode/
+.idea/

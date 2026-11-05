@@ -1,24 +1,72 @@
 # DA_AgentNPM
 
-[Kế hoạch thực hiện 10 tuần](ke-hoach-nhat-ky-tuan/KE_HOACH.md)
+[Kế hoạch thực hiện 10 tuần](docs/tien-do/KE_HOACH.md)
 
-[Kế hoạch và nhật ký theo tuần](ke-hoach-nhat-ky-tuan/README.md)
+[Kế hoạch và nhật ký theo tuần](docs/tien-do/README.md)
 
-## Cấu trúc
+## Cấu trúc thư mục
 
-- `agent/`: schema verdict.
-- `tools/`: tải tarball và công cụ đọc gói.
-- `sandbox/`: chạy install script trong Docker cách ly.
-- `data/`: hợp đồng nhãn và xử lý tập dữ liệu.
+```
+agent/          vòng lặp agent (run.py), luật quyết định (decide.py), schema verdict, trace,
+                chống học vẹt (semantics.py: đánh giá mù, từ vựng hành vi, kiểm chứng ngữ nghĩa)
+tools/          công cụ chỉ đọc: tải/giải nén gói, read_manifest, read_file, extract_indicators,
+                deobfuscate, bối cảnh OSV/Registry, actions.py (dry-run approve/deny)
+sandbox/        Dockerfile + run_install.sh + canary giả, chạy install script cách ly mạng
+experiments/    chạy lô, đo chỉ số, baseline GuardDog, bộ đo học vẹt, cấu hình 3 model (configs/)
+viewer/         trình xem trace và văn phòng 3D (chỉ đọc reports/, chỉ nghe 127.0.0.1)
+data/           dữ liệu nhãn: labels.csv, review_450/, review_rounds/
+  scripts/      pipeline dữ liệu: chuẩn bị nhãn, lọc Datadog (chỉ trong VM), phiếu kiểm tra chéo
+tests/          test pytest (test_*.py); js/ là test Node của văn phòng 3D
+  fixtures/
+    packages/   4 gói vô hại cơ bản (benign, canary, no-hook, obfuscated)
+    corpus/     22 gói mô phỏng lành/độc theo cặp + EXPECTED.json (đáp án nằm ngoài thư mục gói)
+    replays/    phản hồi Ollama ghi lại để test hồi quy không cần model
+    strace/ sandbox-limits/   dữ liệu cho test sandbox
+docs/
+  brownfield/   TRANSITION_APPROVAL.md: mọi Gate B0 do PO duyệt
+  ban-giao/     tài liệu bàn giao giữa các trợ lý code
+  tien-do/      kế hoạch, nhật ký tuần, báo cáo tiến độ, hướng dẫn demo, giao việc, hình ảnh
+reports/        đầu ra chạy cục bộ (Git ignore)
+```
+
+Không đưa lên Git: `data/samples/` (mẫu độc thật, chỉ dùng trong VM), `reports/`, file `.tgz`, `sandbox/out/`.
+
+## Bộ gói mô phỏng và đo học vẹt
+
+`tests/fixtures/corpus/` có 22 gói **mô phỏng**: 11 lành, 11 độc. Các gói đi theo cặp có cùng mô tả và tên gần giống nhau, chỉ khác ở hành vi:
+- tải binary có checksum ↔ tải mã rồi `eval`;
+- đọc biến môi trường cấu hình ↔ gom secret gửi đi;
+- giải base64 thành asset ↔ giải base64 rồi `new Function`;
+- `spawn` script build ↔ reverse shell;
+- hook inline in lời cảm ơn ↔ hook inline tải và chạy mã;
+- ghi cache trong gói ↔ chèn lệnh vào `~/.bashrc`;
+- `require` nhiều tầng ghi dữ liệu ↔ `require` nhiều tầng đọc khóa SSH rồi rò qua DNS;
+- cặp sinh đôi chỉ khác 2 dòng.
+
+Ngoài ra còn bẫy tên gói (tên đáng tin trên mã độc, tên đáng sợ trên mã lành) và bẫy chú thích bảo agent approve.
+
+Mã độc mô phỏng **chỉ được đọc tĩnh, không bao giờ chạy**. Mã dùng dải IP tài liệu (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24) và tên miền `.invalid`, không có khóa thật. Không viết `curl … | sh` trong `package.json`, vì Windows Defender cách ly file đó.
+
+```powershell
+py -3.14 -m experiments.rote_probe <run_id> A-LLM A-SLM A-TLM
+```
+
+Lệnh in các chỉ số:
+- strict, safe;
+- số gói độc bị deny / bị approve, số gói lành được approve / bị deny;
+- số cặp được **phân tách**, tức gói độc nhận hành động nghiêm hơn gói lành cùng cặp.
+
+Kết quả ghi vào `reports/<run_id>-summary.json`. Chỉ thêm gói thật khi bộ mô phỏng đã ổn định (Gate B0 ngày 05/11).
+
+## Dữ liệu nhãn
+
 - Hồ sơ nhãn tuần 2: [`data/REVIEW_WEEK2.md`](data/REVIEW_WEEK2.md). `labels.csv` có 76 nhãn: 20 `benign`, 2 `suspicious`, 54 `malicious`; 71 nhãn mới từ bốn batch đã được Codex kiểm tra tĩnh theo ủy quyền TV2 và chờ Phạm Minh Triết kiểm tra chéo trước khi dùng để đánh giá. Bộ này chưa đủ đại diện để đo độ chính xác agent.
 - Đối chiếu 450 ứng viên metadata: [`data/review_450/metadata_review_450.csv`](data/review_450/metadata_review_450.csv) (445 manifest khớp, 5 không còn trên Registry; chưa gán nhãn từ metadata).
-- Chạy lại theo 25 batch, mỗi batch 18 gói: `rtk proxy python -m data.review_batches` (kết quả trong [`data/review_450/batches/`](data/review_450/batches/); có thể tiếp tục sau khi gián đoạn).
+- Chạy lại theo 25 batch, mỗi batch 18 gói: `rtk proxy python -m data.scripts.review_batches` (kết quả trong [`data/review_450/batches/`](data/review_450/batches/); có thể tiếp tục sau khi gián đoạn).
 - Kho 450 ứng viên chỉ có metadata: [`data/review_450/public_candidates_450.csv`](data/review_450/public_candidates_450.csv); cách thu thập và giới hạn ở [`data/README.md`](data/README.md). Các ứng viên chưa phải nhãn thật.
-- `tests/`: test và gói mô phỏng vô hại.
-- `experiments/configs/`: cấu hình ba model Ollama.
-- `reports/`: đầu ra phân tích (JSON bị ignore).
+## Cài đặt và kiểm tra
 
-Cài phụ thuộc: `py -3.14 -m pip install -r requirements.txt`. Chạy kiểm tra: `rtk proxy py -3.14 -m pytest -q --basetemp=.pytest_tmp`. Một số test HTTP cần quyền bind loopback. Kiểm tra bảo mật: `rtk semgrep scan --config auto --error`.
+Cài phụ thuộc: `py -3.14 -m pip install -r requirements.txt`. Chạy kiểm tra: `py -3.14 -m pytest -q` và `node --test tests/js/*.test.mjs`. Một số test HTTP cần quyền bind loopback. Kiểm tra bảo mật: `rtk semgrep scan --config auto --error`.
 
 Probe 20 lượt với công cụ giả, không dùng mã gói: `rtk proxy python -m experiments.model_probe --attempts 20`. Kết quả probe không thay thế phép đo accuracy trên nhãn thật.
 
@@ -27,8 +75,8 @@ Sandbox Docker chỉ dùng fixture vô hại: xem [hướng dẫn sandbox](sandb
 Chạy agent đọc gói mẫu, không thực thi `postinstall`:
 
 ```powershell
-rtk proxy python -m agent.run tests/fixtures/benign-package A-TLM
-rtk proxy python -m agent.run tests/fixtures/benign-package A-SLM
+rtk proxy python -m agent.run tests/fixtures/packages/benign-package A-TLM
+rtk proxy python -m agent.run tests/fixtures/packages/benign-package A-SLM
 ```
 
 Agent gọi Ollama cục bộ, dùng `read_manifest`, `read_file`, `deobfuscate` và `extract_indicators`, giới hạn 15 bước. Mã gói chỉ được đọc; `#pretty` là bản xem theo dòng ảo, không chạy JavaScript. Luật trong `agent/decide.py` kiểm tra bằng chứng và ngưỡng 0.8 trước khi trả hành động cuối; gói không có lifecycle hook hoặc `binding.gyp` vẫn cần `review`. Mọi hành động hiện là **dry-run**, không gọi `npm approve-scripts` hoặc `deny-scripts`. Nếu model không đạt, lệnh trả lỗi; đó là kết quả FAIL của model, không phải nhãn dữ liệu.
@@ -36,7 +84,7 @@ Agent gọi Ollama cục bộ, dùng `read_manifest`, `read_file`, `deobfuscate`
 Bộ lọc Datadog chỉ chạy **trong VM cách ly** sau khi bộ dữ liệu được clone tại đó. Không clone hoặc giải nén mẫu trên máy host. Lệnh trong VM:
 
 ```bash
-python -m data.filter_datadog /path/to/datadog-dataset /path/to/candidates.csv
+python -m data.scripts.filter_datadog /path/to/datadog-dataset /path/to/candidates.csv
 ```
 
 Script chỉ đọc ZIP/tarball, giữ gói có lifecycle hook hoặc `binding.gyp`, khử trùng lặp theo cụm và xuất SHA-256 cùng số mẫu trước/sau lọc. CSV này là **ứng viên**, chưa phải nhãn đã kiểm tra chéo. Hiện chưa chạy script trên bộ Datadog thật.
@@ -46,7 +94,7 @@ Script chỉ đọc ZIP/tarball, giữ gói có lifecycle hook hoặc `binding.g
 Chạy Ollama rồi khởi động bảng theo dõi trong lúc agent phân tích fixture vô hại:
 
 ```powershell
-rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-SLM
+rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/packages/benign-package A-SLM
 ```
 
 Dashboard hiển thị bốn giai đoạn, bước đang xử lý và bằng chứng file:dòng. Sau khi chạy xong, dùng **Phát lại**, **Bước trước**, **Bước tiếp** và chọn tốc độ 1×/2×/4× để trình bày từng bước.
@@ -56,8 +104,8 @@ Mở URL `http://127.0.0.1:<port>/` mà lệnh in ra ngay khi bắt đầu; các
 Chạy lần lượt hai biến thể TLM và LLM, mỗi lệnh mở một URL dashboard riêng:
 
 ```powershell
-rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-TLM --output reports/A-TLM-agent-flow.html
-rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/benign-package A-LLM --output reports/A-LLM-agent-flow.html
+rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/packages/benign-package A-TLM --output reports/A-TLM-agent-flow.html
+rtk proxy python -X utf8 -m tools.visualize_agent tests/fixtures/packages/benign-package A-LLM --output reports/A-LLM-agent-flow.html
 ```
 
 ## Trình xem trace (VIZ-1)
@@ -80,6 +128,6 @@ Mở `http://127.0.0.1:8765/`, chọn run rồi chọn gói. **Phát lại**, **
 
 ## Kiểm tra chéo nhãn và test phát lại
 
-- **Phiếu:** `rtk proxy py -3.14 -m data.review_sheet build <1-4>` tạo `data/review_rounds/round-N.csv`; `… check data/review_rounds/round-N.csv` kiểm tra phiếu đã điền. Cột `decision`, `reviewer`, `reviewed_at` chỉ do người kiểm tra chéo điền.
-- **Bằng chứng cho người kiểm tra:** `rtk proxy py -3.14 -m data.review_evidence <1-4>` chạy trong container `python:3.12-slim` dùng một lần (`--read-only`, `--cap-drop ALL`, chỉ mount script). Container tải tarball/ZIP vào bộ nhớ, kiểm tra integrity và `tên@phiên bản`, rồi trích các dòng được dẫn dưới dạng chữ vào `data/review_rounds/evidence/round-N.md` (Git ignore). Không chạy mã gói.
+- **Phiếu:** `rtk proxy py -3.14 -m data.scripts.review_sheet build <1-4>` tạo `data/review_rounds/round-N.csv`; `… check data/review_rounds/round-N.csv` kiểm tra phiếu đã điền. Cột `decision`, `reviewer`, `reviewed_at` chỉ do người kiểm tra chéo điền.
+- **Bằng chứng cho người kiểm tra:** `rtk proxy py -3.14 -m data.scripts.review_evidence <1-4>` chạy trong container `python:3.12-slim` dùng một lần (`--read-only`, `--cap-drop ALL`, chỉ mount script). Container tải tarball/ZIP vào bộ nhớ, kiểm tra integrity và `tên@phiên bản`, rồi trích các dòng được dẫn dưới dạng chữ vào `data/review_rounds/evidence/round-N.md` (Git ignore). Không chạy mã gói.
 - **Test phát lại:** `tests/fixtures/replays/*.json` lưu nguyên văn phản hồi Ollama của các lượt chạy ngày 04/11 trên fixture vô hại. `tests/test_replay.py` phát lại chúng và kiểm tra cùng luật cuối, nên lỗi riêng của từng model trở thành test hồi quy không cần Ollama.

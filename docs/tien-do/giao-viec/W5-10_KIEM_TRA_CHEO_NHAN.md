@@ -70,7 +70,7 @@ Với mỗi dòng, tự trả lời 3 câu:
 Trên máy Triết, PowerShell tại `D:\DACN\DA_AgentNPM`:
 
 ```powershell
-py -3.14 -m data.review_sheet check data/review_rounds/round-1.csv
+py -3.14 -m data.scripts.review_sheet check data/review_rounds/round-1.csv
 ```
 
 - Còn dòng chưa điền: `'complete': False` và `'pending': <số dòng>`.

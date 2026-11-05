@@ -45,7 +45,7 @@ Một người lái máy (đề xuất Triết), hai người còn lại nói th
 4. Bật **Ollama**, kiểm tra 3 model: `ollama list` phải có `qwen3.5:9b`, `qwen3.5:4b`, `qwen3.5:0.8b`.
 5. **Chạy tổng duyệt** (đây cũng là bản dự phòng nếu hôm demo có sự cố):
    ```powershell
-   py -3.14 -m experiments.run_batch demo-tongduyet-a-llm A-LLM --dir tests/fixtures/benign-package --dir tests/fixtures/canary-package
+   py -3.14 -m experiments.run_batch demo-tongduyet-a-llm A-LLM --dir tests/fixtures/packages/benign-package --dir tests/fixtures/packages/canary-package
    py -3.14 -m experiments.demo_sandbox
    ```
    Kết quả mong đợi:
@@ -98,7 +98,7 @@ Một người lái máy (đề xuất Triết), hai người còn lại nói th
 
 **Thao tác (Terminal B):**
 ```powershell
-py -3.14 -m experiments.run_batch demo-live-a-llm A-LLM --dir tests/fixtures/benign-package --dir tests/fixtures/canary-package
+py -3.14 -m experiments.run_batch demo-live-a-llm A-LLM --dir tests/fixtures/packages/benign-package --dir tests/fixtures/packages/canary-package
 ```
 Ngay sau khi chạy lệnh, chuyển sang trình duyệt, nhấn **F5**, chọn run **`demo-live-a-llm`**, rồi chọn gói **`benign-install-fixture@1.0.0`**. Trang tự cập nhật mỗi giây khi gói đang chạy.
 

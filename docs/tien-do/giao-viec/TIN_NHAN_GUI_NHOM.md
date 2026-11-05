@@ -4,7 +4,7 @@ Thay `<TV1>`, `<TV3>` bằng tên thật trước khi gửi.
 
 ## 1. Gửi nhóm chung
 
-> Chào cả nhóm, tuần 5 còn 2 việc cần người thật làm, mình đã soạn sẵn hướng dẫn trong repo, thư mục `ke-hoach-nhat-ky-tuan/giao-viec/`:
+> Chào cả nhóm, tuần 5 còn 2 việc cần người thật làm, mình đã soạn sẵn hướng dẫn trong repo, thư mục `docs/tien-do/giao-viec/`:
 >
 > 1. **W5-5 — <TV3> nghiệm thu cách ly sandbox** (~45 phút, hạn 07/11): file `W5-5_NGHIEM_THU_SANDBOX_TV3.md`. Có nghiệm thu thì mới nối sandbox vào agent được.
 > 2. **W5-10 — kiểm tra chéo 76 nhãn** (hạn 09/11): file `W5-10_KIEM_TRA_CHEO_NHAN.md`. <TV1> làm lượt 1 + 4 (40 dòng), <TV3> làm lượt 2 + 3 (36 dòng). Việc này đang chặn phần thực nghiệm tuần 7–8, nhờ mọi người ưu tiên.
