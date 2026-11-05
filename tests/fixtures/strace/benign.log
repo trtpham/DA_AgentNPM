@@ -1,0 +1,159 @@
+17    execve("/usr/local/bin/npm", ["npm", "install", "--offline", "--no-audit", "--no-fund", "--userconfig=/dev/null"], 0x7ffde1763218 /* 8 vars */) = 0
+17    openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+17    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+17    execve("/usr/local/sbin/node", ["node", "/usr/local/bin/npm", "install", "--offline", "--no-audit", "--no-fund", "--userconfig=/dev/null"], 0x7ffc24425ae0 /* 8 vars */) = -1 ENOENT (No such file or directory)
+17    execve("/usr/local/bin/node", ["node", "/usr/local/bin/npm", "install", "--offline", "--no-audit", "--no-fund", "--userconfig=/dev/null"], 0x7ffc24425ae0 /* 8 vars */) = 0
+17    openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+17    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libdl.so.2", O_RDONLY|O_CLOEXEC) = 3
+17    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libstdc++.so.6", O_RDONLY|O_CLOEXEC) = 3
+17    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+17    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libgcc_s.so.1", O_RDONLY|O_CLOEXEC) = 3
+17    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libpthread.so.0", O_RDONLY|O_CLOEXEC) = 3
+17    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+17    openat(AT_FDCWD, "/etc/ssl/openssl.cnf", O_RDONLY) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/proc/version_signature", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+17    clone(child_stack=0x7e4ee3ae6e30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[18], tls=0x7e4ee3ae76c0, child_tidptr=0x7e4ee3ae7990) = 18
+17    clone(child_stack=0x7e4ee32e5e30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[19], tls=0x7e4ee32e66c0, child_tidptr=0x7e4ee32e6990) = 19
+17    clone(child_stack=0x7e4ee2ae4e30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[20], tls=0x7e4ee2ae56c0, child_tidptr=0x7e4ee2ae5990) = 20
+17    clone(child_stack=0x7e4ee22e3e30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[21], tls=0x7e4ee22e46c0, child_tidptr=0x7e4ee22e4990) = 21
+17    clone(child_stack=0x7e4ee1ae2e30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[22], tls=0x7e4ee1ae36c0, child_tidptr=0x7e4ee1ae3990) = 22
+17    openat(AT_FDCWD, "/proc/self/cgroup", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/sys/fs/cgroup//memory.max", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/sys/fs/cgroup//memory.high", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/proc/meminfo", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/proc/self/maps", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/proc/self/maps", O_RDONLY) = 17
+17    clone(child_stack=0x7e4ee1240e30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[23], tls=0x7e4ee12416c0, child_tidptr=0x7e4ee1241990) = 23
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/bin/package.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/package.json", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/bin/npm-cli.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/cli.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/cli/validate-engines.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/package.json", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/cli/entry.js", O_RDONLY|O_CLOEXEC) = 17
+22    openat(AT_FDCWD, "/proc/sys/vm/overcommit_memory", O_RDONLY|O_CLOEXEC <unfinished ...>
+22    <... openat resumed>)             = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/cli/exit-handler.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/error-message.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/npm.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/npm-usage.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/cmd-list.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/log-file.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/format.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/timers.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/display.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/explain-eresolve.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/explain-dep.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/output-error.js", O_RDONLY|O_CLOEXEC) = 17
+17    openat(AT_FDCWD, "/etc/localtime", O_RDONLY|O_CLOEXEC) = 17
+17    clone(child_stack=0x7e4ee1237e30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[24], tls=0x7e4ee12386c0, child_tidptr=0x7e4ee1238990) = 24
+17    clone(child_stack=0x7e4ee0a36e30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[25], tls=0x7e4ee0a376c0, child_tidptr=0x7e4ee0a37990) = 25
+17    clone(child_stack=0x7e4eafffee30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[26], tls=0x7e4eaffff6c0, child_tidptr=0x7e4eaffff990) = 26
+17    clone(child_stack=0x7e4eaf7fde30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[27], tls=0x7e4eaf7fe6c0, child_tidptr=0x7e4eaf7fe990) = 27
+25    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/npmrc", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+24    openat(AT_FDCWD, "/work/.npmrc", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+25    openat(AT_FDCWD, "/dev/null", O_RDONLY|O_CLOEXEC) = 17
+25    openat(AT_FDCWD, "/usr/local/etc/npmrc", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/package.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/package.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/package.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/package.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/home/agent/.npm/_logs/2026-10-28T15_49_55_090Z-debug-0.log", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 17
+24    openat(AT_FDCWD, "/home/agent/.npm/_logs", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 18
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/commands/install.js", O_RDONLY|O_CLOEXEC) = 18
+17    clone(child_stack=0x7e4eaeffce30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[28], tls=0x7e4eaeffd6c0, child_tidptr=0x7e4eaeffd990) = 28
+17    openat(AT_FDCWD, "/etc/resolv.conf", O_RDONLY) = 18
+17    openat(AT_FDCWD, "/etc/nsswitch.conf", O_RDONLY) = 18
+17    openat(AT_FDCWD, "/etc/netsvc.conf", O_RDONLY) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/etc/svc.conf", O_RDONLY) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/reify-finish.js", O_RDONLY|O_CLOEXEC) = 18
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/reify-output.js", O_RDONLY|O_CLOEXEC) = 18
+17    openat(AT_FDCWD, "/proc/self/cgroup", O_RDONLY|O_CLOEXEC) = 18
+17    openat(AT_FDCWD, "/sys/fs/cgroup//cgroup.controllers", O_RDONLY|O_CLOEXEC) = 18
+17    openat(AT_FDCWD, "/sys/fs/cgroup//cpu.max", O_RDONLY|O_CLOEXEC) = 18
+17    openat(AT_FDCWD, "/sys/fs/cgroup/cpu.max", O_RDONLY|O_CLOEXEC) = 18
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/utils/audit-error.js", O_RDONLY|O_CLOEXEC) = 18
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/arborist-cmd.js", O_RDONLY|O_CLOEXEC) = 18
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/base-cmd.js", O_RDONLY|O_CLOEXEC) = 18
+25    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC <unfinished ...>
+25    <... openat resumed>)             = 18
+17    openat(AT_FDCWD, "/usr/local/lib/node_modules/npm/lib/cli/update-notifier.js", O_RDONLY|O_CLOEXEC) = 19
+24    openat(AT_FDCWD, "/home/agent/.npm/_update-notifier-last-checked", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = 19
+17    openat(AT_FDCWD, "/dev/null", O_RDONLY|O_CLOEXEC) = 20
+25    connect(21, {sa_family=AF_UNIX, sun_path="/var/run/nscd/socket"}, 110) = -1 ENOENT (No such file or directory)
+25    connect(21, {sa_family=AF_UNIX, sun_path="/var/run/nscd/socket"}, 110) = -1 ENOENT (No such file or directory)
+25    openat(AT_FDCWD, "/etc/nsswitch.conf", O_RDONLY|O_CLOEXEC) = 18
+25    openat(AT_FDCWD, "/etc/host.conf", O_RDONLY|O_CLOEXEC) = 18
+25    openat(AT_FDCWD, "/etc/resolv.conf", O_RDONLY|O_CLOEXEC) = 18
+25    openat(AT_FDCWD, "/etc/hosts", O_RDONLY|O_CLOEXEC <unfinished ...>
+25    <... openat resumed>)             = 18
+25    connect(18, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("192.168.65.7")}, 16) = -1 ENETUNREACH (Network is unreachable)
+25    connect(18, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("192.168.65.7")}, 16) = -1 ENETUNREACH (Network is unreachable)
+25    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 18
+25    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 19
+26    openat(AT_FDCWD, "/work/npm-shrinkwrap.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+27    openat(AT_FDCWD, "/work/package-lock.json", O_RDONLY|O_CLOEXEC <unfinished ...>
+25    openat(AT_FDCWD, "/work/yarn.lock", O_RDONLY|O_CLOEXEC <unfinished ...>
+27    <... openat resumed>)             = -1 ENOENT (No such file or directory)
+25    <... openat resumed>)             = -1 ENOENT (No such file or directory)
+24    openat(AT_FDCWD, "/work/node_modules/.package-lock.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+26    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 18
+27    openat(AT_FDCWD, "/work/npm-shrinkwrap.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+27    openat(AT_FDCWD, "/work/package-lock.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+24    openat(AT_FDCWD, "/work/yarn.lock", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+27    openat(AT_FDCWD, "/work/node_modules", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+26    openat(AT_FDCWD, "/work/node_modules/.package-lock.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+27    openat(AT_FDCWD, "/work/npm-shrinkwrap.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+25    openat(AT_FDCWD, "/work/yarn.lock", O_RDONLY|O_CLOEXEC <unfinished ...>
+24    openat(AT_FDCWD, "/work/package-lock.json", O_RDONLY|O_CLOEXEC <unfinished ...>
+25    <... openat resumed>)             = -1 ENOENT (No such file or directory)
+24    <... openat resumed>)             = -1 ENOENT (No such file or directory)
+26    openat(AT_FDCWD, "/work/node_modules", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+17    openat(AT_FDCWD, "/usr/bin/ldd", O_RDONLY|O_CLOEXEC) = 18
+27    openat(AT_FDCWD, "/work/package-lock.json", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = 18
+26    openat(AT_FDCWD, "/work/node_modules/.package-lock.json", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = -1 ENOENT (No such file or directory)
+24    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 18
+24    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 18
+26    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 18
+17    clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD, child_tidptr=0x7e4ee3aeaf90) = 29
+29    execve("/work/node_modules/.bin/sh", ["sh", "-c", "node postinstall.js"], 0x413d2020 /* 34 vars */) = -1 ENOENT (No such file or directory)
+29    execve("/node_modules/.bin/sh", ["sh", "-c", "node postinstall.js"], 0x413d2020 /* 34 vars */) = -1 ENOENT (No such file or directory)
+29    execve("/usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin/sh", ["sh", "-c", "node postinstall.js"], 0x413d2020 /* 34 vars */) = -1 ENOENT (No such file or directory)
+29    execve("/usr/local/sbin/sh", ["sh", "-c", "node postinstall.js"], 0x413d2020 /* 34 vars */) = -1 ENOENT (No such file or directory)
+29    execve("/usr/local/bin/sh", ["sh", "-c", "node postinstall.js"], 0x413d2020 /* 34 vars */) = -1 ENOENT (No such file or directory)
+29    execve("/usr/sbin/sh", ["sh", "-c", "node postinstall.js"], 0x413d2020 /* 34 vars */) = -1 ENOENT (No such file or directory)
+29    execve("/usr/bin/sh", ["sh", "-c", "node postinstall.js"], 0x413d2020 /* 34 vars */) = 0
+29    openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+29    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+29    vfork( <unfinished ...>
+30    execve("/usr/local/bin/node", ["node", "postinstall.js"], 0x5b17bf3fdad8 /* 34 vars */ <unfinished ...>
+29    <... vfork resumed>)              = 30
+30    <... execve resumed>)             = 0
+30    openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+30    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libdl.so.2", O_RDONLY|O_CLOEXEC) = 3
+30    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libstdc++.so.6", O_RDONLY|O_CLOEXEC) = 3
+30    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+30    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libgcc_s.so.1", O_RDONLY|O_CLOEXEC) = 3
+30    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libpthread.so.0", O_RDONLY|O_CLOEXEC) = 3
+30    openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+30    openat(AT_FDCWD, "/etc/ssl/openssl.cnf", O_RDONLY) = -1 ENOENT (No such file or directory)
+30    openat(AT_FDCWD, "/proc/version_signature", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+30    clone(child_stack=0x728be4fefe30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[31], tls=0x728be4ff06c0, child_tidptr=0x728be4ff0990) = 31
+30    clone(child_stack=0x728bdfffee30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[32], tls=0x728bdffff6c0, child_tidptr=0x728bdffff990) = 32
+30    clone(child_stack=0x728bdf7fde30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[33], tls=0x728bdf7fe6c0, child_tidptr=0x728bdf7fe990) = 33
+30    clone(child_stack=0x728bdeffce30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[34], tls=0x728bdeffd6c0, child_tidptr=0x728bdeffd990) = 34
+30    clone(child_stack=0x728bde7fbe30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[35], tls=0x728bde7fc6c0, child_tidptr=0x728bde7fc990) = 35
+30    openat(AT_FDCWD, "/proc/self/cgroup", O_RDONLY|O_CLOEXEC) = 17
+30    openat(AT_FDCWD, "/sys/fs/cgroup//memory.max", O_RDONLY|O_CLOEXEC) = 17
+30    openat(AT_FDCWD, "/sys/fs/cgroup//memory.high", O_RDONLY|O_CLOEXEC) = 17
+30    openat(AT_FDCWD, "/proc/meminfo", O_RDONLY|O_CLOEXEC) = 17
+30    openat(AT_FDCWD, "/proc/self/maps", O_RDONLY|O_CLOEXEC) = 17
+30    openat(AT_FDCWD, "/proc/self/maps", O_RDONLY) = 17
+30    clone(child_stack=0x728be474de30, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tid=[36], tls=0x728be474e6c0, child_tidptr=0x728be474e990) = 36
+30    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 17
+30    openat(AT_FDCWD, "/work/postinstall.js", O_RDONLY|O_CLOEXEC) = 17
+30    openat(AT_FDCWD, "/work/sandbox-result.txt", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = 17
+26    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 18
+26    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 18
+26    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 18
+26    openat(AT_FDCWD, "/work/package.json", O_RDONLY|O_CLOEXEC) = 18
