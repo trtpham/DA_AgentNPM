@@ -1,0 +1,6 @@
+{
+  "name": "sandbox-limit-processes",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {"postinstall": "node probe.js"}
+}
