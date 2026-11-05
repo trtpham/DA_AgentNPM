@@ -10,28 +10,66 @@
 <main class="shell office-shell">
   <header class="masthead">
     <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>NPM AGENT <small>/ văn phòng 3D</small></span></div>
-    <a class="office-link" href="/">Dòng thời gian 2D</a>
+    <nav class="office-nav"><a href="/" id="timeline-link">Dòng thời gian 2D</a></nav>
   </header>
-  <div class="office-bar">
-    <label for="run-select">Run</label><select id="run-select"></select>
-    <label for="package-select">Gói</label><select id="package-select"></select>
-    <button type="button" id="previous">Bước trước</button><button type="button" class="primary" id="play">Phát lại</button><button type="button" id="next">Bước tiếp</button>
-    <label for="speed">Tốc độ</label><select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
-    <span id="position" class="count">0 / 0</span>
-  </div>
+
+  <section class="office-bar" aria-label="Chọn lượt chạy và điều khiển phát lại">
+    <div class="office-pick">
+      <label for="run-select">Run</label><select id="run-select"></select>
+      <label for="package-select">Gói</label><select id="package-select"></select>
+    </div>
+    <div class="office-transport">
+      <button type="button" id="previous" aria-label="Bước trước (phím ←)">◀</button>
+      <button type="button" class="primary" id="play">Phát lại</button>
+      <button type="button" id="next" aria-label="Bước tiếp (phím →)">▶</button>
+      <label for="speed">Tốc độ</label><select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+      <button type="button" id="reset-view">Góc nhìn chuẩn</button>
+    </div>
+    <div class="office-progress">
+      <input type="range" id="progress" min="0" max="0" value="0" aria-label="Vị trí trong trace">
+      <span id="position" class="count">0 / 0</span>
+    </div>
+  </section>
+
+  <ol class="phase-bar" aria-label="Bốn bước của agent">
+    <li data-phase="0"><b>1</b>Nhận diện</li>
+    <li data-phase="1"><b>2</b>Phân tích</li>
+    <li data-phase="2"><b>3</b>Kiểm chứng</li>
+    <li data-phase="3"><b>4</b>Quyết định</li>
+  </ol>
+
   <div class="office-stage">
     <div class="office-view">
       <canvas id="office-canvas" aria-label="Văn phòng 3D: nhân viên agent đi qua các phòng theo từng sự kiện"></canvas>
       <div id="room-labels" class="room-labels" aria-hidden="true"></div>
+      <div id="worker-layer" class="room-labels" aria-hidden="true"></div>
+      <div class="office-legend" aria-hidden="true"><span class="ok">✔ bằng chứng có thật</span><span class="bad">✘ bằng chứng sai</span><span>Kéo để xoay · cuộn để thu phóng</span></div>
     </div>
-    <aside class="office-panel" aria-live="polite">
-      <small>PHÒNG HIỆN TẠI</small>
-      <h2 id="room-name">—</h2>
-      <p id="room-step" class="count"></p>
-      <p id="event-text">Đang tải…</p>
-      <small>QUYẾT ĐỊNH</small>
-      <p id="decision" class="office-decision">Chưa có quyết định</p>
-      <p class="result-note">Quyết định cuối do luật trong <code>agent/decide.py</code>, luôn dry-run. Chữ trên trang lấy từ trace và chỉ hiển thị dạng văn bản.</p>
+
+    <aside class="office-panel">
+      <section class="panel-block" aria-live="polite">
+        <small>GÓI ĐANG XEM</small>
+        <h2 id="package-name">—</h2>
+        <p id="package-meta" class="count"></p>
+        <div class="now"><span id="room-dot" class="room-dot"></span><div><strong id="room-name">—</strong><p id="event-text" class="count">Đang tải…</p></div></div>
+      </section>
+
+      <section class="panel-block">
+        <small>QUYẾT ĐỊNH CUỐI (LUẬT CỨNG)</small>
+        <p id="decision" class="office-decision">Chưa có quyết định</p>
+        <ul id="reasons" class="plain-list"></ul>
+        <small>MÔ HÌNH ĐỀ XUẤT</small>
+        <p id="proposal" class="count">Chưa có đề xuất</p>
+        <ul id="behaviors" class="plain-list behaviors"></ul>
+        <small>KIỂM CHỨNG BẰNG CHỨNG</small>
+        <ul id="checks" class="plain-list checks"><li class="count">Chưa kiểm</li></ul>
+        <p class="result-note">Luật trong <code>agent/decide.py</code> quyết định, luôn dry-run. Chữ lấy từ trace là dữ liệu không tin cậy, chỉ hiển thị dạng văn bản.</p>
+      </section>
+
+      <section class="panel-block">
+        <small>NHẬT KÝ SỰ KIỆN</small>
+        <ol id="event-log" class="event-log"></ol>
+      </section>
     </aside>
   </div>
 </main>
