@@ -16,7 +16,7 @@
   <section class="office-bar" aria-label="Chọn lượt chạy và điều khiển phát lại">
     <div class="office-pick">
       <label for="mode">Chế độ</label>
-      <select id="mode"><option value="compare">Đua 3 model</option><option value="single">Một model</option></select>
+      <select id="mode"><option value="truck">🚚 Xe hàng (luồng sản phẩm)</option><option value="compare">Đua 3 model</option><option value="single">Một model</option></select>
       <label for="run-select" id="run-label">Bộ run</label><select id="run-select"></select>
       <label for="package-select">Gói</label><select id="package-select"></select>
     </div>
@@ -25,7 +25,7 @@
       <button type="button" class="primary" id="play">▶ Phát lại</button>
       <button type="button" id="next" aria-label="Sự kiện tiếp (phím →)">▶</button>
       <label for="rate">Tốc độ</label>
-      <select id="rate"><option value="1">1× thật</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option><option value="16">16×</option></select>
+      <select id="rate"><option value="1">1× thật</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option><option value="16">16×</option><option value="32">32×</option><option value="64">64×</option></select>
       <label class="toggle"><input type="checkbox" id="director"> Máy quay tự động</label>
       <button type="button" id="reset-view">Góc nhìn chuẩn</button>
     </div>
@@ -49,7 +49,7 @@
         <div id="room-labels" class="room-labels" aria-hidden="true"></div>
         <div id="worker-layer" class="room-labels" aria-hidden="true"></div>
         <div class="office-legend" aria-hidden="true">
-          <span>🧑 Người = mô hình AI</span><span>🤖 Robot = mã tất định</span><span>● Quả cầu = dữ liệu vào/ra</span><span>Phím 1/2/3 chọn model · cách: phát</span>
+          <span>🧑 Người = mô hình AI</span><span>🤖 Robot = mã tất định</span><span>● Quả cầu = dữ liệu vào/ra</span><span>📦 Thùng = một gói npm</span><span>Cuộn chuột: xem cả khuôn viên · cách: phát</span>
         </div>
       </div>
       <section id="caption" class="caption" aria-live="polite" aria-label="Bước đang diễn ra">
@@ -65,6 +65,15 @@
     </div>
 
     <aside class="office-panel">
+      <section class="panel-block truck-block" id="truck-block" hidden>
+        <small>XE HÀNG — MỘT YÊU CẦU CÀI ĐẶT</small>
+        <div id="truck-counts" class="truck-counts"></div>
+        <p id="truck-final" class="truck-final"></p>
+        <small>CÁC THÙNG (bấm để tua tới)</small>
+        <ol id="truck-parcels" class="truck-parcels"></ol>
+        <small>PHIẾU GỬI NGƯỜI DÙNG</small>
+        <div id="truck-reports" class="truck-reports"></div>
+      </section>
       <section class="panel-block">
         <small>GÓI ĐANG XEM</small>
         <h2 id="package-name">—</h2>

@@ -112,3 +112,33 @@ viewer/
 3. **Phạm vi:** đầy đủ O-0 → O-7. O-6 vẫn phụ thuộc W5-6.
 
 Ghi nhận trong [`../docs/brownfield/TRANSITION_APPROVAL.md`](../docs/brownfield/TRANSITION_APPROVAL.md).
+
+## Chế độ "Xe hàng" — luồng sản phẩm (PO chốt 05/11/2026)
+
+**Câu chuyện:**
+1. Người dùng (hoặc trợ lý AI đang vibe-code) gửi `npm install` tới kho npm Registry.
+2. Xe tải chở các gói tới cổng công ty.
+3. Từng thùng đi qua các bước của agent.
+4. Kết quả cả xe:
+   - an toàn hết → giao tới máy người dùng;
+   - có gói nghi vấn → xe bị giữ chờ người xem;
+   - có gói độc → xe bị giữ, gói vào khu cách ly, phiếu báo cáo gửi người dùng và trợ lý AI.
+
+**Quyết định:**
+
+| Vấn đề | Quyết định | Lý do |
+| --- | --- | --- |
+| Gói bị từ chối | **Cách ly**, không xóa | Thực tế là `npm deny-scripts` (chặn script, không xóa gói); giữ bằng chứng để làm phiếu, khiếu nại, đối chiếu mã băm |
+| Kết luận cả xe | **Nghiêm ngặt nhất thắng**: deny > review > approve | Gói con là phụ thuộc bắt buộc; giao thiếu thì lệnh cài hỏng |
+| Kết quả thứ ba | **Kệ chờ duyệt** ở Bàn người xem | `review` là kết quả phổ biến nhất trên gói thật (10/10 swc) |
+| Làn xanh | Gói không có script cài đặt thì sản phẩm cho đi thẳng | Đa số gói npm không có script; trong lô thực nghiệm agent vẫn phân tích để đo, và phụ đề nói rõ điều này |
+| OSV | **Chặn trước, phân tích sau**; chế độ thực nghiệm không chặn | Không mất số liệu kiểm chứng (xem tuan-07.md) |
+| Phiếu báo cáo | Gửi **cả người dùng và trợ lý AI** | Trợ lý AI mới là bên gõ lệnh cài; nó cần lý do để chọn gói khác |
+| Các chế độ | Giữ cả 3: Xe hàng (mặc định), Đua 3 model, Một model | Xe hàng kể câu chuyện sản phẩm; Đua 3 model dùng cho đánh giá nghiên cứu |
+
+**Trung thực khi thuyết trình:**
+- Lô `w57-reg-a-llm` là **13 gói độc lập** (10 bản `@swc/core` + 3 fixture), không phải một cây phụ thuộc thật.
+- Các phần sau là **minh họa dựng trên kết quả thật của từng gói**, chưa có trong code của agent: "xe tải", "gộp kết luận cả xe", "giao tới máy người dùng", "phiếu gửi người dùng".
+- Bước quét OSV ở cổng trong chế độ này **không dùng dữ liệu OSV thật**, vì trace không có trường đó. Phụ đề ghi rõ.
+
+**Kết quả trên dữ liệu thật:** ✅ 1 an toàn (benign fixture), 👁 11 chờ duyệt (10 swc + no-hook), ⛔ 1 cách ly (canary đọc khóa SSH giả) → **xe bị chặn, có phiếu báo cáo**.

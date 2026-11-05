@@ -71,7 +71,7 @@ function instanced(geometry, material, transforms, shadow = true) {
   return item;
 }
 
-function car(color) {
+export function car(color) {
   const group = new THREE.Group();
   group.add(at(box(1.9, 0.55, 4.2, color, { metalness: 0.3, roughness: 0.4 }), 0, 0.55, 0));
   group.add(at(box(1.7, 0.5, 2.2, color, { metalness: 0.3, roughness: 0.4 }), 0, 1.05, -0.2));
@@ -86,7 +86,7 @@ function car(color) {
   return group;
 }
 
-function truck() {
+export function truck() {
   const group = new THREE.Group();
   group.add(at(box(2.3, 2.4, 5, "#e8e1d4"), 0, 1.6, -0.8));
   group.add(at(box(2.2, 1.6, 1.8, "#c99a5b", { metalness: 0.2 }), 0, 1.15, 2.6));
@@ -102,10 +102,11 @@ function truck() {
 }
 
 /**
- * Build the campus. `keepOut` is the building's rectangle, where nothing may stand.
+ * Build the campus. `keepOut` is the building's rectangle, where nothing may stand; `clearings` are
+ * more rectangles kept free of trees (the registry and the user's house).
  * Returns { group, update(delta) } — update moves the traffic.
  */
-export function createCampus(keepOut) {
+export function createCampus(keepOut, clearings = []) {
   const group = new THREE.Group();
   const random = seeded(21);
   const inside = (x, z, margin = 0) => x > keepOut.minX - margin && x < keepOut.maxX + margin && z > keepOut.minZ - margin && z < keepOut.maxZ + margin;
@@ -158,9 +159,7 @@ export function createCampus(keepOut) {
     parked.rotation.y = row ? Math.PI : 0;
     group.add(parked);
   });
-  const delivery = truck();
-  delivery.position.set(-42, -0.33, -3);
-  group.add(delivery);
+  // The delivery truck itself is animated by logistics.mjs.
 
   // Plaza: fountain, flagpole, benches.
   const fountain = new THREE.Group();
@@ -190,7 +189,10 @@ export function createCampus(keepOut) {
 
   // Trees: avenue along the road, a park to the north, groves to the east and around the lot.
   const trees = [];
-  const plant = (x, z, scale) => { if (!inside(x, z, 3) && Math.abs(z - 26) > 6.5 && !(x > -68 && x < -44 && z > -10 && z < 18)) trees.push({ x, z, scale }); };
+  const cleared = (x, z) => clearings.some((area) => x > area.minX && x < area.maxX && z > area.minZ && z < area.maxZ);
+  const plant = (x, z, scale) => {
+    if (!inside(x, z, 3) && Math.abs(z - 26) > 6.5 && !(x > -68 && x < -44 && z > -10 && z < 18) && !cleared(x, z)) trees.push({ x, z, scale });
+  };
   for (let x = -110; x <= 110; x += 9) { plant(x + random() * 2, 18.6, 0.9 + random() * 0.3); plant(x + 4 + random() * 2, 33.6, 0.9 + random() * 0.3); }
   for (let index = 0; index < 120; index += 1) plant(-80 + random() * 160, -22 - random() * 50, 0.8 + random() * 0.8);
   for (let index = 0; index < 45; index += 1) plant(38 + random() * 50, -18 + random() * 34, 0.8 + random() * 0.7);

@@ -1,10 +1,15 @@
-// 3D office page: by default races A-LLM/A-SLM/A-TLM on the same package, on the real clock of
-// each trace. People are the AI models, robots are deterministic code (tools, checks, rules), and
-// glowing orbs carry each step's input to a robot and its output back.
+// 3D office page. Three modes on the real clock of each trace:
+//  - truck (default): one install request = a truck carrying every package of a run; each parcel is
+//    analysed in turn, then the whole truck is delivered, held for review, or held with a report;
+//  - compare: A-LLM/A-SLM/A-TLM race on the same package;
+//  - single: one run, one package.
+// People are the AI models, robots are deterministic code (tools, checks, rules), and glowing orbs
+// carry each step's input to a robot and its output back.
 // Every string from a trace is untrusted and reaches the page with textContent only.
 import { createOffice } from "./scene.mjs";
 import { ROOMS, roomFor } from "./events.mjs";
 import { argsText, explainStep, thinkingStep } from "./explain.mjs";
+import { buildTruck, currentParcel, parcelZone, tally, truckPhase } from "./truck.mjs";
 
 const $ = (id) => document.getElementById(id);
 const PHASE = { reception: 0, code: 1, intel: 1, lab: 1, evidence: 2, decision: 3 };
@@ -29,6 +34,13 @@ let lanes = [];
 let focusLane = 0;
 let closeUp = null;
 let generation = 0;         // bumps on every seek, so delayed animations of an old timeline are dropped
+let truck = null;           // truck mode timeline (truck.mjs), null in the other modes
+const beats = { intro: false, outro: false }; // one-off truck moments already played
+const FINAL_TEXT = {
+  approve: "✅ Cả xe an toàn — giao hàng, npm install tiếp tục",
+  review: "👁 Xe bị giữ — có gói chờ người xem duyệt",
+  deny: "⛔ Xe bị chặn — có gói độc, đã gửi phiếu báo cáo",
+};
 const clock = { t: 0, duration: 0, rate: 4, playing: false, last: 0 };
 
 async function getJson(url) {
@@ -95,6 +107,17 @@ function animate(lane, event) {
   const worker = () => lane.actor.head();
   switch (event.type) {
     case "run_start":
+      if (truck) {
+        // Truck mode: the guard scans the parcel at the gate (OSV), then reception opens it.
+        office.staffReact("guard", "raise");
+        office.staffReact("courier", "handover");
+        office.sendPacket(office.staffHead("guard"), office.robotHead("reception"), "#c99a5b", () => {
+          if (!alive()) return;
+          office.robotReact("reception", "receive");
+          office.sendPacket(office.robotHead("reception"), worker(), "#c99a5b", null, `📦 ${short(lane.pkg, 22)}`);
+        }, `🛡️ quét OSV · ${short(lane.pkg, 20)}`);
+        break;
+      }
       // The courier hands the tarball from npm pack to reception; reception gives it to the model.
       office.staffReact("courier", "handover");
       office.sendPacket(office.staffHead("courier"), office.robotHead("reception"), "#c99a5b", () => {
@@ -134,6 +157,14 @@ function animate(lane, event) {
           if (!alive()) return;
           stampFor(lane, event, true);
           office.celebrate(event.final_action);
+          if (truck && event.final_action === "deny") {
+            // A malicious parcel: it goes to quarantine and a report flies to the user and the AI assistant.
+            office.sendPacket(office.robotHead("decision"), office.housePoint(), "#ff4a3d", () => {
+              if (!alive()) return;
+              office.robotReact("assistant", "bad");
+              office.staffReact("dev", "raise");
+            }, `📄 Phiếu: ${short(lane.pkg, 20)} — TỪ CHỐI`);
+          }
           if (event.final_action === "review") {
             // A case for a human: the file goes to the reviewer's desk.
             office.sendPacket(office.robotHead("decision"), office.staffHead("reviewer"), "#ffd08a",
@@ -164,8 +195,14 @@ function advance(lane, now, scrubbing) {
   if (!jump && now - lane.shownAt < MIN_DWELL * 1000 / Math.max(1, clock.rate / 4)) return false;
   lane.index = next;
   lane.shownAt = now;
-  if (next < 0) return true;
+  if (next < 0) {  // before the first event (e.g. scrubbed back to the start): a clean worker at reception
+    lane.actor.walkTo("reception", true);
+    lane.actor.say("");
+    lane.actor.stamp(null, "", false);
+    return true;
+  }
   const event = lane.events[next];
+  if (truck) lane.pkg = truck.packages[event._pkg].name;
   lane.actor.walkTo(lane.rooms[next], jump);
   const step = explainStep(lane.events, next);
   lane.actor.say(`${ACTOR_ICONS[step.actor]} ${clip(step.title, 30)}`);
@@ -191,11 +228,21 @@ function renderCaption() {
   const step = stepFor(lane);
   $("caption").style.setProperty("--worker", lane.color);
   $("caption-who").textContent = step
-    ? `${lane.name} · sự kiện ${lane.index + 1}/${lane.events.length} · ${ACTOR_ICONS[step.actor]} ${step.who}: ${step.title}`
+    ? `${lane.name} · ${truck ? `thùng ${(lane.events[lane.index]?._pkg ?? 0) + 1}/${truck.packages.length} · ` : ""}sự kiện ${lane.index + 1}/${lane.events.length} · ${ACTOR_ICONS[step.actor]} ${step.who}: ${step.title}`
     : `${lane.name} · chưa bắt đầu — nhấn Phát lại hoặc phím cách`;
+  let process = step?.process ?? "—";
+  let output = step?.output ?? "—";
+  const event = lane.events[lane.index];
+  if (truck && event && !thinking(lane)) {
+    const parcel = truck.packages[event._pkg];
+    if (event.type === "run_start") process += " · Cổng đã quét OSV (chế độ thực nghiệm: không chặn, agent không thấy kết quả này)";
+    if (event.type === "tool_result" && event.tool === "read_manifest" && parcel?.hooks === false) {
+      output += " → Không có script cài đặt: sản phẩm thật cho gói này đi làn xanh (lô thực nghiệm vẫn phân tích để đo)";
+    }
+  }
   $("caption-in").textContent = step?.input ?? "—";
-  $("caption-process").textContent = step?.process ?? "—";
-  $("caption-out").textContent = step?.output ?? "—";
+  $("caption-process").textContent = process;
+  $("caption-out").textContent = output;
   $("caption-out").parentElement.classList.toggle("untrusted", Boolean(step?.untrustedOutput));
   $("caption").dataset.actor = step?.actor || "system";
 }
@@ -287,15 +334,121 @@ function renderScene() {
   const checks = decisions.flatMap((decision) => decision?.evidence_checks || []);
   office.setScreen("evidence", checks.length ? `✔ ${checks.filter((check) => check.exists).length}  ✘ ${checks.filter((check) => !check.exists).length}` : "");
   office.setScreen("reception", lead ? `📦 ${lead.pkg}` : "");
-  // The npm gate barrier follows the selected model's final action (approve/deny-scripts, dry-run).
-  office.setGate(decisionOf(lead)?.final_action || null);
-  const waiting = decisions.filter((decision) => decision?.final_action === "review").length;
+  // The npm gate barrier follows the selected model's final action (approve/deny-scripts, dry-run);
+  // in truck mode it follows the whole truck instead (see renderTruck).
+  if (!truck) office.setGate(decisionOf(lead)?.final_action || null);
+  const waiting = truck ? tally(truck, clock.t).review : decisions.filter((decision) => decision?.final_action === "review").length;
   office.setInbox(waiting);
   office.setScreen("reviewer", waiting ? `📥 ${waiting} ca chờ duyệt tay` : "");
 }
 
-function render() {
+function truckItems(t) {
+  const current = currentParcel(truck, t);
+  return truck.packages.map((pkg) => ({ zone: parcelZone(pkg, t, truck), action: t >= pkg.decidedAt ? pkg.action : null, hot: pkg === current }));
+}
+
+function houseText(t, counts) {
+  if (t < 0.4) return "";
+  if (t >= truck.outroAt) return FINAL_TEXT[truck.final];
+  const done = truck.packages.length - counts.pending;
+  return `⏳ Chờ kiểm tra: ${done}/${truck.packages.length} gói xong`;
+}
+
+let truckPanelKey = "";
+function renderTruck(scrubbing) {
+  const t = clock.t;
+  const counts = tally(truck, t);
+  const phase = truckPhase(t, truck);
+  office.setTruck({ phase, items: truckItems(t), houseText: houseText(t, counts),
+                    truckLabel: `🚚 ${truck.packages.length} gói · ✅ ${counts.approve} · 👁 ${counts.review} · ⛔ ${counts.deny}` }, scrubbing);
+  office.setGate(t >= truck.outroAt ? truck.final : null);
+  office.setInbox(counts.review);
+  if (office.isDirector() && (phase.where === "toGate" || phase.where === "toHouse" || phase.where === "registry")) {
+    const point = office.truckPoint();
+    office.focusAt(point.x, point.z, 0.4);
+  } else if (office.isDirector() && t >= truck.outroAt) {
+    office.focusAt(-33, 2, 0.42);
+  }
+  // One-off moments, only while playing forward (never replayed by scrubbing).
+  if (!scrubbing && clock.playing) {
+    if (!beats.intro && t >= 0.2) {
+      beats.intro = true;
+      office.robotReact("assistant", "work");
+      office.sendPacket(office.housePoint(), office.registryPoint(), "#61e8c2", null, `npm install (${truck.packages.length} gói)`);
+    }
+    if (!beats.outro && t >= truck.outroAt) {
+      beats.outro = true;
+      const gate = office.staffHead("guard");
+      office.sendPacket(gate, office.housePoint(), truck.final === "approve" ? "#2fe0a8" : truck.final === "deny" ? "#ff4a3d" : "#ffaa1a", () => {
+        office.robotReact("assistant", truck.final === "approve" ? "ok" : "bad");
+        office.staffReact("dev", truck.final === "approve" ? "thumbs" : "raise");
+      }, FINAL_TEXT[truck.final]);
+      if (truck.final === "approve") office.celebrate("approve");
+    }
+  }
+  const key = `${counts.approve}.${counts.review}.${counts.deny}.${currentParcel(truck, t)?.index ?? -1}.${t >= truck.outroAt}`;
+  if (key !== truckPanelKey) { truckPanelKey = key; renderTruckPanel(counts); }
+}
+
+function reportCard(pkg) {
+  const card = element("article", undefined, `report-card report-${pkg.action}`);
+  const verdict = pkg.verdict || {};
+  const decision = pkg.decision || {};
+  card.append(element("h3", pkg.action === "deny" ? "📄 PHIẾU BÁO CÁO — GÓI BỊ TỪ CHỐI" : "👁 PHIẾU CHỜ DUYỆT"));
+  card.append(element("p", `${pkg.name} · ${LABELS[decision.final_label] || decision.final_label || "?"} · luật ${decision.rule || "?"}`, "report-title"));
+  if (pkg.action === "deny") {
+    card.append(element("p", verdict.description || "", "report-why"));
+    const list = element("ul", undefined, "plain-list behaviors");
+    for (const behavior of (verdict.behaviors || []).slice(0, 4)) {
+      const item = element("li");
+      item.append(element("span", behavior.severity || "", `sev sev-${behavior.severity}`), element("span", `${behavior.behavior} `),
+                  element("code", `${behavior.evidence?.file}:${behavior.evidence?.lines}`));
+      if (behavior.impact) item.append(element("small", ` — ${behavior.impact}`));
+      list.append(item);
+    }
+    card.append(element("small", "HÀNH VI VÀ BẰNG CHỨNG"), list);
+    const fix = element("ul", undefined, "plain-list");
+    for (const step of (verdict.remediation || []).slice(0, 4)) fix.append(element("li", `→ ${step}`));
+    card.append(element("small", "VIỆC CẦN LÀM"), fix);
+    card.append(element("p", "Gói được giữ trong khu cách ly (không xóa) để đối chiếu. Gửi tới: 🧑‍💻 người dùng + 🤖 trợ lý AI lập trình.", "report-to"));
+  } else {
+    const list = element("ul", undefined, "plain-list");
+    for (const reason of (decision.reasons || ["Cần người xem xét"]).slice(0, 3)) list.append(element("li", reason));
+    card.append(list, element("p", "Gói nằm trên kệ chờ duyệt ở Bàn người xem.", "report-to"));
+  }
+  return card;
+}
+
+function renderTruckPanel(counts) {
+  const t = clock.t;
+  const current = currentParcel(truck, t);
+  $("truck-counts").replaceChildren(
+    element("span", `✅ ${counts.approve} an toàn`, "chip chip-approve"), element("span", `👁 ${counts.review} chờ duyệt`, "chip chip-review"),
+    element("span", `⛔ ${counts.deny} cách ly`, "chip chip-deny"), element("span", `⏳ ${counts.pending} chưa kiểm`, "chip"));
+  const final = $("truck-final");
+  final.textContent = t >= truck.outroAt ? FINAL_TEXT[truck.final] : "Kết quả cả xe: nghiêm ngặt nhất thắng (có 1 gói độc là giữ cả xe).";
+  final.dataset.action = t >= truck.outroAt ? truck.final : "";
+  $("truck-parcels").replaceChildren(...truck.packages.map((pkg) => {
+    const item = element("li");
+    const button = element("button", undefined, `parcel-item${pkg === current ? " current" : ""}`);
+    button.type = "button";
+    const done = t >= pkg.decidedAt;
+    button.dataset.action = done ? pkg.action : "";
+    button.append(element("span", done ? { approve: "✅", review: "👁", deny: "⛔" }[pkg.action] : pkg === current ? "🔎" : "📦"),
+                  element("span", pkg.name, "parcel-name"),
+                  element("span", pkg.hooks === false ? "không script" : "", "count"));
+    button.addEventListener("click", () => { stop(); seek(pkg.start); });
+    item.append(button);
+    return item;
+  }));
+  const decided = truck.packages.filter((pkg) => t >= pkg.decidedAt && pkg.action !== "approve")
+    .sort((a, b) => (a.action === "deny" ? 0 : 1) - (b.action === "deny" ? 0 : 1));
+  $("truck-reports").replaceChildren(...(decided.length ? decided.slice(0, 6).map(reportCard) : [element("p", "Chưa có phiếu nào.", "count")]));
+}
+
+function render(scrubbing = false) {
   if (!lanes.length) return;
+  if (truck) renderTruck(scrubbing);
   $("clock").textContent = `${seconds(clock.t)} / ${seconds(clock.duration)} thời gian thật`;
   $("progress").value = String(Math.round(clock.t * 10));
   const busyLanes = [];
@@ -332,7 +485,7 @@ function update(scrubbing = false) {
   const done = lanes.every((lane) => lane.index === lane.events.length - 1);
   if (clock.playing && done && clock.t >= clock.duration) stop();
   if (changed || scrubbing) renderScene(); // the 3D props change only on a new event: keep the GPU idle
-  render();
+  render(scrubbing);
 }
 
 // A lane "lags" while an event is already due but still waiting for its on-screen dwell.
@@ -369,7 +522,14 @@ function play() {
 function seek(time) {
   generation += 1;
   clock.t = Math.max(0, Math.min(time, clock.duration));
-  for (const lane of lanes) lane.index = -1;
+  if (truck) Object.assign(beats, { intro: clock.t > 0.2, outro: clock.t >= truck.outroAt });
+  for (const lane of lanes) {
+    lane.index = -1;
+    lane.actor.walkTo("reception", true);
+    lane.actor.say("");
+    lane.actor.stamp(null, "", false);
+    lane.actor.think(false);
+  }
   update(true);
 }
 
@@ -385,6 +545,34 @@ function syncHash() {
   if (first) $("timeline-link").href = `/#run=${encodeURIComponent(first.run)}&pkg=${encodeURIComponent(first.pkg)}`;
 }
 
+async function loadTruck(run) {
+  stop();
+  const names = (await getJson(`/api/runs/${encodeURIComponent(run)}/packages`)).map((item) => item.package);
+  const traces = await Promise.all(names.map(async (name) => {
+    const query = new URLSearchParams({ run, pkg: name, after: "-1" });
+    return { package: name, events: (await getJson(`/api/trace?${query}`)).filter((event) => event.type !== "thought") };
+  }));
+  truck = buildTruck(traces.filter((trace) => trace.events.length));
+  office.clearWorkers(1);
+  focusLane = 0;
+  $("event-log").dataset.run = "";
+  const variant = variantOf(run);
+  const model = truck.events.find((event) => event.type === "run_start")?.model || "agent";
+  const name = variant ? `A-${variant}` : model;
+  const color = VARIANT_COLORS[variant] || "#61e8c2";
+  lanes = [{ run, pkg: truck.packages[0]?.name || "", events: truck.events, offsets: truck.offsets, rooms: truck.events.map(roomFor),
+             variant, model, name, color, index: -1, lane: 0, shownAt: 0, finishedAt: null,
+             actor: office.addWorker({ id: run, name, color, lane: 0 }) }];
+  office.setupTruck(truck.packages.map((pkg) => pkg.name));
+  clock.duration = truck.duration;
+  $("progress").max = String(Math.round(clock.duration * 10));
+  $("package-name").textContent = `Xe hàng: ${truck.packages.length} gói từ lô ${run}`;
+  $("package-meta").textContent = `${name} (${model}) kiểm từng thùng · thời gian thật của từng trace, ghép nối tiếp`;
+  truckPanelKey = "";
+  syncHash();
+  seek(0);
+}
+
 async function packagesFor(choice) {
   if ($("mode").value !== "compare") return (await getJson(`/api/runs/${encodeURIComponent(choice)}/packages`)).map((item) => item.package);
   const lists = await Promise.all(groups.get(choice).map((run) => getJson(`/api/runs/${encodeURIComponent(run)}/packages`)));
@@ -394,6 +582,11 @@ async function packagesFor(choice) {
 
 async function loadLanes() {
   stop();
+  if (truck) {  // leaving truck mode: park an empty truck at the gate
+    truck = null;
+    office.setupTruck([]);
+    office.setTruck({ phase: { where: "gate", progress: 1 }, items: [], truckLabel: "🚚 Xe hàng", houseText: "" }, true);
+  }
   const choice = $("run-select").value;
   const pkg = $("package-select").value;
   const order = { LLM: 0, SLM: 1, TLM: 2 };
@@ -415,6 +608,7 @@ async function loadLanes() {
 }
 
 async function loadChoice(preferredPackage) {
+  if ($("mode").value === "truck") return loadTruck($("run-select").value);
   const names = await packagesFor($("run-select").value);
   $("package-select").replaceChildren(...names.map((name) => { const option = element("option", name); option.value = name; return option; }));
   $("package-select").value = names.includes(preferredPackage) ? preferredPackage : names[0] || "";
@@ -422,15 +616,27 @@ async function loadChoice(preferredPackage) {
 }
 
 async function loadMode(preferredRun, preferredPackage) {
-  const compare = $("mode").value === "compare";
+  const mode = $("mode").value;
+  const compare = mode === "compare";
   const choices = compare ? [...groups.keys()] : runs;
+  document.body.dataset.mode = mode;
+  $("truck-block").hidden = mode !== "truck";
+  $("package-select").disabled = mode === "truck";
+  if (mode === "truck") {
+    // The truck story plays at 16x with the director camera following the truck and the parcels.
+    clock.rate = 16;
+    $("rate").value = "16";
+    office.speed.value = 2.5;
+    $("director").checked = true;
+    office.setDirector(true);
+  }
   $("run-select").replaceChildren(...choices.map((value) => {
     const option = element("option", compare ? value.replace("*", "{LLM,SLM,TLM}") : value);
     option.value = value;
     return option;
   }));
   $("run-label").textContent = compare ? "Bộ run" : "Run";
-  const preferred = compare ? "w57-reg-a-*" : null;
+  const preferred = compare ? "w57-reg-a-*" : mode === "truck" ? "w57-reg-a-llm" : null;
   $("run-select").value = choices.includes(preferredRun) ? preferredRun : choices.includes(preferred) ? preferred : choices[0];
   await loadChoice(preferredPackage || "canary-fixture@1.0.0");
 }
@@ -444,8 +650,9 @@ async function start() {
   }
   for (const [key, members] of groups) if (members.length < 2) groups.delete(key);
   $("mode").querySelector('option[value="compare"]').disabled = groups.size === 0;
-  // Racing all three models is the default view; "?mode=single" opens one run.
-  $("mode").value = params.get("mode") === "single" || !groups.size ? "single" : "compare";
+  // The truck story is the default view; "#mode=compare" races the models, "#mode=single" opens one run.
+  const asked = params.get("mode");
+  $("mode").value = asked === "single" ? "single" : asked === "compare" && groups.size ? "compare" : "truck";
   await loadMode(params.get("run"), params.get("pkg"));
 }
 

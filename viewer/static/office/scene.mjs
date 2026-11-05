@@ -5,6 +5,7 @@ import { OrbitControls } from "../vendor/OrbitControls.js";
 import { ROOMS } from "./events.mjs";
 import { at, box, mesh, personMesh, robotMesh } from "./people.mjs";
 import { createCampus } from "./outdoor.mjs";
+import { createLogistics, SITES } from "./logistics.mjs";
 import { barrierGate, chair, coffeeBar, desk, monitor, plant, printer, rug, serverRack, shelf, sofa,
          textures, waterCooler, wallPoster, workstation } from "./props.mjs";
 
@@ -137,7 +138,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   scene.add(sun);
 
   // Campus around the building (lawn, roads, parking, plaza, trees, traffic), then the building itself.
-  const campus = createCampus(BOUNDS);
+  const campus = createCampus(BOUNDS, [SITES.registry.clearing, SITES.house.clearing]);
   scene.add(campus.group);
   const glowing = (item, strength) => {
     item.material.emissive = new THREE.Color("#ffffff");
@@ -191,7 +192,6 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   add("gate", box(2.42, 0.5, 2.0, "#9fd8ff", { opacity: 0.45, emissive: "#9fd8ff", emissiveIntensity: 0.25, shadow: false }), -2.2, 1.6, -3.2);
   add("gate", box(2.7, 0.15, 2.7, "#22344a"), -2.2, 2.35, -3.2);
   const gate = add("gate", barrierGate(), 2.6, 0, -1.6, -Math.PI / 2);
-  for (let index = 0; index < 4; index += 1) add("gate", box(0.6, 0.45, 0.5, "#c99a5b"), -3 + index * 0.2, 0.23 + (index % 2) * 0.45, 3.4, index * 0.4);
   add("gate", plant(1.3), 3.3, 0, 4.2);
 
   // Reception: a long curved counter, a waiting lounge, posters and plants.
@@ -374,7 +374,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     decision: { name: "Luật R1–R8 (thẩm phán)", at: inside("decision", 0, 4.1), face: Math.PI, lift: 0.25, gear: { gavel: true, robe: "#1a1f26" } },
   };
   const STAFF = {
-    courier: { role: "📦 Giao hàng npm", at: inside("gate", -3.4, -2.2), face: Math.PI / 2,
+    courier: { role: "📦 Nhận hàng (npm pack)", at: inside("gate", -3.6, -1.2), face: Math.PI / 2,
                look: { shirt: "#c99a5b", pants: "#5b4636", hair: "cap", capColor: "#8a5a2b", hold: "none", skin: "#d9a77c" } },
     guard: { role: "🛡️ Bảo vệ cổng", at: inside("gate", 1.2, -2.6), face: Math.PI / 2,
              look: { shirt: "#22344a", pants: "#1a1f26", hair: "cap", capColor: "#1a1f26", vest: "#30475f", hold: "none", skin: "#b97f55" } },
@@ -417,6 +417,12 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   for (const x of [-0.28, 0.28]) cart.add(at(mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 10), "#1a1f26"), x, 0.08, 0.2).rotateX(Math.PI / 2));
   cart.position.set(HALL.minX + 2.35, 0, HALL_Z + 1.9);
   scene.add(cart);
+
+  // Truck mode: registry, the user's machine, the truck, parcels and outcome zones (logistics.mjs).
+  const logistics = createLogistics({ scene, overlay });
+  const silent = () => { const element = document.createElement("span"); element.hidden = true; return element; };
+  staff.dev = { ...logistics.developer, tag: silent(), action: null, actionAge: 0 };
+  robots.assistant = { ...logistics.assistant, tag: silent(), lift: -0.33, action: null, actionAge: 0, slammed: false };
 
   let animating = false; // idle motion only while a replay plays: a paused office leaves the GPU idle
   let idleTime = 0;
@@ -751,6 +757,12 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     director.distance = fitDistance * closeness;
   }
 
+  function focusAt(x, z, closeness = 0.45) {
+    if (!director.on) return;
+    director.target.set(x, 0.6, z);
+    director.distance = fitDistance * closeness;
+  }
+
   function followWorkers() {
     if (!director.on || !workers.size) return false;
     const center = new THREE.Vector3();
@@ -922,6 +934,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       controls.autoRotate = true;
       dirty = true;
     }
+    if (logistics.update(delta, Math.max(1, speed.value))) dirty = true;
     if (followWorkers()) dirty = true;
     if (controls.update(delta)) dirty = true;
     if (dirty && !document.hidden) {
@@ -943,6 +956,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
         const { x, y, z } = person.person.position;
         place(person.tag, [x, y + 2.25, z]);
       }
+      logistics.placeTags(place);
       for (const worker of workers.values()) {
         const { x, z } = worker.person.position;
         // Tags of several workers are stacked by lane so stamps and bubbles never cover each other.
@@ -967,7 +981,10 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   requestAnimationFrame(frame);
   return {
     addWorker, clearWorkers, setScreen, setEvidence, setLamps, setInbox, setThinking, setGate, celebrate,
-    setDirector, focus, resetView, robotReact, robotHead, staffReact, staffHead, sendPacket,
+    setDirector, focus, resetView, robotReact, robotHead, staffReact, staffHead, sendPacket, focusAt,
+    setupTruck: logistics.setup, setTruck: logistics.setState, truckPoint: logistics.truckPoint,
+    registryPoint: logistics.registryPoint, housePoint: logistics.housePoint,
+    isDirector: () => director.on,
     setAnimating: (on) => { animating = on; dirty = true; },
     speed, stats,
     info: () => ({ fps: stats.fps, calls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
