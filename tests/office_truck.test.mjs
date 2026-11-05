@@ -66,3 +66,26 @@ test("only an all-approved truck leaves for the user's machine", () => {
   const held = buildTruck([trace("a@1.0.0", "approve"), trace("b@1.0.0", "deny")]);
   assert.equal(truckPhase(held.duration, held).where, "gate");
 });
+
+test("a reviewer's call replaces a review verdict, and the parcel waits on the shelf until then", () => {
+  const base = trace("swc@1.0.0", "review");
+  const humanEvent = { type: "human_review", final_action: "approve", ts: at(16) };
+  const truck = buildTruck([{ ...base, events: [...base.events, humanEvent] }]);
+  const [pkg] = truck.packages;
+  assert.equal(pkg.agentAction, "review");
+  assert.equal(pkg.action, "approve");
+  assert.equal(parcelZone(pkg, pkg.agentAt + 0.5, truck), "review");
+  assert.equal(parcelZone(pkg, pkg.decidedAt, truck), "approved"); // on the pallet first
+  assert.equal(parcelZone(pkg, truck.duration, truck), "loaded"); // all approved: the truck takes it
+  assert.equal(truck.final, "approve");
+});
+
+test("a reviewer cannot overturn a deny, and a blocklisted parcel is quarantined at once", () => {
+  const base = trace("bad@1.0.0", "deny");
+  const humanEvent = { type: "human_review", final_action: "approve", ts: at(16) };
+  const truck = buildTruck([{ ...base, events: [...base.events, humanEvent] }, { ...trace("osv@1.0.0", "review"), osv: true }]);
+  assert.equal(truck.packages[0].action, "deny");
+  const blocked = truck.packages[1];
+  assert.equal(parcelZone(blocked, blocked.start, truck), "quarantine");
+  assert.equal(truck.final, "deny");
+});

@@ -155,3 +155,21 @@
 .report-title{margin:0;font:700 .82rem/1.4 ui-monospace,Consolas,monospace}
 .report-why{margin:4px 0;font-weight:600}
 .report-to{margin:8px 0 0;font-size:.76rem;color:#5c6b7a}
+
+/* --- scenarios: source badges and report notes ---------------------------------------------- */
+#scenario{max-width:min(100%,360px)}
+.scenario-what{margin:4px 0 6px;font-size:.86rem;color:var(--ink)}
+.source-badge{display:inline-block;padding:0 7px;border-radius:99px;font-size:.66rem;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+.source-real{background:#2fe0a833;color:var(--mint)}
+.source-rule{background:#ffd08a33;color:var(--amber)}
+.source-design{background:#b79cff33;color:#cdb8ff}
+.source-real-design{background:#7cc4ff33;color:#a8d8ff}
+.report-card .source-badge{float:right;margin-top:-2px}
+.report-card .source-real{background:#2fe0a8;color:#09111d}.report-card .source-rule{background:#ffaa1a;color:#09111d}
+.report-card .source-design{background:#b79cff;color:#09111d}.report-card .source-real-design{background:#7cc4ff;color:#09111d}
+.report-card.report-approve{border-top-color:#2fe0a8}
+.report-alert{margin:6px 0;padding:6px 8px;border-radius:8px;background:#ff4a3d;color:#fff;font-weight:800;font-size:.8rem}
+.report-osv{margin:6px 0;padding:6px 8px;border-radius:8px;background:#1a1f26;color:#ffd0cc;font-size:.78rem}
+.report-human{margin:6px 0;padding:6px 8px;border-radius:8px;background:#e8f4ff;color:#1a1f26;font-size:.78rem;font-weight:700}
+.parcel-tag[data-source="rule"]::after{content:" · mô phỏng";color:#ffd08a}
+.parcel-tag[data-source="design"]::after{content:" · thiết kế";color:#cdb8ff}

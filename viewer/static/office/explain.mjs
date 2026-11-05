@@ -17,6 +17,7 @@ export const ERROR_INFO = Object.freeze({
   json_invalid: "Câu trả lời không phải JSON hợp lệ, yêu cầu viết lại.",
   truncated_output: "Câu trả lời bị cắt vì quá dài, yêu cầu viết ngắn hơn.",
   model_error: "Không gọi được mô hình (Ollama lỗi hoặc hết giờ).",
+  fetch_failed: "Không tải hoặc giải nén an toàn được gói (registry lỗi, hoặc tarball có đường dẫn thoát ra ngoài).",
 });
 
 const ACTIONS = { approve: "CHO PHÉP", review: "CHUYỂN NGƯỜI XEM", deny: "TỪ CHỐI" };
@@ -64,6 +65,12 @@ function callFor(events, index) {
  *            input: string, process: string, output: string, untrustedOutput: boolean}}
  */
 export function explainStep(events, index) {
+  const step = explainEvent(events, index);
+  // Simulated steps (truck scenarios) say so in the title, so nobody mistakes them for agent output.
+  return events[index]?.synthetic ? { ...step, title: `[MÔ PHỎNG] ${step.title}` } : step;
+}
+
+function explainEvent(events, index) {
   const event = events[index] || {};
   const step = { actor: "system", who: "Hệ thống", title: event.type || "", input: "—", process: "—", output: "—", untrustedOutput: false };
   switch (event.type) {
@@ -108,6 +115,17 @@ export function explainStep(events, index) {
                process: `Luật ${event.rule}: ${clip((event.reasons || [])[0] || "", 90)}`,
                output: `${LABELS[event.final_label] || event.final_label} → ${ACTIONS[event.final_action] || "—"} · ${command} (dry-run)` };
     }
+    case "sandbox_result":
+      return { ...step, actor: "tool", who: "Robot sandbox", title: "Chạy thử script trong sandbox",
+               input: "Gói đã giải nén, trong container tắt mạng, chỉ đọc, có file khóa mồi",
+               process: "Chạy npm install dưới strace, ghi tiến trình, file và kết nối",
+               output: `${(event.canary_touched || []).length ? `Chạm khóa mồi: ${event.canary_touched.join(", ")}` : "Không chạm khóa mồi"} — ${clip(event.summary || "", 90)}`,
+               untrustedOutput: true };
+    case "human_review":
+      return { ...step, actor: "system", who: "Người xem", title: `Người xem quyết định: ${ACTIONS[event.final_action] || event.final_action}`,
+               input: "Phiếu chờ duyệt: lý do của luật, bằng chứng file:dòng",
+               process: clip(event.reason || "Đọc phiếu và quyết định", 110),
+               output: `${ACTIONS[event.final_action] || "—"} (thay cho kết luận chuyển người xem)` };
     case "run_end":
       return { ...step, title: "Hoàn tất", input: "Toàn bộ lượt chạy", process: "Ghi trace và số đo",
                output: `${event.steps} bước mô hình · ${event.elapsed_s} giây${event.tokens_per_s ? ` · ${event.tokens_per_s} token/giây` : ""}` };

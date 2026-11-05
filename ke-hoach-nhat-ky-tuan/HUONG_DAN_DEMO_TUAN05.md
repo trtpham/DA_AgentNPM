@@ -201,6 +201,25 @@ Chiếu bảng **"Còn vướng"** ở mục 4 báo cáo. Nói ngắn gọn từ
 
 Tóm 3 ý: chạy ổn định (bằng chứng: bước 3, 4, 7, 8), an toàn (bước 6), trung thực về phần còn thiếu (bước 9). Mời giảng viên đặt câu hỏi.
 
+### Bước phụ — Văn phòng 3D: kịch bản "Xe hàng" (TV2, 2–3 phút, nếu còn giờ)
+
+**Thao tác:**
+1. Mở `http://127.0.0.1:8765/office` bằng Chrome, nhấn **F11** cho toàn màn hình.
+2. Để nguyên "Máy quay tự động", tốc độ 16×.
+3. Chọn lần lượt 3 kịch bản, mỗi lần nhấn **phím cách**.
+
+| Kịch bản | Thông điệp |
+| --- | --- |
+| **2. Gói độc ẩn trong cây phụ thuộc** | Một gói con độc thì cả xe bị giữ, gói vào cách ly, phiếu bay về máy người dùng |
+| **5. swc → người xem cho qua** | Agent không tự quyết khi không thấy hết mã; con người là chốt cuối |
+| **3. OSV: chặn trước, phân tích sau** | An toàn tức thì, nhưng vẫn có bằng chứng và không mất số liệu đánh giá |
+
+**Lời nói:**
+- Nhãn THẬT / MÔ PHỎNG / THIẾT KẾ trên mỗi thùng cho biết phần nào là kết quả thật của agent, phần nào là minh họa thiết kế sản phẩm.
+- Xe tải và việc giao hàng là minh họa. Kết luận của từng thùng THẬT lấy đúng từ trace.
+
+**Nếu máy yếu:** tắt "Máy quay tự động" và kéo thanh tiến trình. Cảnh vẫn đúng ở mọi thời điểm.
+
 ## 4. Câu hỏi giảng viên có thể hỏi và cách trả lời
 
 | Câu hỏi | Ý trả lời | Bằng chứng mở ra ngay |

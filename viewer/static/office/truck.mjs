@@ -23,14 +23,16 @@ export function hasInstallHooks(events) {
 
 /**
  * Lay the traces of a run end to end after the truck's arrival.
- * @param {{package: string, events: object[]}[]} traces in run order
+ * @param {{package: string, events: object[], source?: string, osv?: boolean, installedBefore?: boolean}[]} traces
+ *   in truck order; `osv` = the gate found the package on a blocklist (blocked first, analysed after);
+ *   a `human_review` event after the decision is a reviewer's final call on a review case.
  */
 export function buildTruck(traces) {
   const events = [];
   const offsets = [];
   const packages = [];
   let cursor = INTRO;
-  traces.forEach(({ package: name, events: trace }, index) => {
+  traces.forEach(({ package: name, events: trace, source = "real", osv = false, installedBefore = false }, index) => {
     const times = trace.map((event) => Date.parse(event.ts));
     const first = Number.isFinite(times[0]) ? times[0] : 0;
     const local = times.map((time, at) => (Number.isFinite(time) ? (time - first) / 1000 : at));
@@ -45,9 +47,15 @@ export function buildTruck(traces) {
     const verdicts = trace.filter((event) => event.type === "verdict");
     const verdict = (verdicts.slice().reverse().find((event) => event.valid) || verdicts.at(-1))?.verdict || null;
     const end = start + (local.at(-1) ?? 0);
-    packages.push({ name, index, start, end, firstIndex, lastIndex: events.length - 1,
-                    decision, verdict, decidedAt: decision ? start + local[decisionAt] : end,
-                    action: decision?.final_action || "review", hooks: hasInstallHooks(trace) });
+    const agentAt = decision ? start + local[decisionAt] : end;
+    const agentAction = decision?.final_action || "review";
+    const humanAt = trace.findIndex((event) => event.type === "human_review");
+    const human = humanAt >= 0 ? trace[humanAt] : null;
+    packages.push({ name, index, start, end, firstIndex, lastIndex: events.length - 1, source, osv, installedBefore,
+                    decision, verdict, agentAt, agentAction, human, hooks: hasInstallHooks(trace),
+                    // the reviewer's call replaces a review verdict; otherwise the agent's action stands
+                    decidedAt: human && agentAction === "review" ? start + local[humanAt] : agentAt,
+                    action: human && agentAction === "review" ? human.final_action : agentAction });
     cursor = end + GAP;
   });
   const lastEnd = packages.length ? packages.at(-1).end : INTRO;
@@ -59,7 +67,10 @@ export function buildTruck(traces) {
 export function parcelZone(pkg, t, truck) {
   if (t < INTRO * 0.8) return "truck";
   if (t < pkg.start) return "stack";
-  if (t < pkg.decidedAt) return "reception";
+  // Blocked first, analysed after: a blocklisted parcel is quarantined as soon as its turn comes.
+  if (pkg.osv) return "quarantine";
+  if (t < pkg.agentAt) return "reception";
+  if (t < pkg.decidedAt) return "review"; // waiting on the shelf for the human reviewer
   if (t >= truck.outroAt && truck.final === "approve") return "loaded";
   return pkg.action === "approve" ? "approved" : pkg.action === "deny" ? "quarantine" : "review";
 }

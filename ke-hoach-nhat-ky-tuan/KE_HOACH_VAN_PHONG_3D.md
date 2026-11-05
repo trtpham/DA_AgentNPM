@@ -142,3 +142,36 @@ Ghi nhận trong [`../docs/brownfield/TRANSITION_APPROVAL.md`](../docs/brownfiel
 - Bước quét OSV ở cổng trong chế độ này **không dùng dữ liệu OSV thật**, vì trace không có trường đó. Phụ đề ghi rõ.
 
 **Kết quả trên dữ liệu thật:** ✅ 1 an toàn (benign fixture), 👁 11 chờ duyệt (10 swc + no-hook), ⛔ 1 cách ly (canary đọc khóa SSH giả) → **xe bị chặn, có phiếu báo cáo**.
+
+## Danh mục kịch bản xe hàng (05/11/2026)
+
+Mỗi thùng mang **nhãn nguồn** trên màn hình, để không ai nhầm mô phỏng với kết quả thật:
+- **THẬT**: trace thật trong `reports/`.
+- **MÔ PHỎNG**: luật có trong `agent/decide.py` nhưng chưa có trace.
+- **THIẾT KẾ**: bước của thiết kế sản phẩm, chưa có trong code.
+
+Bước mô phỏng ghi "[MÔ PHỎNG]" trong phụ đề và không bao giờ giả làm câu trả lời của model.
+
+| # | Kịch bản | Nguồn | Luật / bước | Kết quả cả xe (đã kiểm trên trình duyệt) |
+| --- | --- | --- | --- | --- |
+| 0 | Lô thực nghiệm thật (chọn run) | THẬT | R6, R7, R7_review | `w57-reg-a-llm`: ✅ 1 · 👁 11 · ⛔ 1 → chặn |
+| 1 | Cài gói an toàn → giao hàng | THẬT + THIẾT KẾ | R7, làn xanh, bộ nhớ đệm | ✅ 4 → **giao tới máy người dùng** |
+| 2 | Gói độc ẩn trong cây phụ thuộc | THẬT + THIẾT KẾ | R6, nghiêm ngặt nhất thắng | ✅ 3 · ⛔ 1 → **chặn cả xe**, có phiếu |
+| 3 | OSV đã biết độc: chặn trước, phân tích sau | THẬT + THIẾT KẾ | R6 + cờ OSV ở cổng | Chặn ngay ở cổng; agent độc lập **khớp** OSV |
+| 4 | Mã bị làm rối → người xem từ chối | THẬT + THIẾT KẾ | R8 → người xem | ⛔ (do người xem) |
+| 5 | Gói tải mã ngoài (swc) → người xem cho qua | THẬT + THIẾT KẾ | R7_review → người xem | ✅ → giao hàng |
+| 6 | Mô hình lỗi / lặp kết luận sai | THẬT | R2 (`repeated_invalid`, `json_invalid`) | 👁 2 → giữ xe |
+| 7 | AI bịa bằng chứng | MÔ PHỎNG | **R3** | 👁 → giữ xe |
+| 8 | OSV báo độc, AI nói lành | MÔ PHỎNG | **R5** | Gói bị chặn, phiếu ghi **bất đồng** |
+| 9 | Sandbox bắt quả tang (sau W5-6) | MÔ PHỎNG | **R1** | ⛔ → chặn |
+| 10 | Tên gần giống gói nổi tiếng | THIẾT KẾ | Kiểm tên ở cổng | 👁 → giữ xe |
+| 11 | Không tải được gói / hết 15 bước | MÔ PHỎNG | **R2** (lỗi tải, `limit`) | 👁 2 → giữ xe |
+| 12 | Gói độc đã từng được cài | THẬT + THIẾT KẾ | R6 + cảnh báo | ⛔, phiếu có **cảnh báo đổi token** |
+
+**Phủ bộ luật `decide.py`:** R1, R2, R3, R5, R6, R7, R7_review, R8 đều có kịch bản.
+- R4 là nhánh phòng thủ mà schema đã chặn từ trước (R3 luôn chạy trước), nên không thể xảy ra trong thực tế.
+- R7_risk chưa có kịch bản.
+
+**Kiểm chứng:**
+- `node --test tests/office_scenarios.test.mjs` (4 test): mọi bước mô phỏng đều có nhãn; luật mô phỏng đạt đúng luật minh họa; kết quả từng kịch bản đúng; run không có trong `reports/` thì bị bỏ qua, không bị bịa ra.
+- Kiểm cả 13 kịch bản trên trình duyệt ngày 05/11.

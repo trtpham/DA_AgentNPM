@@ -10,6 +10,7 @@ import { createOffice } from "./scene.mjs";
 import { ROOMS, roomFor } from "./events.mjs";
 import { argsText, explainStep, thinkingStep } from "./explain.mjs";
 import { buildTruck, currentParcel, parcelZone, tally, truckPhase } from "./truck.mjs";
+import { composeScenario, SCENARIOS, SOURCES } from "./scenarios.mjs";
 
 const $ = (id) => document.getElementById(id);
 const PHASE = { reception: 0, code: 1, intel: 1, lab: 1, evidence: 2, decision: 3 };
@@ -36,6 +37,13 @@ let closeUp = null;
 let generation = 0;         // bumps on every seek, so delayed animations of an old timeline are dropped
 let truck = null;           // truck mode timeline (truck.mjs), null in the other modes
 const beats = { intro: false, outro: false }; // one-off truck moments already played
+// Simulated product decisions taken at the gate, before any model is needed.
+const GATE_RULES = new Set(["LÀN XANH", "BỘ NHỚ ĐỆM", "TÊN GẦN GIỐNG"]);
+const SOURCE_BADGE = { real: "THẬT", rule: "MÔ PHỎNG", design: "THIẾT KẾ", "real+design": "THẬT + THIẾT KẾ" };
+function truckRoom(event) {
+  if (event.synthetic && (GATE_RULES.has(event.rule) || (event.type === "run_end" && event._gate))) return "reception";
+  return roomFor(event);
+}
 const FINAL_TEXT = {
   approve: "✅ Cả xe an toàn — giao hàng, npm install tiếp tục",
   review: "👁 Xe bị giữ — có gói chờ người xem duyệt",
@@ -109,7 +117,12 @@ function animate(lane, event) {
     case "run_start":
       if (truck) {
         // Truck mode: the guard scans the parcel at the gate (OSV), then reception opens it.
+        const parcel = truck.packages[event._pkg];
         office.staffReact("guard", "raise");
+        if (parcel?.osv) {
+          office.celebrate("deny");
+          office.sendPacket(office.staffHead("guard"), office.housePoint(), "#ff4a3d", null, "🛡️ OSV: có trong danh sách đen — đã chặn giao");
+        }
         office.staffReact("courier", "handover");
         office.sendPacket(office.staffHead("guard"), office.robotHead("reception"), "#c99a5b", () => {
           if (!alive()) return;
@@ -135,6 +148,24 @@ function animate(lane, event) {
       office.sendPacket(office.robotHead(room), worker(), event.ok ? "#e8f4ff" : "#ff8e83", null,
                         `RA: ${event.ok ? short(event.summary || "OK", 22) : "lỗi"}`);
       break;
+    case "sandbox_result":
+      office.sendPacket(worker(), office.robotHead("lab"), lane.color, () => alive() && office.robotReact("lab", "work"), "VÀO: chạy thử trong sandbox");
+      office.sendPacket(office.robotHead("lab"), worker(), (event.canary_touched || []).length ? "#ff4a3d" : "#e8f4ff", null,
+                        `RA: ${(event.canary_touched || []).length ? `chạm khóa mồi ${event.canary_touched.join(", ")}` : "không chạm khóa mồi"}`);
+      office.robotReact("lab", (event.canary_touched || []).length ? "bad" : "ok");
+      break;
+    case "human_review":
+      office.staffReact("reviewer", "raise");
+      office.sendPacket(office.staffHead("reviewer"), office.robotHead("decision"), event.final_action === "approve" ? "#2fe0a8" : "#ff4a3d", () => {
+        if (!alive()) return;
+        stampFor(lane, { final_action: event.final_action, rule: "người xem" }, true);
+        office.celebrate(event.final_action);
+        if (truck && event.final_action === "deny") {
+          office.sendPacket(office.robotHead("decision"), office.housePoint(), "#ff4a3d", () => alive() && office.robotReact("assistant", "bad"),
+                            `📄 Phiếu: ${short(lane.pkg, 20)} — người xem TỪ CHỐI`);
+        }
+      }, `👁 Người xem: ${ACTIONS[event.final_action] || event.final_action}`);
+      break;
     case "verdict":
       office.sendPacket(worker(), office.robotHead("evidence"), lane.color,
                         () => alive() && office.robotReact("evidence", event.valid ? "ok" : "bad"),
@@ -147,6 +178,13 @@ function animate(lane, event) {
       }
       break;
     case "decision": {
+      if (truck && event.synthetic && GATE_RULES.has(event.rule)) {
+        office.robotReact("reception", event.final_action === "approve" ? "ok" : "bad");
+        stampFor(lane, event, true);
+        office.sendPacket(office.robotHead("reception"), worker(), event.final_action === "approve" ? "#2fe0a8" : "#ffaa1a", null,
+                          event.rule === "LÀN XANH" ? "🟢 làn xanh: không có script" : event.rule === "BỘ NHỚ ĐỆM" ? "🟢 đã kiểm trước đó" : "⚠ tên gần giống gói khác");
+        break;
+      }
       const checks = event.evidence_checks || [];
       const good = checks.filter((check) => check.exists).length;
       office.robotReact("evidence", good === checks.length ? "ok" : "bad");
@@ -235,7 +273,11 @@ function renderCaption() {
   const event = lane.events[lane.index];
   if (truck && event && !thinking(lane)) {
     const parcel = truck.packages[event._pkg];
-    if (event.type === "run_start") process += " · Cổng đã quét OSV (chế độ thực nghiệm: không chặn, agent không thấy kết quả này)";
+    if (event.type === "run_start") {
+      process += parcel?.osv
+        ? " · Cổng: CÓ trong danh sách đen OSV → chặn giao ngay; agent vẫn phân tích bản cách ly và không được biết kết quả này"
+        : " · Cổng đã quét OSV (không chặn khi đo thực nghiệm; agent không thấy kết quả này)";
+    }
     if (event.type === "tool_result" && event.tool === "read_manifest" && parcel?.hooks === false) {
       output += " → Không có script cài đặt: sản phẩm thật cho gói này đi làn xanh (lô thực nghiệm vẫn phân tích để đo)";
     }
@@ -344,12 +386,16 @@ function renderScene() {
 
 function truckItems(t) {
   const current = currentParcel(truck, t);
-  return truck.packages.map((pkg) => ({ zone: parcelZone(pkg, t, truck), action: t >= pkg.decidedAt ? pkg.action : null, hot: pkg === current }));
+  return truck.packages.map((pkg) => ({ zone: parcelZone(pkg, t, truck), source: pkg.source, hot: pkg === current,
+                                        action: pkg.osv && t >= pkg.start ? "deny" : t >= pkg.decidedAt ? pkg.action : t >= pkg.agentAt ? pkg.agentAction : null }));
 }
 
 function houseText(t, counts) {
   if (t < 0.4) return "";
-  if (t >= truck.outroAt) return FINAL_TEXT[truck.final];
+  if (t >= truck.outroAt) {
+    const urgent = truck.packages.some((pkg) => pkg.installedBefore && pkg.action === "deny");
+    return urgent ? "⚠ Gói độc ĐÃ TỪNG cài trên máy — đổi token, khóa SSH ngay" : FINAL_TEXT[truck.final];
+  }
   const done = truck.packages.length - counts.pending;
   return `⏳ Chờ kiểm tra: ${done}/${truck.packages.length} gói xong`;
 }
@@ -394,8 +440,21 @@ function reportCard(pkg) {
   const card = element("article", undefined, `report-card report-${pkg.action}`);
   const verdict = pkg.verdict || {};
   const decision = pkg.decision || {};
-  card.append(element("h3", pkg.action === "deny" ? "📄 PHIẾU BÁO CÁO — GÓI BỊ TỪ CHỐI" : "👁 PHIẾU CHỜ DUYỆT"));
+  card.append(element("h3", pkg.action === "deny" ? "📄 PHIẾU BÁO CÁO — GÓI BỊ TỪ CHỐI"
+    : pkg.action === "approve" ? "✅ PHIẾU DUYỆT — NGƯỜI XEM CHO PHÉP" : "👁 PHIẾU CHỜ DUYỆT"));
+  card.append(element("span", SOURCE_BADGE[pkg.source] || pkg.source, `source-badge source-${pkg.source.replace("+", "-")}`));
   card.append(element("p", `${pkg.name} · ${LABELS[decision.final_label] || decision.final_label || "?"} · luật ${decision.rule || "?"}`, "report-title"));
+  if (pkg.installedBefore) {
+    card.append(element("p", "⚠ Phiên bản này ĐÃ TỪNG được cài trên máy: script có thể đã chạy. Đổi ngay token npm, khóa SSH, khóa cloud; kiểm tra lịch sử truy cập.", "report-alert"));
+  }
+  if (pkg.osv) {
+    card.append(element("p", pkg.agentAction === "deny"
+      ? "🛡️ OSV đã biết gói này là độc → chặn giao ngay. Agent phân tích độc lập (không thấy OSV) và KHỚP: từ chối, kèm bằng chứng bên dưới."
+      : "🛡️ OSV báo độc nhưng agent không thấy hành vi độc → BẤT ĐỒNG: gói vẫn bị chặn, người xem đối chiếu.", "report-osv"));
+  }
+  if (pkg.human) {
+    card.append(element("p", `👁 Người xem đã quyết định: ${ACTIONS[pkg.human.final_action] || pkg.human.final_action} (sau kết luận "chuyển người xem" của luật).`, "report-human"));
+  }
   if (pkg.action === "deny") {
     card.append(element("p", verdict.description || "", "report-why"));
     const list = element("ul", undefined, "plain-list behaviors");
@@ -414,9 +473,18 @@ function reportCard(pkg) {
   } else {
     const list = element("ul", undefined, "plain-list");
     for (const reason of (decision.reasons || ["Cần người xem xét"]).slice(0, 3)) list.append(element("li", reason));
-    card.append(list, element("p", "Gói nằm trên kệ chờ duyệt ở Bàn người xem.", "report-to"));
+    card.append(list, element("p", pkg.action === "approve" ? "Gói được chuyển lên pallet giao hàng." : "Gói nằm trên kệ chờ duyệt ở Bàn người xem.", "report-to"));
   }
   return card;
+}
+
+function renderScenarioCard() {
+  const scenario = SCENARIOS.find((item) => item.id === $("scenario").value) || SCENARIOS[0];
+  const sources = {};
+  for (const pkg of truck.packages) sources[pkg.source] = (sources[pkg.source] || 0) + 1;
+  $("scenario-what").textContent = scenario.what;
+  $("scenario-sources").replaceChildren(...Object.entries(sources).map(([source, count]) =>
+    element("span", `${SOURCE_BADGE[source] || source}: ${count}`, `source-badge source-${source.replace("+", "-")}`)));
 }
 
 function renderTruckPanel(counts) {
@@ -436,12 +504,12 @@ function renderTruckPanel(counts) {
     button.dataset.action = done ? pkg.action : "";
     button.append(element("span", done ? { approve: "✅", review: "👁", deny: "⛔" }[pkg.action] : pkg === current ? "🔎" : "📦"),
                   element("span", pkg.name, "parcel-name"),
-                  element("span", pkg.hooks === false ? "không script" : "", "count"));
+                  element("span", SOURCE_BADGE[pkg.source] || "", `source-badge source-${pkg.source.replace("+", "-")}`));
     button.addEventListener("click", () => { stop(); seek(pkg.start); });
     item.append(button);
     return item;
   }));
-  const decided = truck.packages.filter((pkg) => t >= pkg.decidedAt && pkg.action !== "approve")
+  const decided = truck.packages.filter((pkg) => (t >= pkg.decidedAt && pkg.action !== "approve") || (pkg.human && t >= pkg.decidedAt))
     .sort((a, b) => (a.action === "deny" ? 0 : 1) - (b.action === "deny" ? 0 : 1));
   $("truck-reports").replaceChildren(...(decided.length ? decided.slice(0, 6).map(reportCard) : [element("p", "Chưa có phiếu nào.", "count")]));
 }
@@ -539,35 +607,56 @@ const groups = new Map(); // "w57-reg-a-*" -> runs that differ only in the model
 
 function syncHash() {
   const next = new URLSearchParams({ mode: $("mode").value, run: $("run-select").value, pkg: $("package-select").value });
+  if ($("mode").value === "truck") next.set("scenario", $("scenario").value);
   if (params.get("bench") === "1") next.set("bench", "1");
   history.replaceState(null, "", `#${next}`);
   const first = lanes[0];
   if (first) $("timeline-link").href = `/#run=${encodeURIComponent(first.run)}&pkg=${encodeURIComponent(first.pkg)}`;
 }
 
+async function loadTrace(run, pkg) {
+  try {
+    return await getJson(`/api/trace?${new URLSearchParams({ run, pkg, after: "-1" })}`);
+  } catch {
+    return []; // run or package not in this reports/ folder: the scenario skips it instead of inventing it
+  }
+}
+
 async function loadTruck(run) {
   stop();
-  const names = (await getJson(`/api/runs/${encodeURIComponent(run)}/packages`)).map((item) => item.package);
-  const traces = await Promise.all(names.map(async (name) => {
-    const query = new URLSearchParams({ run, pkg: name, after: "-1" });
-    return { package: name, events: (await getJson(`/api/trace?${query}`)).filter((event) => event.type !== "thought") };
-  }));
+  const scenario = SCENARIOS.find((item) => item.id === $("scenario").value) || SCENARIOS[0];
+  let traces;
+  if (scenario.useRun) {
+    const names = (await getJson(`/api/runs/${encodeURIComponent(run)}/packages`)).map((item) => item.package);
+    traces = await Promise.all(names.map(async (name) => ({
+      package: name, source: "real", events: (await loadTrace(run, name)).filter((event) => event.type !== "thought") })));
+  } else {
+    traces = await composeScenario(scenario, loadTrace);
+  }
+  for (const trace of traces) {  // the run_end after a gate decision stays at reception
+    const gate = trace.events.some((event) => event.type === "decision" && event.synthetic && GATE_RULES.has(event.rule));
+    if (gate) trace.events.forEach((event) => { if (event.type === "run_end") event._gate = true; });
+  }
   truck = buildTruck(traces.filter((trace) => trace.events.length));
   office.clearWorkers(1);
   focusLane = 0;
   $("event-log").dataset.run = "";
-  const variant = variantOf(run);
-  const model = truck.events.find((event) => event.type === "run_start")?.model || "agent";
-  const name = variant ? `A-${variant}` : model;
+  // The worker is named after the first real parcel's run; an all-simulated truck has no real model.
+  const realTrace = traces.find((trace) => String(trace.source || "real").startsWith("real"));
+  const realRun = scenario.useRun ? run : realTrace?.run;
+  const variant = realRun ? variantOf(realRun) : null;
+  const model = realTrace?.events.find((event) => event.type === "run_start")?.model || "mô phỏng";
+  const name = variant ? `A-${variant}` : realTrace ? model : "Agent (mô phỏng)";
   const color = VARIANT_COLORS[variant] || "#61e8c2";
-  lanes = [{ run, pkg: truck.packages[0]?.name || "", events: truck.events, offsets: truck.offsets, rooms: truck.events.map(roomFor),
+  lanes = [{ run: realRun || "mô phỏng", pkg: truck.packages[0]?.name || "", events: truck.events, offsets: truck.offsets, rooms: truck.events.map(truckRoom),
              variant, model, name, color, index: -1, lane: 0, shownAt: 0, finishedAt: null,
              actor: office.addWorker({ id: run, name, color, lane: 0 }) }];
   office.setupTruck(truck.packages.map((pkg) => pkg.name));
   clock.duration = truck.duration;
   $("progress").max = String(Math.round(clock.duration * 10));
-  $("package-name").textContent = `Xe hàng: ${truck.packages.length} gói từ lô ${run}`;
+  $("package-name").textContent = scenario.useRun ? `Xe hàng: ${truck.packages.length} gói từ lô ${run}` : scenario.title;
   $("package-meta").textContent = `${name} (${model}) kiểm từng thùng · thời gian thật của từng trace, ghép nối tiếp`;
+  renderScenarioCard();
   truckPanelKey = "";
   syncHash();
   seek(0);
@@ -621,6 +710,7 @@ async function loadMode(preferredRun, preferredPackage) {
   const choices = compare ? [...groups.keys()] : runs;
   document.body.dataset.mode = mode;
   $("truck-block").hidden = mode !== "truck";
+  $("scenario-pick").hidden = mode !== "truck";
   $("package-select").disabled = mode === "truck";
   if (mode === "truck") {
     // The truck story plays at 16x with the director camera following the truck and the parcels.
@@ -657,6 +747,9 @@ async function start() {
 }
 
 $("mode").addEventListener("change", () => loadMode(null, $("package-select").value));
+$("scenario").replaceChildren(...SCENARIOS.map((scenario) => { const option = element("option", scenario.title); option.value = scenario.id; return option; }));
+$("scenario").value = SCENARIOS.some((item) => item.id === params.get("scenario")) ? params.get("scenario") : "batch";
+$("scenario").addEventListener("change", () => loadTruck($("run-select").value));
 $("run-select").addEventListener("change", () => loadChoice($("package-select").value));
 $("package-select").addEventListener("change", loadLanes);
 $("play").addEventListener("click", play);

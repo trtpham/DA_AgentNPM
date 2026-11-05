@@ -17,6 +17,7 @@
     <div class="office-pick">
       <label for="mode">Chế độ</label>
       <select id="mode"><option value="truck">🚚 Xe hàng (luồng sản phẩm)</option><option value="compare">Đua 3 model</option><option value="single">Một model</option></select>
+      <span id="scenario-pick" hidden><label for="scenario">Kịch bản</label> <select id="scenario"></select></span>
       <label for="run-select" id="run-label">Bộ run</label><select id="run-select"></select>
       <label for="package-select">Gói</label><select id="package-select"></select>
     </div>
@@ -67,6 +68,8 @@
     <aside class="office-panel">
       <section class="panel-block truck-block" id="truck-block" hidden>
         <small>XE HÀNG — MỘT YÊU CẦU CÀI ĐẶT</small>
+        <p id="scenario-what" class="scenario-what"></p>
+        <div id="scenario-sources" class="truck-counts" title="THẬT: trace thật · MÔ PHỎNG: luật có trong code, chưa có trace · THIẾT KẾ: bước sản phẩm chưa có trong code"></div>
         <div id="truck-counts" class="truck-counts"></div>
         <p id="truck-final" class="truck-final"></p>
         <small>CÁC THÙNG (bấm để tua tới)</small>

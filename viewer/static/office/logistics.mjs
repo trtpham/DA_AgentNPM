@@ -205,6 +205,7 @@ export function createLogistics({ scene, overlay }) {
       parcel.tag.hidden = !parcel.mesh.visible;
       parcel.tag.classList.toggle("hot", Boolean(item.hot));
       parcel.tag.dataset.action = item.action || "";
+      parcel.tag.dataset.source = item.source || "real";
     });
   }
 

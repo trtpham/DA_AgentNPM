@@ -24,7 +24,9 @@ const CODE_TOOLS = new Set(["read_file", "extract_indicators", "deobfuscate"]);
 export function roomFor(event) {
   if (event.type === "run_start" || event.tool === "read_manifest") return "reception";
   if (CODE_TOOLS.has(event.tool)) return "code";
+  if (event.type === "sandbox_result") return "lab";
   if (event.type === "verdict") return "evidence";
+  if (event.type === "human_review") return "decision";
   if (event.type === "decision" || event.type === "run_end") return "decision";
   return "hallway";
 }
