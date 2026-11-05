@@ -180,8 +180,25 @@ Sandbox trả kết quả có thể tái hiện và không chạm secret thật;
 - Kiểm chứng: test đọc cấu hình, khóa sai, `run_meta` khớp YAML, payload gửi Ollama mang đúng giá trị. Lô `w58-a-llm-gpu99` có `run_meta.chat_options.num_gpu = 99`.
 - **Kiểm chứng chung:** `py -3.14 -m pytest` → **137 PASS, 6 SKIP** (6 test sandbox cần `RUN_SANDBOX_TESTS=1` và Docker).
 
+### W5-11 — báo cáo và chuẩn bị demo (2026-11-05)
+
+- Viết [BaoCaoTienDo_Tuan05.md](BaoCaoTienDo_Tuan05.md) và [HUONG_DAN_DEMO_TUAN05.md](HUONG_DAN_DEMO_TUAN05.md) (kịch bản 15 phút, phân vai, dự phòng, câu hỏi thường gặp).
+- Thêm `experiments/demo_sandbox.py`: chỉ chạy fixture của nhóm qua `run_sandbox` và in một bảng. Có test cho hàm dựng dòng.
+- Chạy thử mọi lệnh trong kịch bản:
+  - `demo-rehearsal-a-llm`: benign → approve (21,1 s); canary → deny R6 (14,5 s).
+  - `demo-rehearsal-a-slm`: canary → **review** (A-SLM chưa nhận ra canary), nên demo ca độc dùng A-LLM.
+  - Bảng sandbox đủ 9 fixture.
+- **Phát hiện mới, chưa sửa (cần TV3):** lần chạy 05/11, fixture `memory` cấp phát được **448 MB** rồi mới bị kill (W5-1 ngày 04/11 dừng ở 192 MB).
+  - Nguyên nhân: `--memory 256m` không kèm `--memory-swap`, nên Docker cho thêm 256 MB swap; trần thật là 512 MB.
+  - Vẫn bị chặn (`oom`, mã 137) nhưng rộng gấp đôi thiết kế.
+  - Đề xuất thêm `--memory-swap 256m` vào `sandbox/run.py`; chờ TV3 duyệt.
+- Kiểm chứng: `py -3.14 -m pytest` → **139 PASS, 8 SKIP**.
+
 ## Ảnh kết quả
 
-![Chưa có ảnh kết quả tuần 05](hinh-anh/chua-co-anh.svg)
+Ảnh chụp màn hình thật của trình xem trace ngày 05/11/2026 (chi tiết chú thích trong báo cáo tuần 5):
 
-*Thay ảnh này bằng ảnh kết quả thật khi có bằng chứng.*
+![Lô 13 gói A-LLM](hinh-anh/tuan-05-viewer-lo-13-goi.jpg)
+![Canary bị từ chối](hinh-anh/tuan-05-viewer-canary-deny.jpg)
+![swc chuyển người xem](hinh-anh/tuan-05-viewer-swc-review.jpg)
+![Mã rút gọn qua #pretty](hinh-anh/tuan-05-viewer-obfuscated-pretty.jpg)
