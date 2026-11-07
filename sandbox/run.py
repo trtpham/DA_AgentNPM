@@ -36,8 +36,8 @@ def classify_outcome(status: int, trace: str) -> str:
     return "failed" if status else "ok"
 
 
-def attribute_events(trace: str) -> dict:
-    """W5-3: give every process, connect() and outside open() an actor from the strace -f PID tree.
+def _process_tree(trace: str):
+    """strace -f lines as (pid, call, raw), each pid's parent, and an `actor(pid)` function.
 
     `package` is any process under an `sh -c` that npm starts for a lifecycle script; `npm` is the
     rest of the tree under the traced npm process; `unknown` covers ids whose parent was cut from a
@@ -85,6 +85,12 @@ def attribute_events(trace: str) -> dict:
             cache[item] = found
         return found
 
+    return entries, parent, actor
+
+
+def attribute_events(trace: str) -> dict:
+    """W5-3: give every process, connect() and outside open() an actor from the strace -f PID tree."""
+    entries, _, actor = _process_tree(trace)
     result = {name: {"processes": [], "network_attempts": [], "files_outside_package": set()} for name in ACTORS}
     pending_exec: dict[str, str] = {}
     for pid, call, raw in entries:
@@ -109,6 +115,97 @@ def attribute_events(trace: str) -> dict:
             for name, data in result.items()}
 
 
+CONNECT = re.compile(r"^(connect|sendto)\(.*?\{sa_family=(AF_INET6?)\b(.*?)\}")
+SOCKET_PORT = re.compile(r"sin6?_port=htons\((\d+)\)")
+SOCKET_ADDRESS = re.compile(r"inet_addr\(\"([^\"]+)\"\)|inet_pton\(AF_INET6,\s*\"([^\"]+)\"")
+WRITE_OPEN = re.compile(r"^open(?:at|at2)?\([^\"\n]*\"([^\"\n]+)\",\s*([A-Z_|]+)")
+WRITE_FLAGS = ("O_WRONLY", "O_RDWR", "O_CREAT", "O_APPEND", "O_TRUNC")
+RENAME = re.compile(r"^(?:rename|renameat2?|link|linkat|symlink|symlinkat)\(.*\"([^\"\n]+)\"[^\"]*\)\s+=")
+# Paths that make code run again later (shell start files, cron, autostart, systemd, system config).
+PERSISTENCE = re.compile(r"/\.(?:bashrc|bash_profile|bash_login|profile|zshrc|zprofile|zshenv)$|crontab|/var/spool/cron/"
+                         r"|/\.config/autostart/|/\.config/systemd/|^/etc/")
+EXECVE = re.compile(r"^execve\(\"([^\"]*)\",\s*\[(.*?)\]")
+ARGUMENT = re.compile(r"\"((?:\\.|[^\"\\])*)\"")
+RESULT = re.compile(r"\s=\s+(-?\d+)(?:\s+([A-Z]\w*))?")
+
+
+def behavior_events(trace: str) -> dict:
+    """C4: connects, persistence writes and the process tree, each with its actor. Reads the log only."""
+    entries, parent, actor = _process_tree(trace)
+    connects, persistence, processes, seen = [], [], [], set()
+    pending_exec: dict[str, str] = {}
+    for pid, call, _ in entries:
+        results = RESULT.findall(call)
+        status = None
+        if results:
+            value, errno = results[-1]
+            status = "ok" if not value.startswith("-") else (errno or "error")
+        if network := CONNECT.match(call):
+            port = SOCKET_PORT.search(network.group(3))
+            address = SOCKET_ADDRESS.search(network.group(3))
+            item = {"ip": (address.group(1) or address.group(2)) if address else None,
+                    "port": int(port.group(1)) if port else None, "family": network.group(2),
+                    "call": network.group(1), "dns": bool(port and port.group(1) == "53"),
+                    "result": status, "actor": actor(pid)}
+            key = (item["ip"], item["port"], item["call"], item["actor"])
+            if key not in seen:
+                seen.add(key)
+                connects.append(item)
+        elif (opened := WRITE_OPEN.match(call)) and any(flag in opened.group(2) for flag in WRITE_FLAGS):
+            if PERSISTENCE.search(opened.group(1)):
+                persistence.append({"path": opened.group(1), "result": status, "actor": actor(pid)})
+        elif (renamed := RENAME.match(call)) and PERSISTENCE.search(renamed.group(1)):
+            persistence.append({"path": renamed.group(1), "result": status, "actor": actor(pid)})
+        if call.startswith("execve(") and call.endswith("<unfinished ...>"):
+            pending_exec[pid] = call
+            continue
+        if call.startswith("<... execve resumed>"):
+            call, ok = pending_exec.pop(pid, ""), bool(re.search(r"=\s+0\s*$", call))
+        else:
+            ok = bool(re.search(r"=\s+0\s*$", call))
+        if ok and (executed := EXECVE.match(call)):
+            argv = [argument[:200] for argument in ARGUMENT.findall(executed.group(2))[:10]]
+            processes.append({"pid": int(pid), "ppid": int(parent[pid]) if pid in parent else None,
+                              "argv": argv, "actor": actor(pid)})
+    # Package processes first: they are what the review is about; npm's own tree is context.
+    processes.sort(key=lambda item: item["actor"] != "package")
+    return {"connects": connects[:20], "connect_count": len(connects), "persistence_writes": persistence[:20],
+            "process_tree": processes[:20], "process_count": len(processes)}
+
+
+def touched_canaries(opened: set[str], trace: str, stdout: str, stderr: str) -> list[str]:
+    """Canary files opened, and canary values that appear in output or in process arguments."""
+    touched = [item["name"] for item in CANARY["files"] if item["path"] in opened]
+    if CANARY["environment"] in stdout or CANARY["environment"] in stderr:
+        touched.append("environment")
+    for name, value in CANARY.get("environment_vars", {}).items():
+        if value in stdout or value in stderr or value in trace:
+            touched.append(f"env:{name}")
+    return touched
+
+
+# C6: extra limits, opt-in until TV3 has run them (W5-5); the default command is unchanged.
+HARDENING = ["--ulimit", "nofile=256:256", "--ulimit", "fsize=67108864:67108864",
+             "--tmpfs", "/tmp:rw,noexec,nosuid,size=16m,uid=10001,gid=10001"]
+
+
+def docker_command(root: Path, hardening: bool = False) -> list[str]:
+    environment = [f"CANARY_ENV={CANARY['environment']}"]
+    environment += [f"{name}={value}" for name, value in CANARY.get("environment_vars", {}).items()]
+    return [
+        "docker", "run", "--rm", "--network", "none", "--read-only",
+        "--cap-drop", "ALL", "--cap-add", "SYS_PTRACE",
+        "--security-opt", "no-new-privileges",
+        "--pids-limit", "64", "--memory", "256m", "--cpus", "1",
+        "--user", "10001:10001", "--tmpfs", "/work:rw,exec,nosuid,size=64m,uid=10001,gid=10001",
+        "--tmpfs", "/home/agent:rw,noexec,nosuid,size=1m,uid=10001,gid=10001",
+        "--mount", f"type=bind,source={root},target=/input,readonly",
+        *[part for item in environment for part in ("--env", item)],
+        *(HARDENING if hardening else []),
+        IMAGE, "/usr/local/bin/run_install.sh",
+    ]
+
+
 def _field(output: str, key: str) -> str:
     values = [part[len(key) + 1:] for part in output.splitlines() if part.startswith(key + "=")]
     if len(values) != 1:
@@ -123,22 +220,13 @@ def _decode(output: str, key: str) -> str:
     return base64.b64decode(value, validate=True).decode("utf-8", errors="replace")
 
 
-def run_sandbox(package: Path) -> dict:
+def run_sandbox(package: Path, hardening: bool = False) -> dict:
     try:
         root = package.resolve(strict=True)
         if not root.is_dir() or not (root / "package.json").is_file():
             raise ValueError("package directory required")
-        result = subprocess.run([
-            "docker", "run", "--rm", "--network", "none", "--read-only",
-            "--cap-drop", "ALL", "--cap-add", "SYS_PTRACE",
-            "--security-opt", "no-new-privileges",
-            "--pids-limit", "64", "--memory", "256m", "--cpus", "1",
-            "--user", "10001:10001", "--tmpfs", "/work:rw,exec,nosuid,size=64m,uid=10001,gid=10001",
-            "--tmpfs", "/home/agent:rw,noexec,nosuid,size=1m,uid=10001,gid=10001",
-            "--mount", f"type=bind,source={root},target=/input,readonly",
-            "--env", f"CANARY_ENV={CANARY['environment']}",
-            IMAGE, "/usr/local/bin/run_install.sh",
-        ], capture_output=True, text=True, timeout=120, check=False)
+        result = subprocess.run(docker_command(root, hardening), capture_output=True, text=True, timeout=120,
+                                check=False)
         if result.returncode:
             raise RuntimeError(f"Docker failed: {result.stderr[-300:]}")
         status = int(_field(result.stdout, "EXIT"))
@@ -150,9 +238,7 @@ def run_sandbox(package: Path) -> dict:
         stderr = _decode(result.stdout, "STDERR")
         trace_complete = trace_truncated == "0" and bool(trace.strip())
         opened = set(OPEN.findall(trace))
-        touched = [item["name"] for item in CANARY["files"] if item["path"] in opened]
-        if CANARY["environment"] in stdout or CANARY["environment"] in stderr:
-            touched.append("environment")
+        touched = touched_canaries(opened, trace, stdout, stderr)
         lines = trace.splitlines()
         outcome = classify_outcome(status, trace)
         if outcome != "ok":
@@ -173,6 +259,7 @@ def run_sandbox(package: Path) -> dict:
             "network_attempts": [line[:300] for line in lines if "connect(" in line][:20],
             "canary_touched": touched,
             "by_actor": attribute_events(trace),
+            "behavior": behavior_events(trace),
         }, "error": error}
     except (OSError, ValueError, KeyError, RuntimeError, binascii.Error,
             subprocess.SubprocessError) as error:

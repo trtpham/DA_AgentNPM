@@ -339,3 +339,20 @@ Kế hoạch chi tiết và các quyết định: `docs/tien-do/KE_HOACH_TOOLS_A
 - **Không đổi:** schema `Verdict` §6.5, ngưỡng 0.8, dry-run. Không có công cụ tra theo tên.
 - **Nghiệm thu:** theo §0.3 của kế hoạch; hạng mục cứng là 0 gói độc được approve ở cả 3 model.
 - Owner: Claude. Reviewer: TV2. Rollback: revert commit của từng bước.
+
+## Gate B0 — Sandbox: phần không chạy mã (2026-11-07, bổ sung)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-07 Asia/Saigon
+EVIDENCE_REFERENCES: chat với Claude 07/11: "Enhance more tools, agent's ability, sandbox for project. Make sure no break the core, just enhance."; trả lời câu hỏi phạm vi sandbox: "Chỉ phần không chạy mã".
+
+Mở lại một phần Phần C của `docs/tien-do/KE_HOACH_TOOLS_AGENT_SANDBOX.md`:
+
+- **C2:** thêm canary giả (5 file, 3 biến môi trường) và nhận diện chúng; tmpfs `/home/agent` giữ 1 MB.
+- **C4:** phân tích strace theo hành vi (`connects`, `persistence_writes`, `process_tree`), test trên log viết tay.
+- **C6:** cờ gia cố (`--ulimit`, tmpfs `/tmp noexec`) chỉ bật khi gọi `hardening=True`; mặc định giữ nguyên lệnh `docker run` TV3 đang nghiệm thu.
+- **C7:** nối sandbox vào agent, **mặc định TẮT**; chỉ chạy với gói trong `tests/fixtures/`; R1 (canary) và `R7_sandbox` (ghi file khởi động) chỉ chặt hơn; công cụ `sandbox_report` chỉ đọc kết quả có sẵn.
+- **Không làm:** C1 (`--memory-swap`), C3 (sinkhole mạng), C5 (chạy 2 lần), không chạy corpus mô phỏng trong container, không đổi `--network none`/`--memory`.
+- **Kiểm chứng:** pytest với `subprocess.run` giả và log strace viết tay; không chạy Docker trong đợt này. TV3 build lại image và chạy `RUN_SANDBOX_TESTS=1` khi nghiệm thu.
+- Owner: Claude. Reviewer: TV3 (sandbox), TV2 (agent). Rollback: revert commit `sandbox: …`.

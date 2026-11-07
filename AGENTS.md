@@ -89,6 +89,24 @@ Chuỗi `tên@phiên_bản`, ví dụ `plain-crypto-js@4.2.1`.
 
 `run_sandbox` được làm riêng (task TV3-3) và **chưa nối vào agent** ở giai đoạn này.
 
+**Bổ sung Gate B0 07/11/2026** (`tools/explore.py`, chỉ đọc, bật theo model bằng trường `tools: [...]` trong `experiments/configs/*.yaml`; config không có trường này giữ đúng 4 công cụ `read_manifest`, `read_file`, `deobfuscate`, `extract_indicators`):
+
+| Công cụ | Đầu vào | `data` trả về | Trần |
+| --- | --- | --- | --- |
+| `list_files` | — | `files: [{path, bytes, lines, kind, in_install_path}]`, `skipped` | 300 file |
+| `search_code` | `text` (literal 2–100), `case_sensitive` | `hits: [{file, line, snippet, counts_as_seen}]` | 50 hit |
+| `trace_requires` | `file` (tùy chọn) | `edges`, `builtins`, `external`, `unresolved`, `dynamic` | độ sâu 4, 100 file |
+| `trace_flow` | `file` | `sources`, `sinks`, `flows: [{source_line, source_kind, sink_line, sink_kind, via, confidence}]` | 30 flow |
+| `inspect_scripts` | — | `order`, `hooks: [{commands: [{argv, runs_file, external, pipes_to_shell, inline_code}]}]`, `chains` | — |
+| `decode_literal` | `file`, `line` | `literals: [{column, encoding, decoded_kind, decoded_preview}]` (không bao giờ chạy) | 10 literal |
+| `resolve_value` | `file`, `name` | `assignments`, `values: [{line, value, method}]` | 10 bước |
+| `list_endpoints` | — | `endpoints: [{file, line, host, port, is_ip, ip_class, built}]` | 50 |
+| `inspect_binary` | `file` | `format`, `bytes`, `sha256`, `strings` (không load) | đọc 8 MB |
+| `file_stats` | `file` | số đo + `minified_hint`, `obfuscated_hint`, `reasons` | — |
+| `sandbox_report` | — | kết quả sandbox đã ghi (chỉ khi `sandbox: true`, chỉ với `tests/fixtures/`) | 20 mục |
+
+Mọi kết quả bọc `untrusted`, tên gói bị thay bằng bí danh. Chỉ hit `counts_as_seen=true` được tính là dòng đã xem. Luật mới chỉ chặt hơn: `R7_flow` (benign trên luồng secret/env → mạng hoặc có chữ hướng tới người phân tích) và `R7_sandbox` (sandbox thấy gói ghi file khởi động) đều đổi approve thành review.
+
 Chưa làm (để sau): `osv_lookup`, `typosquat_check`, `diff_versions`, `deobfuscate`, nối sandbox vào agent, SQLite, phòng thủ prompt injection, hiệu chỉnh ngưỡng.
 
 ### 6.5. Định dạng kết luận (Pydantic, `agent/schema.py`)

@@ -56,14 +56,20 @@ EXPLORE_TOOLS = {
 }
 ALL_TOOLS = DEFAULT_TOOLS + tuple(EXPLORE_TOOLS)
 _JSON_TYPES = {"string": str, "integer": int, "boolean": bool}
+# C7: only present when the run was started with sandbox=True; it reads the result already recorded.
+SANDBOX_TOOL = {"type": "function", "function": {
+    "name": "sandbox_report",
+    "description": "Read what the offline sandbox install recorded: outcome, canaries touched, connects, start-up file writes, processes",
+    "parameters": {"type": "object", "properties": {}}}}
+FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures"
 
 
 def tool_schemas(names: tuple[str, ...] = DEFAULT_TOOLS) -> list[dict]:
     """Ollama tool list for the enabled tool names, in the order given."""
-    unknown = [name for name in names if name not in ALL_TOOLS]
+    unknown = [name for name in names if name not in ALL_TOOLS + ("sandbox_report",)]
     if unknown or not names:
         raise ValueError(f"unknown or empty tool list: {unknown}")
-    old = {item["function"]["name"]: item for item in TOOLS}
+    old = {item["function"]["name"]: item for item in TOOLS + [SANDBOX_TOOL]}
     schemas = []
     for name in names:
         if name in old:
@@ -300,6 +306,7 @@ class _Session:
         # Optional per-model features (configs); the defaults reproduce the original agent exactly.
         self.self_check, self.guided_reading, self.repeat_limit = False, False, 3
         self.self_checked = False
+        self.sandbox_result, self.canary_touched, self.sandbox_risks = None, False, []
         self.legacy_trace = trace if isinstance(trace, list) else None
         self.writer = trace if isinstance(trace, TraceWriter) else NullTraceWriter()
         self.thresholds = {"deny": deny_threshold, "approve": approve_threshold}
@@ -342,7 +349,8 @@ class _Session:
         """Record a failed run: optional error event, the R2 fallback decision and the end of the run."""
         if kind:
             self.writer.emit("error", kind=kind, message=message)
-        self.publish_decision(decide(None, [], **(flags or {"run_error": True})), [])
+        self.publish_decision(decide(None, [], canary_touched=self.canary_touched,
+                                     **(flags or {"run_error": True})), [])
         self.end(steps)
 
     # --- preparation -----------------------------------------------------------------------------
@@ -474,7 +482,10 @@ class _Session:
             function = call.get("function", {})
             name, arguments = function.get("name"), function.get("arguments", {})
             started = self.start_tool(name, arguments)
-            result = _tool(self.package, name, arguments, self.tools)
+            if name == "sandbox_report" and self.sandbox_result is not None and arguments == {}:
+                result = self.sandbox_result
+            else:
+                result = _tool(self.package, name, arguments, self.tools)
             if (name == "read_file" and result["ok"] and result["data"].get("truncated")
                     and str(arguments.get("file", "")).endswith((".js", ".cjs", ".mjs"))):
                 # W5-7: A-LLM re-read a cut minified line three times instead of using the pretty view.
@@ -482,7 +493,7 @@ class _Session:
                 result["data"]["hint"] = (f"Long lines were cut. Call deobfuscate with file {file}, "
                                           f"then read_file {file}#pretty and cite {file}#pretty:line.")
             content = json.dumps(self.blind(name, arguments, result), ensure_ascii=False)
-            if name in EXPLORE_TOOLS:
+            if name in EXPLORE_TOOLS or name == "sandbox_report":
                 content = blind_text(content, self.names)  # L1: file paths and snippets may name the package
             if len(content) > 16000:
                 result = {"ok": False, "data": None, "error": "tool result too large; request fewer lines"}
@@ -685,6 +696,31 @@ class _Session:
         check["mismatch"] = problem
         self.writer.emit("error", kind="evidence_mismatch", message=problem[:300])
 
+    def run_sandbox_once(self, runner) -> None:
+        """C7: one offline sandbox install before the model starts; its findings feed R1 and R7_sandbox."""
+        started = self.start_tool("run_sandbox", {})
+        try:
+            result = runner(Path(self.package))
+        except Exception as error:  # a runner must not stop the analysis; the failure blocks approval
+            result = {"ok": False, "data": None, "error": f"sandbox runner failed: {str(error)[:200]}"}
+        data = result.get("data") or {}
+        behavior = data.get("behavior") or {}
+        touched = list(data.get("canary_touched") or [])
+        writes = [item for item in behavior.get("persistence_writes", []) if item.get("actor") == "package"]
+        self.canary_touched = bool(touched)
+        self.sandbox_risks = [f"package wrote start-up file {item['path']} ({item['result']})" for item in writes][:5]
+        if not result.get("ok"):
+            self.incomplete.append(f"sandbox run incomplete: {result.get('error') or data.get('outcome')}")
+        package_files = (data.get("by_actor") or {}).get("package", {}).get("files_outside_package", [])
+        report = {"untrusted": True, "outcome": data.get("outcome"), "ok": bool(result.get("ok")),
+                  "canary_touched": touched, "connects": behavior.get("connects", [])[:20],
+                  "persistence_writes": behavior.get("persistence_writes", [])[:20],
+                  "process_tree": behavior.get("process_tree", [])[:20],
+                  "package_files_outside": package_files[:30]}
+        self.sandbox_result = {"ok": True, "data": report, "error": None}
+        self.end_tool("run_sandbox", self.sandbox_result, f"outcome {report['outcome']}, canaries {touched or 'none'}",
+                      json.dumps(report, ensure_ascii=False)[:2000], started)
+
     def flow_risks(self, verdict: Verdict, checks: list[dict]) -> list[str]:
         """B7 reasons: (a) the verdict's own verified behaviors read a secret/env and reach the network,
         (b) a static secret/env -> network flow on the install path, (c) text addressing the analyst."""
@@ -774,7 +810,8 @@ class _Session:
         decision = decide(verdict, checks, deny_threshold=self.thresholds["deny"], osv_malicious=self.osv_malicious,
                           approve_threshold=self.thresholds["approve"], auto_approve_allowed=not self.incomplete,
                           review_reasons=self.incomplete, unexplained_risks=unexplained,
-                          flow_risks=self.flow_risks(verdict, checks))
+                          flow_risks=self.flow_risks(verdict, checks), canary_touched=self.canary_touched,
+                          sandbox_risks=self.sandbox_risks)
         self.publish_decision(decision, checks)
         self.end(step)
         self.legacy(step=step, kind="verdict", status="ok", detail=f"Nhãn {verdict.label} · hành động {verdict.action}",
@@ -823,12 +860,21 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
             deny_threshold: float = 0.8, approve_threshold: float = 0.8,
             context: dict | None = None, options: dict | None = None,
             tools: list[str] | tuple[str, ...] | None = None, self_check: bool = False,
-            guided_reading: bool = False, repeat_limit: int = 3) -> tuple[Verdict, int]:
+            guided_reading: bool = False, repeat_limit: int = 3, sandbox: bool = False,
+            sandbox_runner=None) -> tuple[Verdict, int]:
     if not 1 <= max_steps <= 15:
         raise ValueError("max_steps must be between 1 and 15")
+    if sandbox and not Path(package).resolve().is_relative_to(FIXTURES):
+        # C7 is off by default and limited to the project's own harmless fixtures until TV3 accepts
+        # the sandbox (W5-5) and a separate Gate allows real packages.
+        raise ValueError("sandbox=True runs only on packages under tests/fixtures")
     if type(repeat_limit) is not int or not 1 <= repeat_limit <= 9:
         raise ValueError("repeat_limit must be between 1 and 9")
     tools = tuple(tools) if tools else DEFAULT_TOOLS
+    if "sandbox_report" in tools and not sandbox:
+        raise ValueError("sandbox_report needs sandbox=True")
+    if sandbox and "sandbox_report" not in tools:
+        tools += ("sandbox_report",)
     schemas = tool_schemas(tools)  # also rejects unknown names
     if chat is _chat and (options or tools != DEFAULT_TOOLS):
         chat = functools.partial(_chat, overrides=options, tools=schemas)
@@ -836,6 +882,10 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
     session.self_check, session.guided_reading, session.repeat_limit = bool(self_check), bool(guided_reading), repeat_limit
     session.writer.emit("run_start", model=model, config_name=None, max_steps=max_steps)
     session.prepare()
+    if sandbox:
+        if sandbox_runner is None:
+            from sandbox.run import run_sandbox as sandbox_runner  # Docker is needed only when enabled
+        session.run_sandbox_once(sandbox_runner)
     for step in range(1, max_steps + 1):
         message = session.ask(step)
         truncated_output = bool(message.pop("truncated", False))

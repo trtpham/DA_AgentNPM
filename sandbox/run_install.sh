@@ -6,6 +6,11 @@ mkdir -p "$HOME/.ssh" "$HOME/.aws"
 cp /opt/canary/.npmrc "$HOME/.npmrc"
 cp /opt/canary/.ssh/id_rsa "$HOME/.ssh/id_rsa"
 cp /opt/canary/.aws/credentials "$HOME/.aws/credentials"
+# C2 (2026-11-07): more fake canaries; an image built before them simply has fewer files.
+mkdir -p "$HOME/.docker" "$HOME/.kube" "$HOME/.config/gh" "$HOME/.config/solana"
+for item in .git-credentials .docker/config.json .kube/config .config/gh/hosts.yml .config/solana/id.json; do
+  cp "/opt/canary/$item" "$HOME/$item" 2>/dev/null || true
+done
 cd /work || exit 97
 
 timeout 60 strace -f -qq -e trace=file,network,process -o /work/strace.log \

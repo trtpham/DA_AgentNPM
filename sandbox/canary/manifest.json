@@ -2,7 +2,17 @@
   "files": [
     {"name": "npmrc", "path": "/home/agent/.npmrc"},
     {"name": "ssh", "path": "/home/agent/.ssh/id_rsa"},
-    {"name": "aws", "path": "/home/agent/.aws/credentials"}
+    {"name": "aws", "path": "/home/agent/.aws/credentials"},
+    {"name": "git_credentials", "path": "/home/agent/.git-credentials"},
+    {"name": "docker", "path": "/home/agent/.docker/config.json"},
+    {"name": "kube", "path": "/home/agent/.kube/config"},
+    {"name": "gh", "path": "/home/agent/.config/gh/hosts.yml"},
+    {"name": "solana", "path": "/home/agent/.config/solana/id.json"}
   ],
-  "environment": "CANARY_ENV_FAKE_WEEK3"
+  "environment": "CANARY_ENV_FAKE_WEEK3",
+  "environment_vars": {
+    "NPM_TOKEN": "CANARY_NPMTOKEN_FAKE_W6_5e1b7a24",
+    "GITHUB_TOKEN": "CANARY_GHTOKEN_FAKE_W6_c38f0d91",
+    "AWS_SECRET_ACCESS_KEY": "CANARY_AWSSECRET_FAKE_W6_86a2e4f7"
+  }
 }
