@@ -312,3 +312,30 @@ EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 05/11: thêm dữ
 - **GitHub:** push `main` lên `origin`. Không đưa lên: file LMS `.docx/.pdf`, `.claude/`, `reports/`, `data/samples/`.
 - **Điều kiện xong:** toàn bộ pytest và test Node PASS; chạy agent trên bộ mô phỏng với 3 model.
 - Owner: Claude. Reviewer: TV2. Rollback: revert commit.
+
+## Gate B0 — Công cụ phân tích và năng lực agent (2026-11-07)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-07 Asia/Saigon
+EVIDENCE_REFERENCES: chat với Claude:
+- 05/11: "tất cả những tools cần thiết để việc phân tích tường minh, chi tiết, sâu hơn", R7_flow "Có, làm cùng đợt", "add more tools to plan", "enhance ability of agents and sandbox more", "enhance the plan more detailed";
+- 07/11: "Do 5 question by your own best choices", sau đó thu hẹp phạm vi còn A và B ("ok do it").
+
+Kế hoạch chi tiết và các quyết định: `docs/tien-do/KE_HOACH_TOOLS_AGENT_SANDBOX.md` (§6).
+
+- **A — 10 công cụ chỉ đọc** (`tools/explore.py`), bọc `untrusted`, không chạy mã gói:
+  - tập công cụ theo model (`tools:` trong config);
+  - AGENTS §6.4 được bổ sung.
+- **B — năng lực agent:**
+  - B1: kiểm tra mâu thuẫn;
+  - B2: bảng luồng, đo trước rồi quyết;
+  - B3: đọc có dẫn hướng;
+  - B4: chỉ báo `analyst_directive`;
+  - B5: bước và sửa lỗi theo model;
+  - B6: đo calibration, **không đổi ngưỡng**;
+  - B7: luật R7_flow, chỉ chặt hơn (approve → review).
+- **C — sandbox: KHÔNG làm đợt này** (PO 07/11: chỉ làm A và B). Không chạy corpus mô phỏng trong container; sandbox, `--network none` và các cờ giữ nguyên như bản TV3 đang nghiệm thu.
+- **Không đổi:** schema `Verdict` §6.5, ngưỡng 0.8, dry-run. Không có công cụ tra theo tên.
+- **Nghiệm thu:** theo §0.3 của kế hoạch; hạng mục cứng là 0 gói độc được approve ở cả 3 model.
+- Owner: Claude. Reviewer: TV2. Rollback: revert commit của từng bước.
