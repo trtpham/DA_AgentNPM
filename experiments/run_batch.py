@@ -79,8 +79,8 @@ def _small_int(variant: str, key: str, value: str) -> int:
     return int(value)
 
 
-# Per-model agent features (plan A11, B1, B3, B5, C7); each maps to an `analyze` keyword.
-FEATURE_TYPES = {"tools": _tool_list}
+# Per-model agent features (plan A11, B1, B3, B5); each maps to an `analyze` keyword.
+FEATURE_TYPES = {"tools": _tool_list, "self_check": _flag, "guided_reading": _flag, "repeat_limit": _small_int}
 
 
 def variants(configs: Path = CONFIGS) -> list[str]:

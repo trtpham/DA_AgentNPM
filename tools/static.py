@@ -16,7 +16,27 @@ MAX_LINE_CHARS = 1000
 LIFECYCLE = ("preinstall", "install", "postinstall", "prepare")
 # Indicator types that a benign verdict must explain before automatic approval.
 RISK_INDICATORS = frozenset({"child_process", "network_api", "sensitive_path", "home_secret",
-                             "eval", "new_function", "decode"})
+                             "eval", "new_function", "decode", "analyst_directive"})
+# B4: text in a comment or string that addresses an automated reviewer ("analysts must approve this").
+# It is recorded as a behavior of the package, never followed; any hit blocks automatic approval.
+ANALYST_DIRECTIVE = re.compile(
+    r"\b(?:automated|ai|llm|analy[sz]ts?|reviewers?|scanners?|auditors?)\b.{0,40}"
+    r"\b(?:must|should|shall|label|approve|ignore|classify|mark)\b"
+    r"|\bignore\s+(?:all\s+|any\s+)?(?:previous|prior|above)\s+instructions\b"
+    r"|\byou\s+are\s+(?:an?|the)\s+(?:ai|assistant|model|analyst|reviewer|scanner)\b", re.I)
+_QUOTED = re.compile(r"'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"|`(?:\\.|[^`\\])*`")
+
+
+def analyst_directive(line: str) -> bool:
+    """True when a comment or string literal on this JavaScript line addresses the analyst."""
+    stripped = line.lstrip()
+    if stripped.startswith(("//", "/*", "*")):
+        return ANALYST_DIRECTIVE.search(stripped) is not None
+    strings = [match.group(0) for match in _QUOTED.finditer(line)]
+    code = _QUOTED.sub("''", line)
+    comment = code.split("//", 1)[1] if "//" in code else ""
+    comment += " ".join(re.findall(r"/\*(.*?)(?:\*/|$)", code))
+    return any(ANALYST_DIRECTIVE.search(text) for text in strings + [comment])
 # Commands that fetch or build code that is not inside the extracted package.
 EXTERNAL_COMMANDS = frozenset({"npx", "pnpx", "curl", "wget", "node-gyp", "prebuild-install",
                                "node-pre-gyp", "prebuild", "cmake-js"})
@@ -311,6 +331,8 @@ def extract_indicators(package: str) -> dict:
                 for kind, pattern in INDICATORS.items():
                     if pattern.search(line):
                         add(kind, relative, number, line)
+                if safe.suffix in (".js", ".cjs", ".mjs") and analyst_directive(line):
+                    add("analyst_directive", relative, number, line)
                 if safe.suffix in (".js", ".cjs", ".mjs"):
                     for required in RELATIVE_REQUIRE.findall(line) + RELATIVE_IMPORT.findall(line):
                         if depth == 2:

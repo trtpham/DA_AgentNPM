@@ -12,7 +12,7 @@ def decide(verdict: Verdict | None, evidence_checks: list[dict], *, canary_touch
            run_error: bool = False, step_limit: bool = False, osv_malicious: bool = False,
            deny_threshold: float = 0.8, approve_threshold: float = 0.8,
            auto_approve_allowed: bool = False, unexplained_risks: list[str] = (),
-           review_reasons: list[str] = ()) -> dict:
+           review_reasons: list[str] = (), flow_risks: list[str] = ()) -> dict:
     if not 0 <= deny_threshold <= 1 or not 0 <= approve_threshold <= 1:
         raise ValueError("decision thresholds must be between 0 and 1")
 
@@ -40,6 +40,10 @@ def decide(verdict: Verdict | None, evidence_checks: list[dict], *, canary_touch
         if not auto_approve_allowed:
             detail = "; ".join(list(review_reasons)[:5]) or "install path not fully reviewed"
             return result("benign", "review", "R7_review", f"Human review required: {detail}")
+        if flow_risks:
+            # B7: only stricter (approve -> review); deny, R1-R6 and the thresholds are untouched.
+            return result("benign", "review", "R7_flow", "Benign verdict over a sensitive-source → network flow: "
+                          + "; ".join(list(flow_risks)[:5]))
         if unexplained_risks:
             return result("benign", "review", "R7_risk", "Benign verdict does not cite risky install lines: "
                           + ", ".join(list(unexplained_risks)[:5]))

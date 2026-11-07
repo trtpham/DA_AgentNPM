@@ -15,6 +15,8 @@ EVENT_FIELDS = {
     "decision": ("threshold", "evidence_checks", "final_label", "final_action", "dry_run", "rule", "reasons"),
     "error": ("kind", "message"),
     "limit": ("reason",),
+    "self_check": ("question", "reasons"),  # B1: one question before a benign verdict over a risky flow
+    "hint": ("text",),  # B3/B5: guided reading and repair hints sent to the model
     "run_end": ("elapsed_s", "steps", "tokens_per_s", "prompt_tokens", "output_tokens"),
 }
 
