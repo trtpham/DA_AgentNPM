@@ -1,0 +1,13 @@
+# A-SLM with a smaller tool set: too many tools made small models pick wrong ones (plan risk table).
+name: A-SLM-X
+model: qwen3.5:4b
+max_steps: 15
+deny_threshold: 0.8
+approve_threshold: 0.8
+tools: [read_manifest, read_file, deobfuscate, extract_indicators, inspect_scripts, trace_requires, trace_flow, search_code, decode_literal]
+self_check: true
+guided_reading: true
+repeat_limit: 3
+options:
+  num_ctx: 16384
+  temperature: 0

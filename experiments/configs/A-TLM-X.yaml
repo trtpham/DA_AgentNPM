@@ -1,0 +1,13 @@
+# A-TLM: two map tools only, and a lower repeat limit (it repeated one wrong verdict until the step limit, E6).
+name: A-TLM-X
+model: qwen3.5:0.8b
+max_steps: 15
+deny_threshold: 0.8
+approve_threshold: 0.8
+tools: [read_manifest, read_file, deobfuscate, extract_indicators, inspect_scripts, trace_flow]
+self_check: true
+guided_reading: true
+repeat_limit: 2
+options:
+  num_ctx: 16384
+  temperature: 0
