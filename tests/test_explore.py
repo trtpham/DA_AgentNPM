@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from tools.explore import (MAX_HITS, MAX_LIST_FILES, file_stats, inspect_scripts, list_files, search_code,
+from tools.explore import (MAX_HITS, MAX_LIST_FILES, decode_literal, file_stats, inspect_binary, inspect_scripts,
+                           list_endpoints, list_files, resolve_value, search_code, trace_flow,
                            trace_requires)
 
 CORPUS = Path(__file__).parent / "fixtures" / "corpus"
@@ -223,3 +224,138 @@ def test_file_stats_rejects_escape_and_empty_file(tmp_path):
     assert file_stats(package, "../x")["ok"] is False
     empty = file_stats(package, "empty.js")["data"]
     assert empty["lines"] == 0 and empty["entropy"] == 0.0 and not empty["obfuscated_hint"]
+
+
+# A4 trace_flow
+
+def _flows(folder: str, file: str) -> list[tuple]:
+    data = trace_flow(str(CORPUS / folder), file)["data"]
+    return [(flow["source_line"], flow["source_kind"], flow["sink_line"], flow["sink_kind"], flow["via"])
+            for flow in data["flows"]]
+
+
+def test_trace_flow_secret_to_network_via_variable():
+    assert _flows("twin-evil", "setup.js") == [(8, "secret_file", 9, "network", ["token"])]
+    assert _flows("env-exfil", "configure.js") == [(4, "env", 9, "network", ["loot"])]
+
+
+def test_trace_flow_benign_shapes_have_no_secret_to_network_flow():
+    assert _flows("env-config", "configure.js") == [(6, "env", 10, "write_package", ["options"])]
+    prebuilt = trace_flow(str(CORPUS / "binary-prebuilt"), "install.js")["data"]
+    assert {source["kind"] for source in prebuilt["sources"]} == {"network_input"}
+    assert {(flow["source_kind"], flow["sink_kind"]) for flow in prebuilt["flows"]} == {("network_input", "write_package")}
+    assert _flows("twin-safe", "setup.js") == []
+
+
+def test_trace_flow_home_path_write_is_outside_package():
+    assert _flows("persist-bashrc", "warm.js") == [(6, "home_path", 7, "write_outside", ["rc"])]
+
+
+def test_trace_flow_rejects_non_javascript():
+    result = trace_flow(str(CORPUS / "twin-evil"), "package.json")
+    assert result["ok"] is False
+
+
+# A6 decode_literal
+
+def test_decode_literal_base64_and_escapes():
+    stage = decode_literal(str(CORPUS / "base64-eval"), "unpack.js", 2)["data"]
+    assert stage["untrusted"] and stage["counts_as_seen"] is False
+    assert stage["literals"][0]["encoding"] == "base64" and stage["literals"][0]["decoded_kind"] == "js"
+    assert "require('https')" in stage["literals"][0]["decoded_preview"]
+    escaped = decode_literal(str(CORPUS / "hex-obfuscated"), "i.js", 1)["data"]["literals"]
+    assert [item["decoded_preview"] for item in escaped] == ["child_process", "execSync"]
+
+
+def test_decode_literal_skips_bad_input_and_hides_identity(tmp_path):
+    package = _package(tmp_path, {}, {"a.js": "const a = 'not base64!!';\n"
+                                              "const b = String.fromCharCode(104, 105);\n"
+                                              "const c = 'abc%2Fdef';\n"})
+    assert decode_literal(package, "a.js", 1)["data"]["literals"] == []
+    assert decode_literal(package, "a.js", 2)["data"]["literals"][0]["decoded_preview"] == "hi"
+    assert decode_literal(package, "a.js", 3)["data"]["literals"][0]["decoded_preview"] == "abc/def"
+    assert decode_literal(package, "a.js", 9)["ok"] is False
+    assert decode_literal(package, "a.js", 0)["ok"] is False
+    assert "hidden" in decode_literal(package, "package.json", 2)["error"]
+
+
+# A7 resolve_value
+
+def test_resolve_value_array_of_escaped_strings():
+    data = resolve_value(str(CORPUS / "hex-obfuscated"), "i.js", "_0x3f1a")["data"]
+    assert data["values"][0]["method"] == "literal"
+    assert data["values"][0]["value"][:2] == ["child_process", "execSync"]
+
+
+def test_resolve_value_concat_index_template_and_limits(tmp_path):
+    package = _package(tmp_path, {}, {
+        "a.js": "const parts = ['ht', 'tp'];\nlet host = parts[0] + parts[1] + '://';\n"
+                "host += 'sim.invalid';\nconst url = `${host}/x`;\nconst bad = compute();\n",
+        "loop.js": "let a = 'x';\n" + "a = a + 'x';\n" * 12})
+    host = resolve_value(package, "a.js", "host")["data"]
+    assert [item["value"] for item in host["values"]] == ["http://", "http://sim.invalid"]
+    assert resolve_value(package, "a.js", "url")["data"]["values"][0] == {
+        "line": 4, "value": "http://sim.invalid/x", "method": "template"}
+    assert resolve_value(package, "a.js", "bad")["data"]["values"] == []
+    loop = resolve_value(package, "loop.js", "a")["data"]
+    assert len(loop["assignments"]) == 10 and loop["truncated"]
+    assert resolve_value(package, "a.js", "1bad")["ok"] is False
+    assert resolve_value(package, "a.js", "a-b")["ok"] is False
+
+
+# A8 list_endpoints
+
+def _endpoints(folder: str) -> list[tuple]:
+    return [(item["file"], item["line"], item["host"], item["port"], item["built"], item["ip_class"])
+            for item in list_endpoints(str(CORPUS / folder))["data"]["endpoints"]]
+
+
+def test_list_endpoints_ip_port_template_and_decoded():
+    assert _endpoints("reverse-shell") == [("scripts/build.js", 5, "203.0.113.40", 4444, "literal", "documentation")]
+    assert _endpoints("multi-file-exfil") == [("lib/util/send.js", 7, "*.sim-collector.invalid", None, "template", None)]
+    assert _endpoints("base64-eval") == [("unpack.js", 2, "update.sim-cdn.invalid", None, "decoded", None)]
+    assert _endpoints("inline-fetch-eval")[0][:3] == ("package.json", 7, "203.0.113.50")
+    assert _endpoints("twin-safe") == []
+
+
+def test_list_endpoints_counts_as_seen_only_for_literals():
+    data = list_endpoints(str(CORPUS / "base64-eval"))["data"]
+    assert data["untrusted"] and data["endpoints"][0]["counts_as_seen"] is False
+    literal = list_endpoints(str(CORPUS / "reverse-shell"))["data"]["endpoints"][0]
+    assert literal["counts_as_seen"] is True and literal["is_ip"] is True
+
+
+def test_list_endpoints_ip_classes(tmp_path):
+    package = _package(tmp_path, {"postinstall": "node a.js"}, {
+        "a.js": "const a = '127.0.0.1';\nconst b = '10.1.2.3';\nconst c = '8.8.8.8';\nconst d = '999.1.1.1';\n"})
+    classes = [(item["host"], item["ip_class"]) for item in list_endpoints(package)["data"]["endpoints"]]
+    assert classes == [("127.0.0.1", "loopback"), ("10.1.2.3", "private"), ("8.8.8.8", "public")]
+
+
+# A9 inspect_binary
+
+def _fake_elf(path: Path, padding: int = 100) -> None:
+    # 64-byte ELF-like header, padding and one URL: inert bytes, not a loadable program.
+    path.write_bytes(b"\x7fELF\x02\x01\x01" + b"\0" * 57 + b"\0" * padding + b"https://sim-cdn.invalid/addon\0"
+                     + b"plain words here\0")
+
+
+def test_inspect_binary_format_strings_and_hash(tmp_path):
+    package = _package(tmp_path, {}, {})
+    _fake_elf(tmp_path / "addon.node")
+    data = inspect_binary(package, "addon.node")["data"]
+    assert data["untrusted"] and data["format"] == "ELF" and not data["truncated"]
+    assert [item["text"] for item in data["strings"]] == ["https://sim-cdn.invalid/addon"]
+    assert len(data["sha256"]) == 64 and data["bytes"] == (tmp_path / "addon.node").stat().st_size
+    assert inspect_binary(package, "package.json")["data"]["format"] == "unknown"
+    assert inspect_binary(package, "../x")["ok"] is False
+
+
+def test_inspect_binary_large_file_is_truncated(tmp_path):
+    package = _package(tmp_path, {}, {})
+    with (tmp_path / "big.bin").open("wb") as stream:
+        stream.write(b"MZ")
+        stream.seek(9 * 1024 * 1024)
+        stream.write(b"\0")
+    data = inspect_binary(package, "big.bin")["data"]
+    assert data["format"] == "PE" and data["truncated"]
