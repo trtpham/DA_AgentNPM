@@ -49,9 +49,42 @@ def load_config(variant: str, configs: Path = CONFIGS) -> dict:
             if key not in OPTION_TYPES:
                 raise ValueError(f"{variant}: unknown option {key}")
             options[key] = OPTION_TYPES[key](value)
-    return {"name": values["name"], "model": values["model"], "max_steps": int(values["max_steps"]),
-            "deny_threshold": float(values["deny_threshold"]), "approve_threshold": float(values["approve_threshold"]),
-            "options": options}
+    config = {"name": values["name"], "model": values["model"], "max_steps": int(values["max_steps"]),
+              "deny_threshold": float(values["deny_threshold"]), "approve_threshold": float(values["approve_threshold"]),
+              "options": options}
+    # Optional keys are added only when present, so older configs (and run_meta of older runs) stay equal.
+    for key, parse in FEATURE_TYPES.items():
+        if key in values:
+            config[key] = parse(variant, key, values[key])
+    return config
+
+
+def _tool_list(variant: str, key: str, value: str) -> list[str]:
+    match = re.fullmatch(r"\[(.*)\]", value)
+    names = [name.strip().strip("'\"") for name in match.group(1).split(",")] if match else []
+    if not names or any(name not in agent_run.ALL_TOOLS for name in names) or len(set(names)) != len(names):
+        raise ValueError(f"{variant}: {key} must be a list of known tools, got {value}")
+    return names
+
+
+def _flag(variant: str, key: str, value: str) -> bool:
+    if value not in ("true", "false"):
+        raise ValueError(f"{variant}: {key} must be true or false")
+    return value == "true"
+
+
+def _small_int(variant: str, key: str, value: str) -> int:
+    if not re.fullmatch(r"[1-9]", value):
+        raise ValueError(f"{variant}: {key} must be an integer 1-9")
+    return int(value)
+
+
+# Per-model agent features (plan A11, B1, B3, B5, C7); each maps to an `analyze` keyword.
+FEATURE_TYPES = {"tools": _tool_list}
+
+
+def variants(configs: Path = CONFIGS) -> list[str]:
+    return sorted(path.stem for path in configs.glob("*.yaml"))
 
 
 def result_name(package: str) -> str:
@@ -131,7 +164,8 @@ def run_one(item: dict, run_dir: Path, config: dict, contexts: Path | None, anal
             verdict, steps = analyze(package_dir, config["model"], config["max_steps"], trace=writer,
                                      deny_threshold=config["deny_threshold"],
                                      approve_threshold=config["approve_threshold"], context=context,
-                                     options=config["options"])
+                                     options=config["options"],
+                                     **{key: config[key] for key in FEATURE_TYPES if key in config})
             result.update(status="ok", steps=steps, verdict=verdict.model_dump())
         except Exception as error:  # the trace already holds the R2 fallback decision
             result.update(status="error", error=str(error)[:300])
@@ -192,7 +226,7 @@ def run_batch(run_id: str, variant: str, inputs: list[dict], reports: Path = Pat
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the agent over packages; resumes an existing run id")
     parser.add_argument("run_id")
-    parser.add_argument("variant", choices=("A-LLM", "A-SLM", "A-TLM"))
+    parser.add_argument("variant", choices=variants())
     parser.add_argument("--labels", type=Path)
     parser.add_argument("--split", choices=("dev", "test"))
     parser.add_argument("--name", action="append", default=[], help="limit to these package names")

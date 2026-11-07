@@ -103,7 +103,7 @@ def run(run_id: str, variants: list[str], reports: Path = Path("reports"), corpu
 def main() -> None:
     parser = argparse.ArgumentParser(description="Score the agent on the simulated corpus")
     parser.add_argument("run_id")
-    parser.add_argument("variants", nargs="+", choices=("A-LLM", "A-SLM", "A-TLM"))
+    parser.add_argument("variants", nargs="+", choices=batch.variants())
     args = parser.parse_args()
     summary = run(args.run_id, args.variants)
     for variant, r in summary.items():
