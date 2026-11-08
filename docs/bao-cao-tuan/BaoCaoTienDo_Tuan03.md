@@ -29,25 +29,15 @@ Trong sáu phần nhóm dự kiến trình diễn, hiện có **năm phần đã
 | Thử trên một gói npm lành | A-LLM kiểm tra `esbuild@0.24.0` trong 6 bước, đề xuất cho phép sau khi đối chiếu 3 bằng chứng. Chương trình chỉ mô phỏng quyết định. |
 | Đo độ chính xác trên dữ liệu chuẩn | Chưa làm được vì bảng nhãn cần được kiểm tra chéo. |
 
-Các ảnh dưới đây là màn hình nhóm chụp khi chạy **mẫu mô phỏng vô hại trước buổi gặp**. Đây không phải ảnh chụp lúc báo cáo với thầy hoặc ảnh của lượt kiểm tra `esbuild`.
+**Hình 1.** Lượt A-LLM kiểm tra gói lành thật `esbuild@0.24.0` (lượt `esbuild-0.24.0-16k`, 01/11). Bên trái: agent đọc lại đúng từng dòng mình dẫn ra (`install.js:234`, `87–93`, `238`) trước khi được kết luận. Bên phải: kết luận "Lành tính · Cho phép" theo luật R7, kèm 3 bằng chứng và lý do. Ảnh chụp trình xem trace, 08/11/2026.
 
-**Hình 1.** Agent mở và đọc các dòng mã của mẫu thử.
+![Lượt esbuild 6 bước với 3 bằng chứng file:dòng](../hinh-anh/tuan-03-esbuild-6-buoc-3-bang-chung.jpg)
 
-![Agent đọc từng dòng mã của mẫu thử](../hinh-anh/tuan-03-demo-ollama-doc-ma.jpg)
+**Hình 2.** Môi trường cách ly Docker chạy gói thử đọc dữ liệu mồi (canary). Container tắt mạng nên mọi lần gọi ra ngoài đều bị `ENETUNREACH`; sandbox ghi nhận gói đã chạm khóa SSH giả và biến môi trường giả (`canary_touched`). Đầu ra thật của lệnh, chạy lại ngày 08/11, chỉ trích các trường chính.
 
-**Hình 2.** Agent đối chiếu những dòng mã đã đọc trước khi kết luận.
+![Sandbox ghi nhận gói thử chạm dữ liệu mồi](../hinh-anh/tuan-03-sandbox-canary.png)
 
-![Agent đối chiếu bằng chứng trước khi kết luận](../hinh-anh/tuan-03-demo-ollama-that.jpg)
-
-**Hình 3.** Giao diện cho thấy A-LLM đang thực hiện từng bước.
-
-![Giao diện cho thấy A-LLM đang chạy](../hinh-anh/tuan-03-demo-a-llm-live.jpg)
-
-**Hình 4.** Giao diện hiển thị kết luận của lượt chạy thử.
-
-![Giao diện hiển thị kết luận của lượt chạy thử](../hinh-anh/tuan-03-demo-a-llm-ket-luan.jpg)
-
-Với gói `esbuild@0.24.0`, nhóm đã lưu lại toàn bộ sáu bước trên máy demo. Khi trình bày, nhóm có thể mở lượt chạy này để thầy xem ba dòng mã trong `install.js` mà agent dùng làm bằng chứng và quyết định cuối. Nhóm chỉ tải gói để đọc, không chạy lệnh cài đặt của gói.
+Nhóm chỉ tải gói `esbuild` để đọc, không chạy lệnh cài đặt của gói trên máy thật. Khi trình bày, nhóm mở lại lượt chạy ở Hình 1 trong trình xem để thầy xem từng bước.
 
 ## 3. Nhóm sẽ trình bày demo như thế nào?
 
@@ -60,7 +50,12 @@ Nhóm chọn phát lại lượt chạy đã lưu để buổi demo liền mạc
 
 ## 4. Nhóm đã xử lý được gì, còn vướng gì?
 
-Ban đầu A-LLM bị lặp khi kiểm tra `esbuild` và không kết thúc trong giới hạn 15 bước. Nhóm đã điều chỉnh lượng thông tin mô hình có thể ghi nhớ trong một lượt, sau đó agent hoàn tất cùng gói này trong 6 bước. A-LLM và A-SLM cũng đã chạy trên mẫu mô phỏng hành vi đáng ngờ và đề xuất chặn. Bộ kiểm thử phần mềm khi đó đạt **72/72 bài** (ngày 04/11: 115/115, xem mục 7).
+Ban đầu A-LLM bị lặp khi kiểm tra `esbuild` và không kết thúc trong giới hạn 15 bước (Hình 3). Nhóm đã điều chỉnh lượng thông tin mô hình có thể ghi nhớ trong một lượt, sau đó agent hoàn tất cùng gói này trong 6 bước (Hình 1).
+
+**Hình 3.** Lượt `esbuild` trước khi sửa (`esbuild-0.24.0-live`, 01/11): 11 lần câu trả lời bị cắt giữa chừng nên không đọc được JSON, hết 15 bước sau 419 giây. Agent không đoán bừa mà chuyển người kiểm tra (luật R2). Ảnh chụp trình xem trace, 08/11/2026.
+
+![Lượt esbuild bị lặp, hết 15 bước](../hinh-anh/tuan-03-esbuild-lap-15-buoc.png)
+ A-LLM và A-SLM cũng đã chạy trên mẫu mô phỏng hành vi đáng ngờ và đề xuất chặn. Bộ kiểm thử phần mềm khi đó đạt **72/72 bài** (ngày 04/11: 115/115, xem mục 7).
 
 Nhóm vẫn thấy A-LLM đưa ra **ba kết quả sai định dạng trước kết quả hợp lệ cuối cùng** trong lượt `esbuild`. Do đó nhóm chỉ báo cáo rằng agent đã chạy được, chưa khẳng định nó ổn định hay dự đoán chính xác.
 

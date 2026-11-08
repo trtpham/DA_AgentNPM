@@ -53,15 +53,19 @@ Nhóm demo được **5/6 phần dự kiến (≈ 83%)**. Phần còn thiếu l�
 | A-SLM | 13/13 → 13/13 | 17,2 → 12,0 (**−30%**) | 12/13 |
 | A-LLM | 13/13 → 13/13 | 50,7 → 82,2 (**chậm hơn**, xử lý ở tuần 5) | 13/13 |
 
-**Hình 1.** Trình xem trace: lô 13 gói dev của A-LLM (`i1b-dev-a-llm-20261103`), mỗi ô là một gói với kết luận. Ảnh chụp màn hình thật, 08/11/2026.
+**Hình 1.** Tra cứu bối cảnh trước khi chạy agent. Gói độc đã biết `exnesss@0.0.1` có mã OSV `MAL-2026-11518`. Gói lành `@swc/core@1.7.36` không có cảnh báo, có phiên bản trước và không thêm hook mới. Đầu ra thật của lệnh, chạy lại ngày 08/11; phần registry của swc được rút gọn.
 
-![Lô 13 gói dev trong trình xem trace](../hinh-anh/tuan-04-viewer-lo-dev-13-goi.jpg)
+![OSV và npm Registry cho một gói độc và một gói lành](../hinh-anh/tuan-04-osv-registry.png)
 
-**Hình 2.** Gói `@swc/core@1.7.23`: model đề xuất "Lành tính · cho phép · tin cậy 95%", nhưng **luật R7_review chuyển người xem** và nêu đủ lý do (tải mã ngoài gói ở `postinstall.js:125`, thiếu 18 file `.node`, không đọc được `swc.wasi.cjs`). Ảnh chụp màn hình thật.
+**Hình 2.** Agent A-LLM và GuardDog trên cùng 10 bản `@swc/core` (lượt 03/11): cả hai không báo nhầm gói nào (`fpr: 0.0`). Agent chuyển cả 10 gói cho người xem (`review_rate: 1.0`, lý do ở Hình 3). GuardDog **không thấy gì** (`issues: 0`) ở gói thử đọc khóa SSH giả. Đầu ra thật của `experiments.metrics` tính ngày 08/11 trên kết quả đã lưu, rút gọn.
+
+![Agent và GuardDog trên 10 bản swc và gói thử canary](../hinh-anh/tuan-04-guarddog-va-agent.png)
+
+**Hình 3.** Gói `@swc/core@1.7.23`: model đề xuất "Lành tính · cho phép · tin cậy 95%", nhưng **luật R7_review chuyển người xem** và nêu đủ lý do (tải mã ngoài gói ở `postinstall.js:125`, thiếu 18 file `.node`, không đọc được `swc.wasi.cjs`). Ảnh chụp màn hình thật.
 
 ![R7_review với lý do cụ thể](../hinh-anh/tuan-04-viewer-r7-review-ly-do.jpg)
 
-**Hình 3.** Sơ đồ các phần đã tích hợp trong tuần 4 (hình tổng hợp, không phải ảnh chụp).
+**Hình 4.** Sơ đồ các phần đã tích hợp trong tuần 4 (hình tổng hợp, không phải ảnh chụp).
 
 ![Sơ đồ tích hợp tuần 4](../hinh-anh/tuan-04-tich-hop.svg)
 
