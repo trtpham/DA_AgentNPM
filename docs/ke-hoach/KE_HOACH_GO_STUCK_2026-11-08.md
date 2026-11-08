@@ -1,4 +1,6 @@
-# Kế hoạch gỡ các điểm tắc (08/11/2026, chờ PO duyệt)
+# Kế hoạch gỡ các điểm tắc (08/11/2026, đã duyệt)
+
+> **Trạng thái 08/11 (tối):** S2, S3, S4, S5 xong; S1 đã có đủ phiếu (15 lượt, 516 dòng, [phân công](../giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md)) và chờ người kiểm tra; S6 đã có công cụ và [quy trình](QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md), chờ nhãn v1.
 
 > Người lập: Claude · PO: Phạm Minh Triết · Thành viên: TV1 Lê Đặng Thiên Phước, TV3 Nguyễn Đình Thiên.
 > Phần mềm (agent, công cụ, sandbox, công cụ dữ liệu) đã chạy ổn định: pytest 268 passed, Docker 14/14, Node 19/19, agent thật 8/8. **Mọi điểm tắc còn lại nằm ở dữ liệu và việc của người.** Mốc cứng: đóng băng nhãn v1 ngày **19/11** để kịp thực nghiệm tuần 7–8.

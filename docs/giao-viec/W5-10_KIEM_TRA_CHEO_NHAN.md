@@ -20,6 +20,8 @@ Trạng thái hiện tại: cả 4 phiếu đều trống (`check` ra `pending` 
 
 ## Lượt mới (từ 08/11/2026)
 
+Toàn bộ 15 lượt, người và hạn: [PHAN_CONG_KIEM_TRA_CHEO.md](PHAN_CONG_KIEM_TRA_CHEO.md).
+
 | Lượt | Nội dung | Người | Số dòng |
 | --- | --- | --- | --- |
 | `round-5.csv` | 40 gói lành **nháp** từ phân loại tĩnh nhóm A (D-2); bằng chứng `evidence/round-5.md` | TV3 Nguyễn Đình Thiên | 40 |

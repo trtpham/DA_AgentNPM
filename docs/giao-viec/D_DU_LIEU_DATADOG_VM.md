@@ -1,5 +1,7 @@
 # Giao việc D-5 — Lọc mẫu độc từ bộ Datadog trong VM
 
+> **Không cần làm nữa (08/11/2026):** PO duyệt dùng container Docker thay VM (Gate B0 08/11). Claude đã chạy `data/scripts/datadog_container.py` trên 800 ZIP và sinh lượt 10–15. Phiếu này giữ lại cho trường hợp cần chạy trong VM.
+
 **Người nhận:** TV3 Nguyễn Đình Thiên (có VM Ubuntu) · **Người giao:** TV2 Phạm Minh Triết (PO) · **Ngày giao:** 08/11/2026 · **Hạn đề xuất:** 13/11/2026
 **Thời lượng:** khoảng 45 phút, phần lớn là máy chạy · **Kế hoạch:** [KE_HOACH_DU_LIEU_400.md](../ke-hoach/KE_HOACH_DU_LIEU_400.md), mục 3.2
 

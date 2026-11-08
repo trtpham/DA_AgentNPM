@@ -381,3 +381,18 @@ EVIDENCE_REFERENCES: chat với Claude 08/11, trả lời câu hỏi "Duyệt k�
 - **D-1 được làm:** `data/scripts/triage_candidates.py` tải đúng phiên bản và kiểm hash trong **container dùng một lần** (`--network` chỉ để tải registry, `--read-only`, không chạy script gói), chạy công cụ tĩnh, ghi bảng nhóm A/B/C. Kết quả là gợi ý sắp thứ tự, **không phải nhãn**; không ghi `labels.csv`.
 - **Không:** giải nén tarball trên Windows, chạy `npm install`/script gói, đưa tarball lên Git, dùng kết quả D-1 làm nhãn.
 - Owner: Claude. Reviewer: TV1. Rollback: revert commit `data: …`.
+
+## Gate B0 — Gỡ điểm tắc dữ liệu (2026-11-08)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-08 Asia/Saigon
+EVIDENCE_REFERENCES: chat với Claude 08/11: "Duyệt theo đề xuất. hoàn thiện toàn bộ công việc các tuần cho tôi, ko được tồn đọng việc nữa." cho [`KE_HOACH_GO_STUCK_2026-11-08.md`](../ke-hoach/KE_HOACH_GO_STUCK_2026-11-08.md).
+
+- **Q1 — Datadog trong container Docker dùng một lần** thay cho VM (thay quy định "chỉ trong VM" của luồng Datadog): container `--read-only`, tmpfs `noexec`, `cap-drop ALL`, `no-new-privileges`, user thường, mạng chỉ để tải từ GitHub của Datadog; ZIP chỉ nằm trong bộ nhớ container, không ghi ra ổ Windows; chỉ trả về metadata và đoạn trích văn bản. Không chạy mã gói.
+- **Q2 — Kiểm tra chéo:** Phước, Thiên và Triết đều là người kiểm tra; Claude/Codex vẫn không được kiểm.
+- **Q3:** `A-*` giữ làm mốc; `A-*-X` là cấu hình đo chính thức.
+- **Q4:** đóng băng nhãn v1 ngày 19/11 với số mẫu đã kiểm tra thật, sàn 300; không hạ chuẩn kiểm tra.
+- **Không đổi:** không chạy gói thật hay mẫu độc trong sandbox; agent vẫn đánh giá mù; `labels.csv` chỉ thay đổi sau kiểm tra chéo.
+- Owner: Claude. Reviewer: TV3. Rollback: revert các commit `data: …` ngày 08/11.
+- **Bổ sung cùng ngày (để không tồn đọng tuần 7–8, theo yêu cầu "hoàn thiện toàn bộ công việc các tuần"):** `experiments/run_isolated.py` chạy agent (và `--guarddog` chạy GuardDog) trên các dòng của nhãn v1 trong container dùng một lần với cùng các cờ cách ly; agent chỉ đọc tĩnh, gọi Ollama trên máy qua `host.docker.internal` (`agent.run.ollama_host` từ chối mọi địa chỉ khác). Đã chạy thử trên 2 gói lành thật. Chạy trên mẫu độc bắt đầu sau khi đóng băng nhãn v1 (19/11), theo [`QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md`](../ke-hoach/QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md).

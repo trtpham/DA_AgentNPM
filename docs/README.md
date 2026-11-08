@@ -5,7 +5,7 @@
 | [`ke-hoach/`](ke-hoach/) | Kế hoạch tổng thể 10 tuần và các kế hoạch đã duyệt |
 | [`nhat-ky-tuan/`](nhat-ky-tuan/) | Nhật ký kỹ thuật từng tuần: việc đã làm, lệnh kiểm chứng, PASS/FAIL |
 | [`bao-cao-tuan/`](bao-cao-tuan/) | Báo cáo tiến độ cho giảng viên, hướng dẫn demo |
-| [`giao-viec/`](giao-viec/) | Phiếu giao việc cho thành viên (nghiệm thu sandbox W5-5, kiểm tra chéo nhãn W5-10, lọc mẫu Datadog trong VM D-5) |
+| [`giao-viec/`](giao-viec/) | Phiếu giao việc cho thành viên (nghiệm thu sandbox W5-5, kiểm tra chéo nhãn W5-10, [phân công 15 lượt](giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md), lọc mẫu Datadog D-5) |
 | [`hinh-anh/`](hinh-anh/) | Ảnh kết quả thật dùng trong báo cáo |
 | [`brownfield/`](brownfield/) | `TRANSITION_APPROVAL.md`: mọi Gate B0 do PO duyệt |
 | [`ban-giao/`](ban-giao/) | Bàn giao mới nhất giữa các trợ lý code |
@@ -19,7 +19,8 @@ Mỗi tuần có **một** nhật ký (`nhat-ky-tuan/tuan-XX.md`) và **một** 
 - [Kế hoạch công cụ, năng lực agent và sandbox (07/11/2026)](ke-hoach/KE_HOACH_TOOLS_AGENT_SANDBOX.md)
 - [Kế hoạch hoàn thiện việc dở tuần 2–5 (08/11/2026)](ke-hoach/KE_HOACH_HOAN_THIEN_2026-11-08.md)
 - [Kế hoạch dữ liệu: từ 76 lên 400–500 mẫu (08/11/2026, đã duyệt)](ke-hoach/KE_HOACH_DU_LIEU_400.md)
-- [Kế hoạch gỡ các điểm tắc (08/11/2026, chờ duyệt)](ke-hoach/KE_HOACH_GO_STUCK_2026-11-08.md)
+- [Kế hoạch gỡ các điểm tắc (08/11/2026, đã duyệt)](ke-hoach/KE_HOACH_GO_STUCK_2026-11-08.md)
+- [Quy trình thực nghiệm tuần 7–10](ke-hoach/QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md)
 - [Kế hoạch văn phòng 3D](ke-hoach/KE_HOACH_VAN_PHONG_3D.md)
 - (Đã xong, lưu trữ) [Kế hoạch xử lý tồn đọng khi Claude tiếp nhận (03/11/2026)](../archive/ke-hoach-da-xong/KE_HOACH_XU_LY_TON_DONG_2026-11-03.md)
 - (Đã xong, lưu trữ) [Kế hoạch cải thiện chất lượng I1–I7 (03/11/2026)](../archive/ke-hoach-da-xong/KE_HOACH_CAI_THIEN_2026-11-03.md)
@@ -33,7 +34,7 @@ Mỗi tuần có **một** nhật ký (`nhat-ky-tuan/tuan-XX.md`) và **một** 
 | 03 | Công cụ đọc, agent và sandbox cơ bản | [tuan-03.md](nhat-ky-tuan/tuan-03.md) | [BaoCaoTienDo_Tuan03.md](bao-cao-tuan/BaoCaoTienDo_Tuan03.md) |
 | 04 | Tích hợp công cụ tĩnh và baseline | [tuan-04.md](nhat-ky-tuan/tuan-04.md) | [BaoCaoTienDo_Tuan04.md](bao-cao-tuan/BaoCaoTienDo_Tuan04.md) |
 | 05 | Hoàn thiện sandbox và công cụ mở rộng | [tuan-05.md](nhat-ky-tuan/tuan-05.md) | [BaoCaoTienDo_Tuan05.md](bao-cao-tuan/BaoCaoTienDo_Tuan05.md) |
-| 06 | Quyết định và chạy lô | [tuan-06.md](nhat-ky-tuan/tuan-06.md) | — |
+| 06 | Quyết định và chạy lô | [tuan-06.md](nhat-ky-tuan/tuan-06.md) | [BaoCaoTienDo_Tuan06.md](bao-cao-tuan/BaoCaoTienDo_Tuan06.md) |
 | 07 | Hiệu chỉnh trên tập phát triển | [tuan-07.md](nhat-ky-tuan/tuan-07.md) | — |
 | 08 | Đánh giá trên tập kiểm tra | [tuan-08.md](nhat-ky-tuan/tuan-08.md) | — |
 | 09 | Viết báo cáo và phân tích lỗi | [tuan-09.md](nhat-ky-tuan/tuan-09.md) | — |

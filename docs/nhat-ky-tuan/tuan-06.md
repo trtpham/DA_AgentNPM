@@ -56,3 +56,13 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 - **Vi phạm phạm vi (tự báo):** trong lượt C7 Claude đã đưa thêm 2 gói corpus mô phỏng (`persist-bashrc`, `twin-safe`) vào container. Gate 07/11 không cho chạy corpus trong container. Rủi ro thấp (mã nhóm viết, `--network none`, `--read-only`, `/home` là tmpfs bị xóa khi container dừng) nhưng vẫn là thực thi chưa được duyệt. Đã chặn trong code: `sandbox=True` chỉ nhận `tests/fixtures/packages` và `tests/fixtures/sandbox-limits`; có test. Kết quả 2 gói này (`reports/c7-1108-a-llm-xs`) không dùng làm số liệu.
 - **Hồi quy 13 gói dev** (`reg1108-a-*-x` so với `rote-reg-a-*`): A-LLM-X 13/13 giống mốc; A-TLM-X 13/13 giống mốc (cả 13 về review, 8 lần R2); A-SLM-X đổi 2 gói: `benign-install-fixture` review → **approve** (đúng), `canary-fixture` deny → **review** (an toàn nhưng mất một lần deny đúng). Không có approve nhầm hay deny nhầm mới.
 - **Còn chờ người thật:** W5-5 (TV3 ký nghiệm thu, chọn phương án swap), W5-10 và dữ liệu v1 (người kiểm tra nhãn).
+
+### Gỡ điểm tắc dữ liệu (08/11/2026, Gate B0 "Gỡ điểm tắc dữ liệu")
+
+- **S2 — Datadog trong container:** `data/scripts/datadog_container.py` liệt kê 25 267 ZIP ở commit cố định `72c723be…`, lấy 800 ZIP ngẫu nhiên (seed 20261108), đọc trong container dùng một lần: 783 đọc được, 476 có hook và file điểm vào, 429 cụm mã cài đặt khác nhau. Sửa lỗi tên gói scope (thư mục Datadog dùng `@scope@name`).
+- **S3 — đủ gói lành:** quét lại 29 gói vượt giới hạn giải nén (nhóm A 132 → 147); đề xuất lượt 6–7 (nhóm A) và 8–9 ("B nhẹ": chỉ `child_process`/gọi mạng, không luồng secret, không shell, không làm rối).
+- **S4/D-6:** lượt 10–15, 240 mẫu độc, chọn xoay vòng theo cụm; bằng chứng 238/240 sạch, 2 dòng được đánh dấu để loại.
+- **S1:** 15 lượt, 516 dòng, [phân công](../giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md) cho Phước, Thiên, Triết; hạn 17/11.
+- **S6 — sẵn sàng tuần 7–10:** `freeze_labels.py` (chỉ dòng `verified`, chia theo cụm, test 60%), `experiments/run_isolated.py` (agent và `--guarddog` trong container, Ollama qua `host.docker.internal`), `experiments/threshold_sweep.py` (quét 0,50–0,95 bằng chính `decide()`, trace nay ghi `inputs`). Chạy thử trên 2 gói `@swc/core`: agent R7_review giống chạy trên máy chủ; GuardDog 0 issue; `metrics`/`threshold_sweep` đọc được.
+- **Kiểm chứng:** pytest PASS; test Docker 14/14 (lượt trước); bằng chứng 9 lượt mới qua container.
+- **Còn chờ người thật:** kiểm tra chéo 516 dòng.
