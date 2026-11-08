@@ -57,7 +57,8 @@ def test_docker_command_keeps_core_flags_and_passes_fake_env():
 
 def test_hardening_adds_limits_only_when_asked():
     command = docker_command(Path("/pkg"), hardening=True)
-    assert "nofile=256:256" in command and any(part.startswith("/tmp:") and "noexec" in part for part in command)
+    assert "nofile=256:256" in command and command[command.index("--memory-swap") + 1] == "256m"
+    assert not any(part.startswith("/tmp") for part in command)  # a /tmp tmpfs would loosen --read-only
     assert command[-2:] == ["agent-npm-sandbox:local", "/usr/local/bin/run_install.sh"]
 
 

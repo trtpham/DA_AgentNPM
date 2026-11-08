@@ -184,9 +184,11 @@ def touched_canaries(opened: set[str], trace: str, stdout: str, stderr: str) -> 
     return touched
 
 
-# C6: extra limits, opt-in until TV3 has run them (W5-5); the default command is unchanged.
-HARDENING = ["--ulimit", "nofile=256:256", "--ulimit", "fsize=67108864:67108864",
-             "--tmpfs", "/tmp:rw,noexec,nosuid,size=16m,uid=10001,gid=10001"]
+# C6 + C1: extra limits, opt-in until TV3 accepts them (W5-5); the default command is unchanged.
+# --memory-swap equal to --memory removes swap: without it the `memory` fixture reached 448 MB.
+# No tmpfs on /tmp: with --read-only, /tmp is already unwritable; a tmpfs there loosened the
+# sandbox and made npm's own trace overflow the 2 MB cap (measured 2026-11-08).
+HARDENING = ["--ulimit", "nofile=256:256", "--ulimit", "fsize=67108864:67108864", "--memory-swap", "256m"]
 
 
 def docker_command(root: Path, hardening: bool = False) -> list[str]:

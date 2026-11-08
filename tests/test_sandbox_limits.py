@@ -90,3 +90,31 @@ def test_harmless_fixtures_have_no_package_network(name):
     assert result["ok"] and result["data"]["outcome"] == "ok"
     actors = result["data"]["by_actor"]
     assert actors["package"]["network_count"] == 0 and actors["npm"]["network_count"] > 0
+
+
+def test_new_canaries_and_env_tokens_are_detected():
+    # C2 (2026-11-07): needs an image rebuilt after the five new canary files were added.
+    result, _ = run("canary-all")
+    touched = set(result["data"]["canary_touched"])
+    assert {"git_credentials", "docker", "kube", "gh", "solana", "env:NPM_TOKEN"} <= touched
+
+
+def test_blocked_write_to_etc_is_recorded_as_a_package_behavior():
+    result, _ = run("write-outside")
+    writes = result["data"]["behavior"]["persistence_writes"]
+    assert {"path": "/etc/w5-marker", "result": "EROFS", "actor": "package"} in writes
+
+
+@pytest.mark.parametrize("name", ["benign-package", "canary-package", "no-hook-package"])
+def test_hardening_keeps_harmless_installs_working(name):
+    plain = run_sandbox(Path(__file__).parent / "fixtures" / "packages" / name)
+    hardened = run_sandbox(Path(__file__).parent / "fixtures" / "packages" / name, hardening=True)
+    assert hardened["ok"] == plain["ok"] and hardened["data"]["outcome"] == plain["data"]["outcome"] == "ok"
+    assert hardened["data"]["canary_touched"] == plain["data"]["canary_touched"]
+
+
+def test_hardening_removes_swap_so_memory_stays_under_the_limit():
+    result = run_sandbox(FIXTURES / "memory", hardening=True)
+    values = dict(re.findall(r"(\S+)=(\S+)", " ".join(line for line in result["data"]["stdout"]["content"].splitlines()
+                                                     if line.startswith("W5RESULT "))))
+    assert result["data"]["outcome"] == "oom" and int(values.get("allocated_mb", "0")) <= 256
