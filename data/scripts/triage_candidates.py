@@ -38,7 +38,7 @@ HOST = "registry.npmjs.org"
 MAX_ARCHIVE = 60 * 1024 * 1024
 NATIVE_BUILD = frozenset({"node-gyp", "prebuild-install", "node-pre-gyp", "prebuild", "cmake-js"})
 FIELDS = ("package", "version", "group", "reasons", "hooks", "external", "risky", "hosts", "flows",
-          "files", "entries", "tarball", "tarball_sha256")
+          "files", "entries", "tarball", "tarball_sha256", "install_hash")
 
 
 def _download(url: str) -> bytes:
@@ -128,7 +128,23 @@ def triage(package_dir: str) -> dict:
     group = "C" if c_reasons else "B" if b_reasons else "A"
     return {**result, "group": group, "reasons": c_reasons + b_reasons, "external": external,
             "risky": dict(sorted(risky.items())), "hosts": hosts, "flows": flows[:5],
-            "files": len(traced["data"]["files"]) if traced["ok"] else None}
+            "files": len(traced["data"]["files"]) if traced["ok"] else None,
+            "install_hash": install_hash(package_dir, hooks, (traced["data"] or {}).get("files", []))}
+
+
+def install_hash(package_dir: str, hooks: dict, files: list[str]) -> str:
+    """D-3 near-duplicate key: what runs at install, without names, paths or whitespace.
+
+    Two packages that differ only in name, version or formatting get the same key.
+    """
+    parts = sorted("".join(command.split()) for command in hooks.values())
+    for file in files:
+        try:
+            text = (Path(package_dir) / file).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        parts.append(hashlib.sha256("".join(text.split()).encode("utf-8")).hexdigest())
+    return hashlib.sha256("\n".join(sorted(parts)).encode("utf-8")).hexdigest() if parts else ""
 
 
 def inspect(row: dict, work: Path) -> dict:
@@ -207,7 +223,8 @@ def summarize(out_dir: Path = OUT_DIR, summary: Path = SUMMARY) -> dict:
                              "risky": json.dumps(item.get("risky", {})), "hosts": " ".join(item.get("hosts", [])),
                              "flows": " | ".join(item.get("flows", [])), "files": item.get("files"),
                              "entries": json.dumps(item.get("entries", []), ensure_ascii=False),
-                             "tarball": item.get("tarball", ""), "tarball_sha256": item.get("tarball_sha256", "")})
+                             "tarball": item.get("tarball", ""), "tarball_sha256": item.get("tarball_sha256", ""),
+                             "install_hash": item.get("install_hash", "")})
     return {"rows": len(items), "groups": dict(sorted(Counter(item["group"] for item in items).items()))}
 
 

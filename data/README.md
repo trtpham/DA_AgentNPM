@@ -75,3 +75,14 @@ py -3.14 -m data.scripts.review_sheet check data/review_rounds/round-5.csv
 - `data/proposals.csv` cùng hợp đồng 11 cột với `labels.csv`. Mỗi dòng là **bản nháp do Claude viết từ phân loại tĩnh**: nhãn `benign`, file mà hook chạy và tối đa 150 dòng đầu, `technique = draft-no-risky-sign`, `split = pending`. Bản nháp **không** dùng để đo cho tới khi người khác người soạn đánh `verified` trong phiếu.
 - Chỉ nhóm A được đề xuất tự động; nhóm B cần người đọc mã trước. Mỗi cụm tối đa 12 dòng (tính cả `labels.csv`).
 - Lượt 5: 40 gói, phân công TV3 Nguyễn Đình Thiên (lượt lành, theo kế hoạch dữ liệu). Cách điền giống [phiếu W5-10](../docs/giao-viec/W5-10_KIEM_TRA_CHEO_NHAN.md); nếu đoạn trích không đủ để kết luận, ghi `exclude` hoặc `revise` kèm `note`.
+
+## Lọc trùng và trần cụm (D-3, 08/11/2026)
+
+```powershell
+py -3.14 -m data.scripts.dedupe_labels --report reports/dedupe.json               # chỉ báo cáo
+py -3.14 -m data.scripts.dedupe_labels --output data/dataset-v1-draft.csv         # ghi bảng đã lọc (không bao giờ ghi labels.csv)
+```
+
+Thứ tự luật: cùng `name@version` → giữ dòng đầu (`labels.csv` trước `proposals.csv`); cùng sha256 tarball → một mẫu; cùng `install_hash` (mã chạy lúc cài, bỏ tên/phiên bản/khoảng trắng; tính trong D-1) → gộp cụm; cụm quá 12 dòng → giữ 12 dòng đầu; cụm có ở cả dev và test → báo rò rỉ.
+
+Lần chạy 08/11 trên 76 nhãn + 40 đề xuất: giữ **99**, bỏ 17 (đều do trần cụm: `mut-4831` 5, `npm-token-worm-2026-03` 6, `shai-hulud-2-2025-11` 6), gộp 1 cặp cụm, 47 cụm, 0 cụm rò rỉ dev/test. Trong 450 ứng viên có 10 nhóm mã cài đặt giống hệt nhau (21 gói), ví dụ 3 gói `@db-ux/*`.

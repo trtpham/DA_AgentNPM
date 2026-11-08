@@ -121,3 +121,18 @@ def test_entries_point_to_where_reading_starts():
         {"hook": "postinstall", "file": "setup.js", "lines": 5}]
     inline = triage(str(FIXTURES / "corpus" / "inline-thanks"))["entries"]
     assert inline[0]["file"] == "package.json" and isinstance(inline[0]["line"], int)
+
+
+def test_install_hash_ignores_names_paths_and_whitespace(tmp_path):
+    def package(folder, name, file, body):
+        root = tmp_path / folder
+        root.mkdir()
+        (root / "package.json").write_text(json.dumps({"name": name, "version": "1.0.0",
+                                                       "scripts": {"postinstall": f"node {file}"}}), encoding="utf-8")
+        (root / file).write_text(body, encoding="utf-8")
+        return triage(str(root))["install_hash"]
+
+    first = package("a", "pkg-a", "setup.js", "console.log('x');\n")
+    assert first == package("b", "pkg-b", "setup.js", "console.log( 'x' );")
+    assert first != package("c", "pkg-c", "setup.js", "console.log('y');\n")
+    assert len(first) == 64

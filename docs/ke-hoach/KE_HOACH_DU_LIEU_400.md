@@ -66,7 +66,7 @@
 | --- | --- | --- | --- |
 | D-1 ✅ 08/11: A 132 / B 258 / C 60 | Phân loại sơ bộ 450 ứng viên trong container: tải đúng phiên bản + hash, chạy công cụ tĩnh, ghi bảng nhóm A/B/C kèm lý do; resume theo batch | `data/scripts/triage_candidates.py` | Test trên fixture; chạy hết 450 trong container, 0 lần chạy script gói |
 | D-2 ✅ 08/11: lượt 5 (40 gói) | Sinh phiếu và bằng chứng cho lượt mới từ bảng đề xuất (mở rộng `review_sheet`/`review_evidence` khỏi cố định 4 lượt) | `data/scripts/review_sheet.py`, `review_evidence.py` | `round-5…` tạo được, `check` chạy đúng |
-| D-3 | Lọc trùng chính xác và gần trùng, gán cụm, áp trần cụm | `data/scripts/dedupe_labels.py` | Test với dữ liệu giả: trùng hash bị gộp, cụm vượt trần bị cắt có ghi lý do |
+| D-3 ✅ 08/11: giữ 99/116, bỏ 17 do trần cụm | Lọc trùng chính xác và gần trùng, gán cụm, áp trần cụm | `data/scripts/dedupe_labels.py` | Test với dữ liệu giả: trùng hash bị gộp, cụm vượt trần bị cắt có ghi lý do |
 | D-4 | Báo cáo độ phủ: số mẫu theo nhãn/cụm/split, tỷ lệ đã kiểm tra, cụm vượt trần | `data/scripts/data_report.py` | In bảng so với chỉ tiêu mục 2 |
 | D-5 | Hướng dẫn chạy luồng Datadog trong VM (lệnh, kiểm tra hash, không giải nén trên Windows) | `docs/giao-viec/D_DU_LIEU_DATADOG_VM.md` | TV3/TV1 làm theo được |
 
