@@ -3,7 +3,7 @@ __pycache__/
 .pytest_tmp/
 *.pyc
 data/samples/
-# Đầu ra của data/filter_datadog.py chạy trong VM; bản 5 dòng advisory cũ đã được track có chủ đích.
+# Đầu ra của data/scripts/filter_datadog.py khi chạy trong VM (bản 5 dòng cũ đã chuyển vào archive/data/).
 data/candidates.csv
 data/**/*.zip
 data/**/*.tar

@@ -91,7 +91,7 @@ Các vấn đề đã thấy trong trace là cơ sở cho kế hoạch:
 ## 2. Những gì cố ý **không** đưa vào kế hoạch này
 
 - Công cụ agent mới, `typosquat_check`, nối sandbox vào agent, hành động approve/deny thật: đều là chức năng mới.
-- Đổi split dev/test để chỉ số đẹp hơn: chỉ bổ sung họ/chiến dịch mới **trước** khi chạy test, theo `data/REVIEW_WEEK2.md`.
+- Đổi split dev/test để chỉ số đẹp hơn: chỉ bổ sung họ/chiến dịch mới **trước** khi chạy test, theo `data/review_rounds/REVIEW_WEEK2.md`.
 - Recall/F1 trên mẫu độc: chờ nhãn v1 được kiểm tra chéo và môi trường VM.
 
 ## 3. Trình tự đề xuất

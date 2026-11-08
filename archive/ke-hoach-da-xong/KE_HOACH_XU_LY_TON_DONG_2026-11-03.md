@@ -86,7 +86,7 @@ Claude chuẩn bị, **người thật kiểm tra chéo**. Phạm vi "duyệt b�
 | C2 | Lượt 1: 20 nhãn lành. Đã đối chiếu tự động nguồn và dòng; còn phải đọc ngữ nghĩa đường install | Claude điền phần tóm tắt hành vi; reviewer xác nhận |
 | C3 | Lượt 2–4: 18 `npm-token-worm`, 18 `shai-hulud`, 17 `mut-4831` + `exnesss` + 2 nghi vấn | **Bị chặn** cho đến khi biết ZIP Datadog nằm ở đâu và có VM/container dùng một lần. Không đưa ZIP lên host hay Git |
 | C4 | Sau mỗi lượt: `prepare_labels` ra file mới, kiểm tra không rò cụm, đủ 3 lớp ở 2 split | Chỉ sửa `labels.csv` khi đổi nhãn hoặc loại dòng |
-| C5 | Ghi rõ giới hạn đại diện: test chỉ có 1 họ lành (esbuild), 1 chiến dịch độc chính (mut-4831), 1 gói nghi vấn | Ghi vào `data/REVIEW_WEEK2.md` và báo cáo; cân nhắc bổ sung họ/chiến dịch thay vì đổi split sau khi đã thấy kết quả |
+| C5 | Ghi rõ giới hạn đại diện: test chỉ có 1 họ lành (esbuild), 1 chiến dịch độc chính (mut-4831), 1 gói nghi vấn | Ghi vào `data/review_rounds/REVIEW_WEEK2.md` và báo cáo; cân nhắc bổ sung họ/chiến dịch thay vì đổi split sau khi đã thấy kết quả |
 
 **DoD C:** như mục H1 của bàn giao. Nếu chưa có reviewer, trạng thái là `BLOCKED — kiểm tra chéo`.
 
@@ -131,7 +131,7 @@ Làm theo thứ tự, mỗi bước cần một Gate B0 riêng nếu đổi hợ
 2. **Reviewer nhãn khác người gán:** điền 4 phiếu `data/review_rounds/round-*.csv`. Lượt 2–4 đọc ZIP Datadog trong VM. Sau đó chạy `py -3.14 -m data.scripts.review_sheet check …` cho từng phiếu.
 3. **PO:** nghiệm thu demo viewer G3–G4; quyết định 5 mục untracked (A4); quyết định có tách CSS dùng chung giữa `tools/visualize_agent.py` và viewer hay không.
 - **C1 PASS:** `data/scripts/review_sheet.py` (`build`/`check`) có 2 test. Đã sinh `data/review_rounds/round-1..4.csv`: 20 + 18 + 18 + 20 = 76 dòng, cột kiểm tra để trống. **C2–C4 BLOCKED:** cần reviewer là người thật, cùng ZIP Datadog/VM cho lượt 2–4.
-- **C5 PASS:** giới hạn đại diện của dev/test đã ghi vào `data/REVIEW_WEEK2.md`.
+- **C5 PASS:** giới hạn đại diện của dev/test đã ghi vào `data/review_rounds/REVIEW_WEEK2.md`.
 - **D PASS cục bộ:** `viewer/static/index.html`, `style.css`, `app.js` theo mẫu dashboard `tools/visualize_agent.py`. Đã kiểm tra trên trình duyệt:
   - replay chạy hết 8/8 sự kiện;
   - live tự nối sự kiện của run B5 đang chạy;
