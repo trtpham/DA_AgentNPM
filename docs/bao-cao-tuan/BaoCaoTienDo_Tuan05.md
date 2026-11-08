@@ -1,68 +1,60 @@
 # Báo cáo tiến độ tuần 05 — AI Agent kiểm tra gói npm
 
-**Thành viên:** Lê Đặng Thiên Phước · Phạm Minh Triết · Nguyễn Đình Thiên
+**Thành viên:** Lê Đặng Thiên Phước (TV1) · Phạm Minh Triết (TV2, PO) · Nguyễn Đình Thiên (TV3)
 
-**Giai đoạn:** Hoàn thiện sandbox và công cụ mở rộng · **Ngày cập nhật:** 08/11/2026 (bản đầu 05/11) · **Nghiệm thu:** W5-5 cách ly sandbox — Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11 (ngoại lệ do PO quyết); agent — TV2 Phạm Minh Triết
+**Giai đoạn:** Hoàn thiện sandbox, chống học vẹt và công cụ mở rộng · **Ngày làm:** 04–05/11/2026 (W5-5, W5-6 hoàn tất 08/11) · **Cập nhật tình trạng:** 08/11/2026
+**Nghiệm thu:** W5-5 cách ly sandbox — Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11 (ngoại lệ do PO quyết); agent — TV2 Phạm Minh Triết
 
-> Số liệu trong báo cáo đều lấy từ lần chạy thật ngày 04–08/11/2026 trên máy của nhóm. Phần cập nhật 07–08/11 nằm ở mục 4.3. Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết từng việc ở [nhật ký tuần 5](../nhat-ky-tuan/tuan-05.md); kịch bản demo ở [hướng dẫn demo](HUONG_DAN_DEMO_TUAN05.md).
+> Số liệu lấy từ lần chạy thật trên máy của nhóm (Ollama cục bộ, Docker 29.1.3). Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết ở [nhật ký tuần 5](../nhat-ky-tuan/tuan-05.md); kịch bản demo ở [hướng dẫn demo](HUONG_DAN_DEMO_TUAN05.md).
 
 ## 1. Nội dung buổi báo cáo tuần
 
-Mục tiêu tuần 5 là **chứng minh sandbox cách ly được mã của gói và trả kết quả tái hiện được**, trước khi nối sandbox vào agent. Nhóm cũng xử lý hai việc còn treo từ tuần 4: A-LLM chạy chậm và tham số model chưa nằm trong file cấu hình.
+Mục tiêu tuần 5: **chứng minh sandbox cách ly được mã của gói và trả kết quả tái hiện được**, rồi mới nối sandbox vào agent; đồng thời bảo đảm agent **phân tích hành vi chứ không học vẹt theo tên gói**.
 
-1. **Thử vượt từng giới hạn của sandbox (W5-1):** 6 gói thử vô hại, mỗi gói cố làm đúng một việc trong `postinstall`:
-   - gọi mạng ra ngoài;
-   - sinh 200 tiến trình;
-   - cấp phát khoảng 512 MB;
-   - chờ 120 giây;
-   - ghi ra ngoài thư mục gói;
-   - đọc file bí mật mồi (canary).
-
-   Các gói thử chỉ chạy trong container Docker tắt mạng, không bao giờ chạy trên máy thật.
-2. **Kết quả sandbox nói rõ vì sao dừng (W5-2):** trường `outcome` = `ok` / `timeout` / `oom` / `pids_limit` / `failed`, thay cho thông điệp chung "sandbox execution failed".
-3. **Tách hành vi của npm khỏi hành vi của gói (W5-3):**
-   - Dựng cây tiến trình từ `strace -f`; mỗi tiến trình, kết nối mạng và file đã mở được gắn **`npm`** hoặc **`package`**.
-   - Trước đây, 4 lần tra DNS của chính npm bị lẫn vào hành vi của gói, nên gói lành vẫn trông như "có gọi mạng".
-4. **Tái hiện và không lộ secret thật (W5-4):** chạy 9 gói thử × 3 lần và so sánh kết quả; dò toàn bộ biến môi trường của máy thật trong log.
-5. **Mã bị làm rối (W5-7):** thêm gói thử có mã rút gọn một dòng và chuỗi base64. Gói này làm lộ một lỗi thật của agent; nhóm đã sửa (mục 4).
-6. **A-LLM chậm (W5-8)** và **tham số model nằm trong YAML (W5-9).**
+1. **Thử vượt từng giới hạn của sandbox (W5-1):** 6 gói thử vô hại, mỗi gói cố làm đúng một việc trong `postinstall` — gọi mạng ra ngoài, sinh 200 tiến trình, cấp phát ~512 MB, chờ 120 giây, ghi ra ngoài thư mục gói, đọc file bí mật mồi (canary). Chỉ chạy trong container Docker tắt mạng.
+2. **Kết quả sandbox nói rõ vì sao dừng (W5-2):** `outcome` = `ok` / `timeout` / `oom` / `pids_limit` / `failed`.
+3. **Tách hành vi npm khỏi hành vi của gói (W5-3):** dựng cây tiến trình từ `strace -f`; mỗi tiến trình, kết nối, file đã mở được gắn `npm` hoặc `package`.
+4. **Tái hiện và không lộ secret thật (W5-4):** 9 gói thử × 3 lần; dò toàn bộ biến môi trường của máy thật trong log.
+5. **Nghiệm thu cách ly (W5-5) và nối sandbox vào agent (W5-6):** sandbox chạy **trước** model; chạm canary → từ chối (luật R1), model không đảo được.
+6. **Mã bị làm rối (W5-7):** agent gọi `deobfuscate` và đọc bản đã định dạng `file#pretty`.
+7. **A-LLM chậm (W5-8)** và **tham số model trong YAML (W5-9).**
+8. **Chống học vẹt (L1–L4):** đánh giá mù (model không thấy tên gói), từ vựng kỹ thuật cố định, kiểm tra ngữ nghĩa bằng chứng, bộ 22 gói mô phỏng theo cặp.
+9. **Văn phòng 3D** (công cụ trình bày): mô phỏng luồng làm việc của agent và 12 tình huống, dùng cho demo cuối kỳ.
 
 > *Góp ý của thầy trong buổi gặp tuần 5:* **[nhóm bổ sung theo ghi chép buổi gặp]**. Báo cáo không tự ghi nội dung trao đổi khi nhóm chưa xác nhận.
 
 ## 2. Demo bao nhiêu phần trăm (kèm ảnh)
 
-Ngày 05/11 nhóm demo được **6/8 phần dự kiến (75%)**. Đến 08/11 làm thêm được phần nối sandbox (chạy được, còn chờ TV3 ký để bật mặc định), thành **7/8 (88%)**; W5-5 nghiệm thu ngày 08/11. Phần còn lại bị chặn bởi việc của người, không phải lỗi kỹ thuật (xem mục 4).
+Ngày 05/11 nhóm demo được **6/8 phần (75%)**; đến 08/11 hoàn tất thêm nghiệm thu cách ly và nối sandbox vào agent → **7/8 (≈ 88%)**. Phần còn lại bị chặn bởi việc của người (mục 4).
 
 | Phần trình diễn | Kết quả |
 | --- | --- |
-| Sandbox chặn mạng, giới hạn tiến trình, RAM, thời gian; phát hiện đọc canary | **Đạt.** 9 gói thử × 3 lần cho kết quả giống hệt nhau. Test tự động trong Docker 8/8. |
-| Tách hành vi npm và gói | **Đạt.** Gói lành và gói không có hook: 0 kết nối của gói. Gói thử gọi mạng: 5 kết nối của gói. 4 lần tra DNS của npm được ghi riêng. |
-| Không lộ secret thật | **Đạt.** Không biến môi trường nào của máy thật xuất hiện trong log (chỉ trùng `127.0.0.1`, có sẵn trong mọi container). |
-| Agent xử lý mã rút gọn/base64 | **Đạt về quy trình:** gọi `deobfuscate`, trích bằng chứng `install.min.js#pretty:124, 126`. Kết luận vẫn là "chuyển người xem" vì model chưa đọc hết bản đã định dạng. |
-| A-LLM nhanh hơn, kết luận không đổi | **Đạt:** 85,1 → 47,0 giây/gói (−45%), 13/13 kết luận giống mốc. |
-| Đổi tham số model chỉ bằng file cấu hình | **Đạt.** |
-| Nối sandbox vào agent (W5-6) | **Đạt (08/11):** `sandbox: true` trong config, chỉ chạy gói thử vô hại. Chạy thật: gói canary bị **từ chối bởi luật R1** (model không đảo được), gói lành vẫn được cho phép. W5-5 đã nghiệm thu 08/11. |
-| Recall/F1 trên mẫu độc | **Chưa làm:** bộ nhãn v1 chưa có người kiểm tra chéo (W5-10). |
+| Sandbox chặn mạng, giới hạn tiến trình, RAM, thời gian; phát hiện đọc canary | **Đạt.** Test Docker **14/14** (08/11, image `sha256:ac8579db…`); 9 gói thử × 3 lần giống hệt nhau |
+| Tách hành vi npm và gói | **Đạt.** Gói lành và gói không có hook: 0 kết nối của gói; gói thử gọi mạng: 5 kết nối của gói; 4 lần tra DNS của npm ghi riêng |
+| Không lộ secret thật | **Đạt.** `no_host_leak: true` (59 biến môi trường đã kiểm; chỉ `127.0.0.1` trùng, có sẵn trong mọi trace npm) |
+| Nối sandbox vào agent (W5-6) | **Đạt.** Gói thử canary bị **từ chối bởi R1** dù model không cần nói gì; gói lành vẫn được cho phép (Hình 4) |
+| Agent xử lý mã rút gọn/base64 | **Đạt về quy trình:** gọi `deobfuscate`, trích `install.min.js#pretty:124, 126` |
+| A-LLM nhanh hơn, kết luận không đổi | **Đạt:** 85,1 → 47,0 giây/gói (−45%), 13/13 kết luận giống mốc |
+| Chống học vẹt trên 22 gói mô phỏng | **Đạt với A-LLM:** 11/11 gói độc bị từ chối, 0 gói lành bị từ chối, 9/9 cặp phân tách |
+| Recall/F1 trên mẫu độc thật | **Chưa:** bộ nhãn chưa được kiểm tra chéo |
 
-### Sandbox: kết quả trên 9 gói thử
+### Sandbox: 9 gói thử (chạy lại 08/11, cấu hình mặc định mới)
 
-Lệnh `py -3.14 -m experiments.demo_sandbox`, chạy ngày 05/11/2026. Image `agent-npm-sandbox:local` (`sha256:b657e013…`), Docker 29.1.3. Kết quả giống hệt nhau qua 3 lần chạy.
+Lệnh `py -3.14 -m experiments.demo_sandbox`; kết quả giống hệt qua 3 lần (`py -3.14 -m experiments.repro_sandbox --runs 3`).
 
 | Gói thử | Script cố làm | Script tự báo | `outcome` | Mã thoát | Mạng npm / gói | Canary bị chạm |
 | --- | --- | --- | --- | --- | --- | --- |
 | `network` | gọi HTTPS + DNS ra ngoài | `https=ENETUNREACH dns=EAI_AGAIN` | ok | 0 | 4 / **5** | — |
 | `processes` | sinh 200 tiến trình | `spawned=200 refused=158` | **pids_limit** | 0 | (trace bị cắt) | — |
-| `memory` | cấp phát ~512 MB | dừng ở 448 MB | **oom** | 137 | 4 / 0 | — |
+| `memory` | cấp phát ~512 MB | dừng ở **192 MB** (trước 08/11: 448 MB) | **oom** | 137 | 4 / 0 | — |
 | `timeout` | chờ 120 giây | `waiting=120` | **timeout** | 124 | 6 / 0 | — |
-| `write-outside` | ghi `/input`, `/etc`, `$HOME` | `/input`, `/etc`, `/usr/local` = `EROFS`; `$HOME` ghi được (tmpfs 1 MB trong container) và **có ghi nhận** | ok | 0 | 4 / 0 | — |
-| `canary-all` | đọc 3 file bí mật mồi + biến môi trường | đọc được bản giả | ok | 0 | 4 / 0 | npmrc, ssh, aws, environment |
+| `write-outside` | ghi `/input`, `/etc`, `$HOME` | `/input`, `/etc`, `/usr/local` = `EROFS`; `$HOME` ghi được (tmpfs 1 MB) và **có ghi nhận** | ok | 0 | 4 / 0 | — |
+| `canary-all` | đọc 8 file mồi + biến môi trường | đọc được bản giả | ok | 0 | 4 / 0 | đủ 8 file + `environment` + `NPM_TOKEN` |
 | `benign` | gói lành có `postinstall` | — | ok | 0 | 4 / **0** | — |
 | `no-hook` | gói không có hook | — | ok | 0 | 4 / **0** | — |
 | `canary` | đọc khóa SSH giả | — | ok | 0 | 4 / 0 | ssh, environment |
 
-### Agent: hồi quy 3 mô hình trên 13 gói dev
-
-Tập dev gồm 10 phiên bản `@swc/core` (gói lành thật) và 3 gói thử. Các run: `w57-reg-a-llm`, `w57-reg-a-slm`, `w57-reg-a-tlm`.
+### Agent: hồi quy 3 mô hình trên 13 gói dev (`w57-reg-*`)
 
 | Mô hình | Kết luận giống mốc | Giây/gói (trung vị) | Báo nhầm trên 10 gói swc |
 | --- | --- | --- | --- |
@@ -70,76 +62,79 @@ Tập dev gồm 10 phiên bản `@swc/core` (gói lành thật) và 3 gói thử
 | A-SLM (qwen3.5:4b) | 13/13 | 11,5 | 0/10 |
 | A-TLM (qwen3.5:0.8b) | 12/13 | 8,8 | 0/10 |
 
-Ca lệch của A-TLM là gói không có hook. Model 0.8b lặp lại cùng một kết luận sai nên hệ thống rơi về "chuyển người xem" (luật R2). Lỗi y hệt đã có ở lô tuần 4, không do thay đổi tuần này, và kết quả vẫn an toàn.
+### Chống học vẹt: 22 gói mô phỏng (trước = commit `fbcdd22`)
 
-**Hình 1.** Trình xem trace: lô 13 gói của A-LLM. Gói thử canary được kết luận Độc hại. Ảnh chụp màn hình thật, 05/11/2026.
+| Mô hình | Gói độc bị từ chối | **Gói độc bị cho phép** | Gói lành bị từ chối | Cặp phân tách |
+| --- | --- | --- | --- | --- |
+| A-LLM | 10 → **11**/11 | 0 → 0 | 1 → **0** | 8 → **9**/9 |
+| A-SLM | 9 → 6/11 | 1 → 1 (bẫy chú thích; đã chặn ở tuần 6 bằng luật `R7_flow`) | 1 → **0** | 8 → 7/9 |
+| A-TLM | 3 → 0/11 | **1 → 0** (trước đây cho phép một reverse shell) | 0 → 0 | 6 → 0/9 |
+
+**Hình 1.** Trình xem trace: lô 13 gói của A-LLM; gói thử canary được kết luận Độc hại. Ảnh chụp màn hình thật, 05/11/2026.
 
 ![Trình xem trace — lô 13 gói](../hinh-anh/tuan-05-viewer-lo-13-goi.jpg)
 
-**Hình 2.** Gói thử canary: kết luận Độc hại → **Từ chối** (luật R6). Bằng chứng `inspect.js:2` đọc `/home/agent/.ssh/id_rsa`; lệnh `npm deny-scripts` chỉ lập ở chế độ chạy thử.
+**Hình 2.** Gói thử canary: Độc hại → **Từ chối** (R6). Bằng chứng `inspect.js:2` đọc `/home/agent/.ssh/id_rsa`; lệnh `npm deny-scripts` chỉ lập ở chế độ chạy thử.
 
 ![Gói canary bị từ chối kèm bằng chứng](../hinh-anh/tuan-05-viewer-canary-deny.jpg)
 
-**Hình 3.** `@swc/core@1.7.36` (gói lành thật). Model đề xuất "Cho phép, tin cậy 95%", nhưng **luật cứng R7_review chuyển sang người xem**: script tải mã ngoài gói ở `postinstall.js:125`, thiếu 18 file `.node`, không đọc được `swc.wasi.cjs`.
-
-![swc chuyển người xem với lý do cụ thể](../hinh-anh/tuan-05-viewer-swc-review.jpg)
-
-**Hình 4.** Gói thử mã rút gọn: agent gọi `deobfuscate` và trích `install.min.js#pretty:124` và `#pretty:126`.
+**Hình 3.** Gói thử mã rút gọn: agent gọi `deobfuscate` và trích `install.min.js#pretty:124` và `#pretty:126`.
 
 ![Agent đọc bản đã định dạng của mã rút gọn](../hinh-anh/tuan-05-viewer-obfuscated-pretty.jpg)
 
+**Hình 4.** W5-6: sandbox chạy trước model. Gói thử canary bị **từ chối bởi luật R1 "Sandbox canary touched"**; đây là quyết định của code, model không đảo được. Ảnh chụp màn hình thật, 08/11/2026 (lượt `c7-1108-a-llm-xs`).
+
+![Sandbox chạm canary dẫn tới R1](../hinh-anh/tuan-05-sandbox-r1-canary-deny.png)
+
+**Hình 5.** `@swc/core@1.7.36` (gói lành thật): model đề xuất "Cho phép, tin cậy 95%", **luật R7_review chuyển người xem** vì script tải mã ngoài gói.
+
+![swc chuyển người xem với lý do cụ thể](../hinh-anh/tuan-05-viewer-swc-review.jpg)
+
+**Hình 6.** Văn phòng 3D — chế độ "Đua 3 model" trên gói canary: A-LLM ra R6 (từ chối), A-SLM và A-TLM ra R8 (chuyển người xem). Ảnh chụp màn hình thật.
+
+![Văn phòng 3D: 3 model trên cùng một gói](../hinh-anh/van-phong-3d-dua-3-model.jpg)
+
+**Hình 7.** Văn phòng 3D — kịch bản "Sandbox bắt quả tang (R1)" (nhãn MÔ PHỎNG: dựng từ dữ liệu thiết kế trước khi W5-6 xong).
+
+![Kịch bản sandbox R1 trong văn phòng 3D](../hinh-anh/kich-ban-sandbox-r1.jpg)
+
+**Hình 8.** Chế độ "Xe hàng": cổng npm và khu cách ly — gói canary bị giữ lại, gói lành đi qua.
+
+![Cổng npm và khu cách ly](../hinh-anh/xe-hang-cong-cach-ly.png)
+
+**Hình 9.** Toàn cảnh trụ sở văn phòng 3D theo luồng nhận diện → phân tích → kiểm chứng → quyết định.
+
+![Toàn cảnh văn phòng 3D](../hinh-anh/van-phong-3d-tru-so-day-du.jpg)
+
 ## 3. Ảnh chụp lúc báo cáo
 
-Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có, thêm vào `hinh-anh/` với tên `tuan-05-buoi-bao-cao.jpg` và cập nhật mục này.
+Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có, thêm `../hinh-anh/tuan-05-buoi-bao-cao.jpg` và cập nhật mục này.
 
 ## 4. Đã làm tốt hơn và còn vướng ở đâu
 
 ### Cải thiện có số đo
 
-- **A-LLM chậm (đóng I3 tuần 4):**
-  - Đo riêng từng lượt gọi model: **86% thời gian là sinh câu trả lời**, chỉ 12 token/giây.
-  - Nguyên nhân: Ollama chỉ đưa khoảng 55% model lên GPU 6 GB, phần còn lại chạy bằng CPU. Giảm `num_ctx` từ 16384 xuống 8192 không giúp (104,5 giây/gói).
-  - Sửa bằng một dòng cấu hình `num_gpu: 99`: tốc độ sinh tăng lên **27,6 token/giây**, thời gian **85,1 → 47,0 giây/gói**, kết luận giữ nguyên 13/13.
-  - DoD gốc ghi mốc cố định 50,7 giây, đo trước các thay đổi I1–I4 và không tái hiện được (cùng code đo lại ra 82–83 giây). Ngày 05/11, PO chốt so với lần đo cùng ngày, cùng code: **giảm 45% → W5-8 ĐẠT**. Nếu so với 50,7 giây thì chỉ giảm 7%; báo cáo ghi cả hai để minh bạch.
-- **Agent bỏ qua công cụ giải rối mã:**
-  - Gói thử mã rút gọn cho thấy: khi một dòng quá dài bị cắt, agent coi như "đã đọc xong" và chuyển ngay sang kết luận, không còn cơ hội gọi `deobfuscate`.
-  - Sau khi sửa, agent được thêm tối đa 2 lượt để giải rối và đọc bản đã định dạng; kết quả đọc file có gợi ý rõ phải làm gì.
-  - Luật an toàn giữ nguyên: nguồn chưa đọc trọn thì không được cho phép.
-- **Bộ kiểm thử:** 115 (tuần 4) → **139 PASS**, cộng 8 test sandbox chỉ chạy khi có Docker (8/8 PASS ngày 05/11).
+- **A-LLM chậm (đóng I3 của tuần 4):** đo riêng từng lượt gọi model — **86% thời gian là sinh câu trả lời**, chỉ 12 token/giây, vì Ollama chỉ đưa ~55% model lên GPU 6 GB. Một dòng cấu hình `num_gpu: 99` → **27,6 token/giây**, **85,1 → 47,0 giây/gói**, kết luận giữ nguyên 13/13. (Giảm `num_ctx` 16384 → 8192 không giúp: 104,5 giây/gói.) DoD gốc ghi mốc 50,7 giây đo ở code cũ; PO chốt so cùng ngày, cùng code → W5-8 **ĐẠT**; so với 50,7 thì −7%, báo cáo ghi cả hai.
+- **Agent bỏ qua công cụ giải rối mã (W5-7):** dòng quá dài bị cắt làm agent tưởng "đã đọc xong"; nay agent có thêm tối đa 2 lượt để giải rối và đọc bản định dạng. Nguồn chưa đọc trọn vẫn không được cho phép.
+- **Học vẹt (L1–L4):** model chỉ thấy bí danh `package-under-review`; số dòng có tiền tố `N| ` (trước đây model hay trích lệch 1–2 dòng); dòng được trích phải chứa dấu hiệu của kỹ thuật được khai; A-LLM không còn từ chối nhầm gói tải binary có checksum.
+- **Sandbox (08/11):** trần RAM thật 448 MB → **192 MB** khi bỏ swap (`--memory-swap 256m`, nay là mặc định); thêm 5 file canary giả và 3 biến môi trường giả; phát hiện chế độ "gia cố" thử nghiệm lại *nới* sandbox (tmpfs `/tmp` làm trace vượt 2 MB) và đã bỏ.
+- **Bộ kiểm thử:** 115 (tuần 4) → 159 PASS (05/11) → **292 PASS** (08/11), cộng 14 test Docker.
 
-### Còn vướng (stuck) và vì sao
+### Còn vướng (stuck) — tình trạng ngày 08/11
 
 | Vướng | Nguyên nhân | Ảnh hưởng | Hướng xử lý |
 | --- | --- | --- | --- |
-| **Nghiệm thu sandbox chưa do TV3 tự làm** (W5-5) | PO nghiệm thu thay TV3 ngày 08/11 dựa trên lần chạy của Claude (ngoại lệ quy trình) | Chưa có lần kiểm tra độc lập của người phụ trách sandbox | TV3 tự chạy lại 3 lệnh trong phiếu khi có mặt và ghi kết quả bên dưới biên bản |
-| **Chưa có Recall/F1 trên mẫu độc** | 4 phiếu kiểm tra chéo nhãn (76 dòng) chưa có người điền. Một người không được vừa gán vừa duyệt nhãn | Chưa so được 3 mô hình với GuardDog trên mẫu độc; **chặn mốc thực nghiệm tuần 7–8** | Phân công người kiểm tra chéo ngay đầu tuần 6; bằng chứng đã chuẩn bị sẵn |
-| **Trần RAM thực tế là 512 MB, không phải 256 MB** | `--memory 256m` không kèm `--memory-swap`, nên Docker cho dùng thêm 256 MB swap. Lần chạy 05/11 thấy script cấp phát được 448 MB rồi mới bị kill | Vẫn bị chặn, nhưng trần rộng gấp đôi thiết kế | **Đã sửa 08/11:** `--memory-swap 256m` là mặc định (phương án 1 của W5-5); fixture `memory` dừng ở 192 MB |
-| **Gói sinh nhiều tiến trình làm trace vượt 2 MB** | Chỉ giữ 2 MB cuối của log | Phần đầu cây tiến trình mất, sự kiện thành `unknown` | An toàn (`ok=False`, không thể dẫn tới cho phép). Tuần 6 tóm tắt trace ngay trong container |
-| **A-SLM chưa nhận ra canary** | Model 4B xếp gói thử canary vào "chuyển người xem" thay vì từ chối | Không nguy hiểm (không cho phép), nhưng bỏ lỡ một ca độc rõ ràng | Đã có bù bằng sandbox (`canary_touched` → luật R1), kiểm chứng 08/11; có hiệu lực khi bật sandbox |
-| **Không gói swc thật nào được tự động cho phép** | Script cài của swc tải mã ngoài gói và cần file nhị phân không có trong gói | Thiết kế an toàn chủ động: không thấy hết thì chuyển người xem | Giữ nguyên; giải thích trong báo cáo cuối kỳ |
+| **Chưa có Recall/F1 trên mẫu độc** | Nhãn do AI soạn phải có người khác kiểm; 0/499 dòng đã kiểm | Chặn thực nghiệm tuần 7–8 | Bằng chứng và ô **kiểm tự động** đã sẵn (rút ~2–3 phút/dòng xuống ~30–60 giây); [phân công 15 lượt](../giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md) cho Phước, Thiên, Triết, hạn 17/11; đóng băng 19/11 |
+| **W5-5 do PO nghiệm thu thay TV3** | Ngoại lệ quy trình do PO quyết | Chưa có lần kiểm độc lập của người phụ trách sandbox | Thiên tự chạy lại 3 lệnh trong [phiếu W5-5](../giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md) khi có mặt và ghi kết quả dưới biên bản |
+| **Gói sinh nhiều tiến trình làm trace vượt 2 MB** | Chỉ giữ 2 MB cuối của log | Phần đầu cây tiến trình mất, sự kiện thành `unknown` | An toàn: kết quả `ok=False`, không thể dẫn tới cho phép. Nếu cần: tóm tắt trace ngay trong container |
+| **A-SLM chưa nhận ra canary bằng phán đoán** | Model 4B xếp gói canary vào "chuyển người xem" | Bỏ lỡ một ca độc rõ khi không có sandbox | Có sandbox thì R1 tự từ chối (Hình 4) |
+| **A-TLM (0.8b) mất khả năng phân biệt** khi bằng chứng bị kiểm chặt | Model quá nhỏ cho tác vụ | Mọi gói về "chuyển người xem" | Dùng làm mốc so sánh, không triển khai |
+| **Windows Defender cách ly file bằng chứng** chứa mã độc dạng chữ | Bằng chứng trích nguyên văn mã độc thật | Người kiểm tra không mở được file | Đã đổi định dạng: JSON base64 + trang HTML giải mã khi xem; 0/30 file bị chặn; không thêm ngoại lệ Defender |
 
-### 4.3 Cập nhật 07–08/11/2026
+## 5. Đề xuất tuần 6 (đã thực hiện phần lớn) và việc tiếp theo
 
-- **Công cụ phân tích mới** (Gate B0 07/11): 10 công cụ chỉ đọc (`list_files`, `search_code`, `trace_requires`, `trace_flow`, `inspect_scripts`, `decode_literal`, `resolve_value`, `list_endpoints`, `inspect_binary`, `file_stats`), bật theo từng model bằng config `A-*-X`. Config cũ giữ nguyên.
-- **Luật mới, chỉ chặt hơn:** `R7_flow` (benign trên luồng secret/env → mạng, hoặc có chữ hướng tới người phân tích) và `R7_sandbox` (sandbox thấy gói ghi file khởi động) đổi "cho phép" thành "chuyển người xem".
-- **Đo trên 22 gói mô phỏng, model thật:**
-
-| Config | Gói độc bị từ chối | Gói độc bị cho phép | Gói lành được cho phép | Gói lành bị từ chối | Cặp phân tách |
-| --- | --- | --- | --- | --- | --- |
-| A-LLM → A-LLM-X | 11/11 → 11/11 | 0 → 0 | 7/11 → 6/11 | 0 → 0 | 9/9 → 9/9 |
-| A-SLM → A-SLM-X | 6/11 → 7/11 | **1 → 0** | 2/11 → 4/11 | 0 → 0 | 7/9 → 8/9 |
-| A-TLM → A-TLM-X | 0/11 → 0/11 | 0 → 0 | 0/11 → 2/11 | 0 → 0 | 0/9 → 2/9 |
-
-- **Sandbox:** build lại image (`sha256:ac8579db…`) với 5 file canary giả mới và 3 biến môi trường giả; test Docker **14/14 PASS**; tái hiện 9 gói thử × 3 lần giống nhau, không lộ biến môi trường của máy thật.
-- **Lỗi tìm ra và đã sửa:** `trace_flow` treo trên file dài; chạy lô dừng vì ký tự Unicode trên console Windows; tmpfs `/tmp` trong chế độ gia cố làm sandbox *lỏng* hơn (đã bỏ).
-- **Bộ kiểm thử:** 139 → **241 PASS**, cộng 14 test sandbox chỉ chạy khi có Docker.
-- Chi tiết: [nhật ký tuần 6](../nhat-ky-tuan/tuan-06.md).
-
-## 5. Đề xuất tuần 6 và cách thực hiện
-
-1. **Nghiệm thu sandbox (cập nhật 08/11):**
-   - Phần kỹ thuật W5-6 đã xong và đã chạy thử; còn TV3 Nguyễn Đình Thiên tự chạy lại theo phiếu W5-5, chọn phương án swap và ký.
-   - Sau khi ký: bật `sandbox` mặc định cho gói thử, chạy lại ma trận 3 mô hình.
-2. **Hoàn tất bộ nhãn v1:** người kiểm tra chéo (không phải người đã gán nhãn, không phải Claude/Codex) điền 4 phiếu W5-10. Sau đó mới tính Recall/F1 và so với GuardDog, chạy trong môi trường cách ly.
-3. **Tập test:** chọn thêm họ gói và chiến dịch mới từ 450 ứng viên và OSV, chuẩn bị bằng chứng trong container dùng một lần.
-4. **Văn phòng 3D (đã duyệt 04/11):** bắt đầu khi tuần 5 ổn định, phục vụ demo cuối kỳ ([kế hoạch](../ke-hoach/KE_HOACH_VAN_PHONG_3D.md)).
+1. **Nghiệm thu và nối sandbox:** **xong 08/11** (W5-5, W5-6; Hình 4).
+2. **Hoàn tất bộ nhãn v1:** dữ liệu đã chuẩn bị (499 dòng); **còn chờ người kiểm tra** — việc chính 09–17/11.
+3. **Tập test với họ gói và chiến dịch mới:** **đã chuẩn bị** 240 mẫu độc thuộc 240 cụm khác nhau (bộ Datadog, đọc trong container) và 200 gói lành.
+4. **Văn phòng 3D cho demo cuối kỳ:** đã có 12 tình huống; còn đo FPS trên trình duyệt thật.
+5. Chi tiết tuần 6: [báo cáo tuần 6](BaoCaoTienDo_Tuan06.md); quy trình tuần 7–10: [quy trình thực nghiệm](../ke-hoach/QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md).
