@@ -1,5 +1,6 @@
 """Collect npm manifest metadata only; never download or execute package code."""
 
+import argparse
 import csv
 import http.client
 import json
@@ -13,7 +14,7 @@ from urllib.parse import quote, urlencode
 
 
 TARGET = 450
-OUTPUT = Path(__file__).with_name("review_450") / "public_candidates_450.csv"
+OUTPUT = Path(__file__).resolve().parents[1] / "review_450" / "public_candidates_450.csv"
 HOOKS = ("preinstall", "install", "postinstall")
 TERMS = ("postinstall", "preinstall", "install script", "node-gyp", "native addon")
 NAME = re.compile(r"^(?:@[a-z0-9._~-]+/)?[a-z0-9._~-]+$")
@@ -67,6 +68,8 @@ def manifest(candidate):
 
 
 def main():
+    argparse.ArgumentParser(description=f"Collect {TARGET} npm manifests with install hooks (metadata only; "
+                            f"refuses to replace {OUTPUT.name})").parse_args()
     if OUTPUT.exists():
         raise SystemExit(f"Refusing to replace {OUTPUT}")
     rows, seen = [], set()

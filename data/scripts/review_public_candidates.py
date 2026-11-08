@@ -1,5 +1,6 @@
 """Recheck npm metadata without downloading package code or assigning labels."""
 
+import argparse
 import csv
 import http.client
 import json
@@ -10,8 +11,8 @@ from urllib.parse import quote
 
 from data.scripts.collect_public_candidates import HOOKS, NAME, VERSION, get_json
 
-SOURCE = Path(__file__).with_name("review_450") / "public_candidates_450.csv"
-OUTPUT = Path(__file__).with_name("review_450") / "metadata_review_450.csv"
+SOURCE = Path(__file__).resolve().parents[1] / "review_450" / "public_candidates_450.csv"
+OUTPUT = Path(__file__).resolve().parents[1] / "review_450" / "metadata_review_450.csv"
 FIELDS = ("package", "version", "source_label", "install_hook", "source_url",
           "review_status", "search_term", "observed_at")
 EXTRA = ("metadata_status", "metadata_detail", "integrity_present", "label_decision", "reviewed_at",
@@ -51,6 +52,8 @@ def review_row(row: dict[str, str], fetch=get_json) -> dict[str, str]:
 
 
 def main() -> None:
+    argparse.ArgumentParser(description="Recheck npm metadata of the 450 candidates (refuses to replace "
+                            f"{OUTPUT.name})").parse_args()
     with SOURCE.open(newline="", encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
         if tuple(reader.fieldnames or ()) != FIELDS:

@@ -11,7 +11,7 @@ from pathlib import Path
 from data.scripts.review_public_candidates import EXTRA, FIELDS, SOURCE, review_row
 
 BATCH_SIZE = 18
-OUTPUT_DIR = Path(__file__).with_name("review_450") / "batches"
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / "review_450" / "batches"
 
 
 def run_batches(source: Path = SOURCE, output_dir: Path = OUTPUT_DIR, batch: int | None = None,
