@@ -51,3 +51,15 @@ rtk proxy python -m data.scripts.review_batches
 ```
 
 Không thực thi nội dung trong cột `hook_commands`: đó là văn bản không tin cậy do nhà phát hành gói cung cấp. Quyết định nhãn mới nhất nằm ở `labels.csv` và [hồ sơ tuần 2](REVIEW_WEEK2.md); các batch là ảnh chụp metadata tại thời điểm chạy.
+
+## Phân loại sơ bộ 450 ứng viên (D-1, 08/11/2026)
+
+`py -3.14 -m data.scripts.triage_candidates` chạy trong container dùng một lần (tải đúng phiên bản, kiểm `sha512` của npm, giải nén an toàn trong tmpfs, chỉ đọc bằng công cụ tĩnh của dự án; không chạy script gói, không giải nén trên Windows). Kết quả: [`review_450/triage_450.csv`](review_450/triage_450.csv) và từng batch trong `review_450/triage/`.
+
+| Nhóm | Số gói | Nghĩa |
+| --- | --- | --- |
+| A | 132 | Không thấy dấu hiệu rủi ro trên đường cài đặt → kiểm nhanh |
+| B | 258 | Có thứ người kiểm tra phải đọc (chỉ báo rủi ro, endpoint, luồng secret/env, shell script, mã inline, làm rối) |
+| C | 60 | Chưa phân loại được: 29 gói vượt giới hạn giải nén/kích thước, 8 gói 404, 3 không còn hook trong tarball, 20 không đọc được file cài đặt |
+
+**Nhóm không phải nhãn.** Nhóm A chỉ có nghĩa là công cụ tĩnh không thấy dấu hiệu; nhóm B gồm cả gói lành (tải binary, build) lẫn gói đáng ngờ. Ví dụ `@ma.vu/virus@1.0.3` (nhãn `suspicious` trong `labels.csv`) nằm ở nhóm B vì `moon.sh`. Nhãn chỉ được ghi sau khi người thật kiểm tra (kế hoạch [KE_HOACH_DU_LIEU_400](../docs/ke-hoach/KE_HOACH_DU_LIEU_400.md)).

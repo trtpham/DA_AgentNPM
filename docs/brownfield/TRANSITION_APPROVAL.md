@@ -369,3 +369,15 @@ EVIDENCE_REFERENCES: chat với Claude 08/11: "Ký W5-5 cho tôi luôn đi"; tr�
 - **Mở:** W5-6 cho `tests/fixtures/packages` và `tests/fixtures/sandbox-limits`. **Không mở:** gói thật, corpus mô phỏng trong container, đổi `--network none`.
 - **Kiểm chứng:** `RUN_SANDBOX_TESTS=1 py -3.14 -m pytest -q tests/test_sandbox_limits.py` → 14 passed sau khi đổi; `memory` 192 MB.
 - Owner: Claude. Reviewer: TV3 (khi có mặt). Rollback: revert commit `sandbox: …` ngày 08/11.
+
+## Gate B0 — Dữ liệu 400–500 mẫu, bước D-1 (2026-11-08)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-08 Asia/Saigon
+EVIDENCE_REFERENCES: chat với Claude 08/11, trả lời câu hỏi "Duyệt kế hoạch và cho tải 450 tarball trong container?": "Duyệt, làm D-1".
+
+- **Kế hoạch:** [`docs/ke-hoach/KE_HOACH_DU_LIEU_400.md`](../ke-hoach/KE_HOACH_DU_LIEU_400.md), mục 7 chấp nhận như bản nháp: tải 450 tarball ứng viên; chỉ tiêu ≥ 180 lành / ≥ 180 độc; phân công kiểm tra chéo TV1 lượt độc, TV3 lượt lành, TV2 chốt.
+- **D-1 được làm:** `data/scripts/triage_candidates.py` tải đúng phiên bản và kiểm hash trong **container dùng một lần** (`--network` chỉ để tải registry, `--read-only`, không chạy script gói), chạy công cụ tĩnh, ghi bảng nhóm A/B/C. Kết quả là gợi ý sắp thứ tự, **không phải nhãn**; không ghi `labels.csv`.
+- **Không:** giải nén tarball trên Windows, chạy `npm install`/script gói, đưa tarball lên Git, dùng kết quả D-1 làm nhãn.
+- Owner: Claude. Reviewer: TV1. Rollback: revert commit `data: …`.
