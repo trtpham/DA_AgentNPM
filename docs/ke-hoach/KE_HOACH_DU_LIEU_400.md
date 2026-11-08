@@ -1,6 +1,6 @@
-# Kế hoạch dữ liệu: từ 76 lên 400–500 mẫu có nhãn (BẢN NHÁP chờ PO duyệt)
+# Kế hoạch dữ liệu: từ 76 lên 400–500 mẫu có nhãn
 
-> Ngày lập: 08/11/2026 · Người lập: Claude · Người duyệt: PO Phạm Minh Triết · Owner dữ liệu: TV1 Lê Đặng Thiên Phước · Kiểm tra chéo: TV1, TV3 Nguyễn Đình Thiên, TV2 chốt.
+> Trạng thái: **đã duyệt 08/11/2026** (Gate B0 dữ liệu D-1). Ngày lập: 08/11/2026 · Người lập: Claude · Người duyệt: PO Phạm Minh Triết · Owner dữ liệu: TV1 Lê Đặng Thiên Phước · Kiểm tra chéo: TV1, TV3 Nguyễn Đình Thiên, TV2 chốt.
 > Căn cứ: [KE_HOACH.md](KE_HOACH.md) giai đoạn 4 — "Chuẩn bị 400–500 mẫu sau lọc trùng, tách dev/test" trước thực nghiệm tuần 7–8.
 
 ## 1. Hiện trạng (đo ngày 08/11)
@@ -64,8 +64,8 @@
 
 | ID | Việc | File | Xong khi |
 | --- | --- | --- | --- |
-| D-1 | Phân loại sơ bộ 450 ứng viên trong container: tải đúng phiên bản + hash, chạy công cụ tĩnh, ghi bảng nhóm A/B/C kèm lý do; resume theo batch | `data/scripts/triage_candidates.py` | Test trên fixture; chạy hết 450 trong container, 0 lần chạy script gói |
-| D-2 | Sinh phiếu và bằng chứng cho lượt mới từ bảng đề xuất (mở rộng `review_sheet`/`review_evidence` khỏi cố định 4 lượt) | `data/scripts/review_sheet.py`, `review_evidence.py` | `round-5…` tạo được, `check` chạy đúng |
+| D-1 ✅ 08/11: A 132 / B 258 / C 60 | Phân loại sơ bộ 450 ứng viên trong container: tải đúng phiên bản + hash, chạy công cụ tĩnh, ghi bảng nhóm A/B/C kèm lý do; resume theo batch | `data/scripts/triage_candidates.py` | Test trên fixture; chạy hết 450 trong container, 0 lần chạy script gói |
+| D-2 ✅ 08/11: lượt 5 (40 gói) | Sinh phiếu và bằng chứng cho lượt mới từ bảng đề xuất (mở rộng `review_sheet`/`review_evidence` khỏi cố định 4 lượt) | `data/scripts/review_sheet.py`, `review_evidence.py` | `round-5…` tạo được, `check` chạy đúng |
 | D-3 | Lọc trùng chính xác và gần trùng, gán cụm, áp trần cụm | `data/scripts/dedupe_labels.py` | Test với dữ liệu giả: trùng hash bị gộp, cụm vượt trần bị cắt có ghi lý do |
 | D-4 | Báo cáo độ phủ: số mẫu theo nhãn/cụm/split, tỷ lệ đã kiểm tra, cụm vượt trần | `data/scripts/data_report.py` | In bảng so với chỉ tiêu mục 2 |
 | D-5 | Hướng dẫn chạy luồng Datadog trong VM (lệnh, kiểm tra hash, không giải nén trên Windows) | `docs/giao-viec/D_DU_LIEU_DATADOG_VM.md` | TV3/TV1 làm theo được |

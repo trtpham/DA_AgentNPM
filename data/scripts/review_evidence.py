@@ -136,16 +136,30 @@ def to_markdown(round_number: int, results: list[dict]) -> str:
     return "\n".join(out) + "\n"
 
 
-def run_round(round_number: int, labels: Path, output: Path, runner=subprocess.run) -> dict:
-    from data.scripts.review_sheet import ROUNDS
+def round_rows(round_number: int, labels: Path, sheet: Path | None = None) -> list[dict]:
+    """Rows of a round: rounds 1-4 by their fixed filter, later rounds by the ids in their sheet."""
+    from data.scripts.review_sheet import ROUNDS, sheet_ids
     from experiments.dataset import load_labels
-    rows = [row for row in load_labels(labels) if ROUNDS[round_number](row)]
+    table = load_labels(labels)
+    if round_number in ROUNDS:
+        return [row for row in table if ROUNDS[round_number](row)]
+    sheet = sheet or Path("data/review_rounds") / f"round-{round_number}.csv"
+    by_id = {row["id"]: row for row in table}
+    ids = sheet_ids(sheet)
+    missing = [row_id for row_id in ids if row_id not in by_id]
+    if missing:
+        raise ValueError(f"{sheet} lists ids not in {labels}: {missing[:5]}")
+    return [by_id[row_id] for row_id in ids]
+
+
+def run_round(round_number: int, labels: Path, output: Path, runner=subprocess.run, sheet: Path | None = None) -> dict:
+    rows = round_rows(round_number, labels, sheet)
     command = ["docker", "run", "--rm", "-i", "--read-only", "--tmpfs", "/tmp:rw,size=64m", "--cap-drop", "ALL",
                "--security-opt", "no-new-privileges", "--memory", "512m", "--pids-limit", "64", "--user", "10001:10001",
                "--mount", f"type=bind,source={Path(__file__).resolve()},target=/review_evidence.py,readonly",
                IMAGE, "python", "-I", "/review_evidence.py", "--inside"]
     completed = runner(command, input="\n".join(json.dumps(row) for row in rows), capture_output=True,
-                       text=True, timeout=3600, check=False)
+                       text=True, encoding="utf-8", errors="replace", timeout=3600, check=False)
     if completed.returncode:
         raise RuntimeError(f"container failed: {completed.stderr[-300:]}")
     results = [json.loads(line) for line in completed.stdout.splitlines() if line.strip()]
@@ -156,8 +170,9 @@ def run_round(round_number: int, labels: Path, output: Path, runner=subprocess.r
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare static evidence for a cross-review round")
-    parser.add_argument("round", type=int, nargs="?", choices=(1, 2, 3, 4))
-    parser.add_argument("--labels", type=Path, default=Path("data/labels.csv"))
+    parser.add_argument("round", type=int, nargs="?")
+    parser.add_argument("--labels", type=Path, default=Path("data/labels.csv"),
+                        help="label table; rounds 5+ use data/proposals.csv")
     parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.inside:

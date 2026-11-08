@@ -114,3 +114,10 @@ def test_shell_script_and_inline_hooks_need_a_reader(tmp_path):
     assert result["group"] == "B" and "shell script on the install path: moon.sh" in result["reasons"]
     inline = triage(str(FIXTURES / "corpus" / "inline-thanks"))
     assert inline["group"] == "B" and "inline code in a lifecycle hook" in inline["reasons"]
+
+
+def test_entries_point_to_where_reading_starts():
+    assert triage(str(FIXTURES / "corpus" / "twin-safe"))["entries"] == [
+        {"hook": "postinstall", "file": "setup.js", "lines": 5}]
+    inline = triage(str(FIXTURES / "corpus" / "inline-thanks"))["entries"]
+    assert inline[0]["file"] == "package.json" and isinstance(inline[0]["line"], int)

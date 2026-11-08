@@ -18,6 +18,14 @@ Trạng thái hiện tại: cả 4 phiếu đều trống (`check` ra `pending` 
 4. Lưu, rồi chạy `py -3.14 -m data.scripts.review_sheet check data/review_rounds/round-N.csv` cho tới khi ra `'complete': True, 'problems': []`.
 5. Báo Triết. Triết chạy `check` cho cả 4 phiếu và commit.
 
+## Lượt mới (từ 08/11/2026)
+
+| Lượt | Nội dung | Người | Số dòng |
+| --- | --- | --- | --- |
+| `round-5.csv` | 40 gói lành **nháp** từ phân loại tĩnh nhóm A (D-2); bằng chứng `evidence/round-5.md` | TV3 Nguyễn Đình Thiên | 40 |
+
+Với lượt 5, cột `label` = `benign` chỉ là đề xuất của Claude. Đọc đoạn trích; nếu thấy hành vi khác (gọi mạng, đọc secret…) hoặc đoạn trích không đủ, chọn `revise`/`exclude` và ghi `note`.
+
 ## Phân công
 
 | Người | Phiếu | Nội dung | Số dòng | Ước tính |

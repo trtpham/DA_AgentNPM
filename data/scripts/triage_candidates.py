@@ -38,7 +38,7 @@ HOST = "registry.npmjs.org"
 MAX_ARCHIVE = 60 * 1024 * 1024
 NATIVE_BUILD = frozenset({"node-gyp", "prebuild-install", "node-pre-gyp", "prebuild", "cmake-js"})
 FIELDS = ("package", "version", "group", "reasons", "hooks", "external", "risky", "hosts", "flows",
-          "files", "tarball_sha256")
+          "files", "entries", "tarball", "tarball_sha256")
 
 
 def _download(url: str) -> bytes:
@@ -72,8 +72,22 @@ def triage(package_dir: str) -> dict:
         b_reasons.append("hook runs code from outside the package: " + ", ".join(fetchers))
     # The indicator regexes read JavaScript; shell scripts and inline commands (`env`, `printenv`,
     # `node -e ...`) must be read by a person (found on @ma.vu/virus, labelled suspicious).
-    commands = [command for hook in (inspect_scripts(package_dir)["data"] or {}).get("hooks", [])
-                for command in hook["commands"]]
+    hook_rows = (inspect_scripts(package_dir)["data"] or {}).get("hooks", [])
+    commands = [command for hook in hook_rows for command in hook["commands"]]
+    # Where a reviewer starts reading: each file a hook runs (with its line count), or the
+    # package.json line of a hook whose code is inline.
+    entries = []
+    for hook in hook_rows:
+        files = sorted({file for command in hook["commands"] for file in command["runs_file"]})
+        for file in files:
+            try:
+                count = len((Path(package_dir) / file).read_text(encoding="utf-8", errors="replace").splitlines())
+            except OSError:
+                count = None
+            entries.append({"hook": hook["hook"], "file": file, "lines": count})
+        if not files and hook["line"]:
+            entries.append({"hook": hook["hook"], "file": "package.json", "line": hook["line"]})
+    result["entries"] = entries[:10]
     shell_files = sorted({file for command in commands for file in command["runs_file"]
                           if file.endswith((".sh", ".bash", ".bat", ".cmd", ".ps1"))})
     if shell_files:
@@ -131,6 +145,7 @@ def inspect(row: dict, work: Path) -> dict:
         if algorithm != "sha512" or hashlib.sha512(tarball).digest() != base64.b64decode(digest):
             raise ValueError("tarball does not match registry integrity")
         result["tarball_sha256"] = hashlib.sha256(tarball).hexdigest()
+        result["tarball"] = meta["dist"]["tarball"]
         shutil.rmtree(work, ignore_errors=True)
         (work / "package").mkdir(parents=True)
         (work / "pkg.tgz").write_bytes(tarball)
@@ -191,7 +206,8 @@ def summarize(out_dir: Path = OUT_DIR, summary: Path = SUMMARY) -> dict:
                              "external": " ".join(item.get("external", [])),
                              "risky": json.dumps(item.get("risky", {})), "hosts": " ".join(item.get("hosts", [])),
                              "flows": " | ".join(item.get("flows", [])), "files": item.get("files"),
-                             "tarball_sha256": item.get("tarball_sha256", "")})
+                             "entries": json.dumps(item.get("entries", []), ensure_ascii=False),
+                             "tarball": item.get("tarball", ""), "tarball_sha256": item.get("tarball_sha256", "")})
     return {"rows": len(items), "groups": dict(sorted(Counter(item["group"] for item in items).items()))}
 
 

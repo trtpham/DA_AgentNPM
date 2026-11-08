@@ -63,3 +63,15 @@ Không thực thi nội dung trong cột `hook_commands`: đó là văn bản kh
 | C | 60 | Chưa phân loại được: 29 gói vượt giới hạn giải nén/kích thước, 8 gói 404, 3 không còn hook trong tarball, 20 không đọc được file cài đặt |
 
 **Nhóm không phải nhãn.** Nhóm A chỉ có nghĩa là công cụ tĩnh không thấy dấu hiệu; nhóm B gồm cả gói lành (tải binary, build) lẫn gói đáng ngờ. Ví dụ `@ma.vu/virus@1.0.3` (nhãn `suspicious` trong `labels.csv`) nằm ở nhóm B vì `moon.sh`. Nhãn chỉ được ghi sau khi người thật kiểm tra (kế hoạch [KE_HOACH_DU_LIEU_400](../docs/ke-hoach/KE_HOACH_DU_LIEU_400.md)).
+
+## Lượt kiểm tra chéo mới từ đề xuất (D-2, 08/11/2026)
+
+```powershell
+py -3.14 -m data.scripts.propose_labels 5 --limit 40              # nhóm A → data/proposals.csv + data/review_rounds/round-5.csv
+py -3.14 -m data.scripts.review_evidence 5 --labels data/proposals.csv   # bằng chứng trong container → evidence/round-5.md (chỉ trên máy)
+py -3.14 -m data.scripts.review_sheet check data/review_rounds/round-5.csv
+```
+
+- `data/proposals.csv` cùng hợp đồng 11 cột với `labels.csv`. Mỗi dòng là **bản nháp do Claude viết từ phân loại tĩnh**: nhãn `benign`, file mà hook chạy và tối đa 150 dòng đầu, `technique = draft-no-risky-sign`, `split = pending`. Bản nháp **không** dùng để đo cho tới khi người khác người soạn đánh `verified` trong phiếu.
+- Chỉ nhóm A được đề xuất tự động; nhóm B cần người đọc mã trước. Mỗi cụm tối đa 12 dòng (tính cả `labels.csv`).
+- Lượt 5: 40 gói, phân công TV3 Nguyễn Đình Thiên (lượt lành, theo kế hoạch dữ liệu). Cách điền giống [phiếu W5-10](../docs/giao-viec/W5-10_KIEM_TRA_CHEO_NHAN.md); nếu đoạn trích không đủ để kết luận, ghi `exclude` hoặc `revise` kèm `note`.
