@@ -86,3 +86,7 @@ py -3.14 -m data.scripts.dedupe_labels --output data/dataset-v1-draft.csv       
 Thứ tự luật: cùng `name@version` → giữ dòng đầu (`labels.csv` trước `proposals.csv`); cùng sha256 tarball → một mẫu; cùng `install_hash` (mã chạy lúc cài, bỏ tên/phiên bản/khoảng trắng; tính trong D-1) → gộp cụm; cụm quá 12 dòng → giữ 12 dòng đầu; cụm có ở cả dev và test → báo rò rỉ.
 
 Lần chạy 08/11 trên 76 nhãn + 40 đề xuất: giữ **99**, bỏ 17 (đều do trần cụm: `mut-4831` 5, `npm-token-worm-2026-03` 6, `shai-hulud-2-2025-11` 6), gộp 1 cặp cụm, 47 cụm, 0 cụm rò rỉ dev/test. Trong 450 ứng viên có 10 nhóm mã cài đặt giống hệt nhau (21 gói), ví dụ 3 gói `@db-ux/*`.
+
+## Báo cáo độ phủ (D-4)
+
+`py -3.14 -m data.scripts.data_report` so bộ nhãn sau lọc trùng (D-3) với chỉ tiêu v1 (≥ 400 mẫu, ≥ 180 lành, ≥ 180 độc, ≥ 40 cụm, cụm ≤ 12). Chỉ dòng `verified` trong phiếu kiểm tra mới được tính. Ngày 08/11: 0/400 verified; 99 dòng sau lọc trùng đang chờ kiểm tra. Luồng mẫu độc từ Datadog: [phiếu D-5](../docs/giao-viec/D_DU_LIEU_DATADOG_VM.md).

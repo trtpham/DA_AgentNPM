@@ -5,7 +5,7 @@
 | [`ke-hoach/`](ke-hoach/) | Kế hoạch tổng thể 10 tuần và các kế hoạch đã duyệt |
 | [`nhat-ky-tuan/`](nhat-ky-tuan/) | Nhật ký kỹ thuật từng tuần: việc đã làm, lệnh kiểm chứng, PASS/FAIL |
 | [`bao-cao-tuan/`](bao-cao-tuan/) | Báo cáo tiến độ cho giảng viên, hướng dẫn demo |
-| [`giao-viec/`](giao-viec/) | Phiếu giao việc cho thành viên (nghiệm thu sandbox W5-5, kiểm tra chéo nhãn W5-10) |
+| [`giao-viec/`](giao-viec/) | Phiếu giao việc cho thành viên (nghiệm thu sandbox W5-5, kiểm tra chéo nhãn W5-10, lọc mẫu Datadog trong VM D-5) |
 | [`hinh-anh/`](hinh-anh/) | Ảnh kết quả thật dùng trong báo cáo |
 | [`brownfield/`](brownfield/) | `TRANSITION_APPROVAL.md`: mọi Gate B0 do PO duyệt |
 | [`ban-giao/`](ban-giao/) | Bàn giao mới nhất giữa các trợ lý code |
