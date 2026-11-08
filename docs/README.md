@@ -19,6 +19,7 @@ Mỗi tuần có **một** nhật ký (`nhat-ky-tuan/tuan-XX.md`) và **một** 
 - [Kế hoạch công cụ, năng lực agent và sandbox (07/11/2026)](ke-hoach/KE_HOACH_TOOLS_AGENT_SANDBOX.md)
 - [Kế hoạch hoàn thiện việc dở tuần 2–5 (08/11/2026)](ke-hoach/KE_HOACH_HOAN_THIEN_2026-11-08.md)
 - [Kế hoạch dữ liệu: từ 76 lên 400–500 mẫu (08/11/2026, đã duyệt)](ke-hoach/KE_HOACH_DU_LIEU_400.md)
+- [Kế hoạch gỡ các điểm tắc (08/11/2026, chờ duyệt)](ke-hoach/KE_HOACH_GO_STUCK_2026-11-08.md)
 - [Kế hoạch văn phòng 3D](ke-hoach/KE_HOACH_VAN_PHONG_3D.md)
 - (Đã xong, lưu trữ) [Kế hoạch xử lý tồn đọng khi Claude tiếp nhận (03/11/2026)](../archive/ke-hoach-da-xong/KE_HOACH_XU_LY_TON_DONG_2026-11-03.md)
 - (Đã xong, lưu trữ) [Kế hoạch cải thiện chất lượng I1–I7 (03/11/2026)](../archive/ke-hoach-da-xong/KE_HOACH_CAI_THIEN_2026-11-03.md)
