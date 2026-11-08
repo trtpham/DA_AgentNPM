@@ -28,4 +28,18 @@
 | `demo_sandbox.py` | Demo sandbox trên gói mẫu, in một bảng dễ đọc |
 | `repro_sandbox.py` | Chạy sandbox nhiều lần để kiểm tính lặp lại (W5-4) |
 
+## Lệnh thường dùng
+
+```powershell
+py -3.14 -m tools.intel @swc/core 1.7.36 --output reports/ctx/@swc__core@1.7.36.json        # tra OSV/Registry trước
+py -3.14 -m experiments.run_batch <run_id> A-SLM --labels data/labels.csv --split dev --contexts reports/ctx
+docker build -t agent-npm-guarddog:2.6.0 experiments/guarddog                                # một lần
+py -3.14 -m experiments.baseline_guarddog <run_id> --labels data/labels.csv --split dev
+py -3.14 -m experiments.metrics reports/<run_id>                                             # thêm --source guarddog cho GuardDog
+```
+
+- Chạy lại cùng `run_id` thì bỏ qua gói đã xong. Một gói lỗi không dừng cả lô.
+- Lượt chạy lỗi tính là bỏ sót, vẫn nằm trong mẫu số.
+- GuardDog bản pip trên Windows báo "0 lỗi" giả, nên chỉ chạy trong container.
+
 Thứ tự chạy tuần 7–10: [QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md](../docs/ke-hoach/QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md).

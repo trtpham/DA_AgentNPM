@@ -45,7 +45,7 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 
 *Thay ảnh này bằng ảnh kết quả thật khi có bằng chứng.*
 
-### Hoàn thiện việc dở tuần 2–5 (08/11/2026, kế hoạch: [KE_HOACH_HOAN_THIEN_2026-11-08.md](../ke-hoach/KE_HOACH_HOAN_THIEN_2026-11-08.md))
+### Hoàn thiện việc dở tuần 2–5 (08/11/2026, kế hoạch: [KE_HOACH_HOAN_THIEN_2026-11-08.md](../../archive/ke-hoach-da-xong/KE_HOACH_HOAN_THIEN_2026-11-08.md))
 
 - **Build lại image:** `docker build -t agent-npm-sandbox:local sandbox` → `sha256:ac8579db8b8071c53019b82784d34ba24fd326caf0d489a6847279394a7d54e0` (cũ: `b657e013…`); `/opt/canary` có đủ 8 file canary.
 - **Test Docker:** `RUN_SANDBOX_TESTS=1 py -3.14 -m pytest -q tests/test_sandbox_limits.py` → PASS 14/14 (8 cũ + 6 mới: canary C2, ghi `/etc` được ghi nhận, hardening giữ cài đặt lành, hardening bỏ swap).
