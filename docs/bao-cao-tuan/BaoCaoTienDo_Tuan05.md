@@ -5,7 +5,7 @@
 **Giai đoạn:** Hoàn thiện sandbox, chống học vẹt và công cụ mở rộng · **Ngày làm:** 04–05/11/2026 (W5-5, W5-6 hoàn tất 08/11) · **Cập nhật tình trạng:** 08/11/2026
 **Nghiệm thu:** W5-5 cách ly sandbox — Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11 (ngoại lệ do PO quyết); agent — TV2 Phạm Minh Triết
 
-> Số liệu lấy từ lần chạy thật trên máy của nhóm (Ollama cục bộ, Docker 29.1.3). Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết ở [nhật ký tuần 5](../nhat-ky-tuan/tuan-05.md); kịch bản demo ở [hướng dẫn demo](HUONG_DAN_DEMO_TUAN05.md).
+> Số liệu lấy từ lần chạy thật trên máy của nhóm (Ollama cục bộ, Docker 29.1.3). Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết ở [nhật ký tuần 5](../nhat-ky-tuan/tuan-05.md); kịch bản demo ở hướng dẫn demo.
 
 ## 1. Nội dung buổi báo cáo tuần
 

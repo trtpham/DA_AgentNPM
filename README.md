@@ -17,7 +17,9 @@ Agent chạy cục bộ (Ollama) đọc install script của gói npm, kết lu�
 | [`tests/`](tests/) | Test pytest, test Node và gói mẫu vô hại |
 | [`docs/`](docs/) | Nhật ký tuần, báo cáo tiến độ, ảnh kết quả |
 
-Mỗi thư mục có `README.md` riêng. Quy tắc làm việc và an toàn: [`AGENTS.md`](AGENTS.md).
+Mỗi thư mục có `README.md` riêng.
+
+**An toàn:** không bao giờ chạy mã của gói npm trên máy thật (không `npm install`, không `node` file của gói). Mẫu độc thật chỉ mở trong container hoặc máy ảo cách ly.
 
 ## Bắt đầu nhanh
 

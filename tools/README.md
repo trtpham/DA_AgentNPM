@@ -10,4 +10,4 @@ Mọi công cụ chỉ đọc, trừ `actions.py`. Không công cụ nào chạy
 | `intel.py` | Tra OSV và npm Registry trước khi chạy agent; chỉ dùng cho luật R5 |
 | `actions.py` | File duy nhất được ghi `package.json`: lập lệnh `npm approve-scripts` / `deny-scripts`, mặc định chạy thử |
 
-Bảng đầu vào và đầu ra của từng công cụ: AGENTS.md mục 6.4.
+Mọi công cụ trả `{"ok": ..., "data": ..., "error": ...}` và không ném lỗi ra vòng lặp agent. Nội dung lấy từ gói luôn bọc `{"untrusted": true, ...}`.

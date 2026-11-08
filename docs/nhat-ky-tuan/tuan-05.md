@@ -184,7 +184,7 @@ Sandbox trả kết quả có thể tái hiện và không chạm secret thật;
 
 ### W5-11 — báo cáo và chuẩn bị demo (2026-11-05)
 
-- Viết [BaoCaoTienDo_Tuan05.md](../bao-cao-tuan/BaoCaoTienDo_Tuan05.md) và [HUONG_DAN_DEMO_TUAN05.md](../bao-cao-tuan/HUONG_DAN_DEMO_TUAN05.md) (kịch bản 15 phút, phân vai, dự phòng, câu hỏi thường gặp).
+- Viết [BaoCaoTienDo_Tuan05.md](../bao-cao-tuan/BaoCaoTienDo_Tuan05.md) và HUONG_DAN_DEMO_TUAN05.md (kịch bản 15 phút, phân vai, dự phòng, câu hỏi thường gặp).
 - Thêm `experiments/demo_sandbox.py`: chỉ chạy fixture của nhóm qua `run_sandbox` và in một bảng. Có test cho hàm dựng dòng.
 - Chạy thử mọi lệnh trong kịch bản:
   - `demo-rehearsal-a-llm`: benign → approve (21,1 s); canary → deny R6 (14,5 s).
