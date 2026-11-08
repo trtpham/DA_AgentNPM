@@ -2,30 +2,16 @@
 
 | Thư mục | Nội dung |
 | --- | --- |
-| [`ke-hoach/`](ke-hoach/) | Kế hoạch tổng thể 10 tuần và các kế hoạch đã duyệt |
 | [`nhat-ky-tuan/`](nhat-ky-tuan/) | Nhật ký kỹ thuật từng tuần: việc đã làm, lệnh kiểm chứng, PASS/FAIL |
 | [`bao-cao-tuan/`](bao-cao-tuan/) | Báo cáo tiến độ cho giảng viên, hướng dẫn demo |
-| [`giao-viec/`](giao-viec/) | Phiếu giao việc cho thành viên (nghiệm thu sandbox W5-5, kiểm tra chéo nhãn W5-10, [phân công 15 lượt](giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md), lọc mẫu Datadog D-5) |
 | [`hinh-anh/`](hinh-anh/) | Ảnh kết quả thật dùng trong báo cáo |
-| [`brownfield/`](brownfield/) | `TRANSITION_APPROVAL.md`: mọi Gate B0 do PO duyệt |
-| [`ban-giao/`](ban-giao/) | Bàn giao mới nhất giữa các trợ lý code |
 | `lms/` | Bản LMS docx/pdf nộp trường, chỉ trên máy (Git ignore) |
 
-Mỗi tuần có **một** nhật ký (`nhat-ky-tuan/tuan-XX.md`) và **một** báo cáo tiến độ (`bao-cao-tuan/BaoCaoTienDo_TuanXX.md`). Khi cập nhật, sửa file hiện có, không tạo bản `v2`/`final`. Tài liệu cũ không còn dùng nằm ở [`../archive/`](../archive/).
+Mỗi tuần có **một** nhật ký (`nhat-ky-tuan/tuan-XX.md`) và **một** báo cáo tiến độ (`bao-cao-tuan/BaoCaoTienDo_TuanXX.md`). Khi cập nhật, sửa file hiện có, không tạo bản `v2`/`final`. Tài liệu cũ không còn dùng nằm ở `archive/` (chỉ trên máy).
 
-## Kế hoạch
+## Tài liệu nội bộ (chỉ trên máy, không có trên GitHub)
 
-Đang dùng:
-- [Kế hoạch tổng thể 10 tuần](ke-hoach/KE_HOACH.md)
-- [Kế hoạch dữ liệu: từ 76 lên 400–500 mẫu](ke-hoach/KE_HOACH_DU_LIEU_400.md)
-- [Kế hoạch gỡ các điểm tắc (còn chờ kiểm tra chéo nhãn)](ke-hoach/KE_HOACH_GO_STUCK_2026-11-08.md)
-- [Quy trình thực nghiệm tuần 7–10](ke-hoach/QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md)
-
-Đặc tả mà mã nguồn còn trích dẫn:
-- [Công cụ, năng lực agent và sandbox](ke-hoach/KE_HOACH_TOOLS_AGENT_SANDBOX.md) (`tools/explore.py`)
-- [Văn phòng 3D](ke-hoach/KE_HOACH_VAN_PHONG_3D.md) (`viewer/`)
-
-Đã xong, lưu trữ trong [`../archive/ke-hoach-da-xong/`](../archive/ke-hoach-da-xong/): xử lý tồn đọng (03/11), cải thiện I1–I7 (03/11), hoàn thiện việc dở tuần 2–5 (08/11).
+`ke-hoach/` (kế hoạch), `giao-viec/` (phiếu giao việc, phân công kiểm tra chéo), `brownfield/` (Gate B0 do PO duyệt), `ban-giao/` (bàn giao giữa trợ lý code), `../archive/` (file cũ).
 
 ## Theo tuần
 

@@ -42,4 +42,4 @@ py -3.14 -m experiments.metrics reports/<run_id>                                
 - Lượt chạy lỗi tính là bỏ sót, vẫn nằm trong mẫu số.
 - GuardDog bản pip trên Windows báo "0 lỗi" giả, nên chỉ chạy trong container.
 
-Thứ tự chạy tuần 7–10: [QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md](../docs/ke-hoach/QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md).
+Thứ tự chạy tuần 7–10: QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md.

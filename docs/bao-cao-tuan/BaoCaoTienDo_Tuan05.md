@@ -124,8 +124,8 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
 
 | Vướng | Nguyên nhân | Ảnh hưởng | Hướng xử lý |
 | --- | --- | --- | --- |
-| **Chưa có Recall/F1 trên mẫu độc** | Nhãn do AI soạn phải có người khác kiểm; 0/499 dòng đã kiểm | Chặn thực nghiệm tuần 7–8 | Bằng chứng và ô **kiểm tự động** đã sẵn (rút ~2–3 phút/dòng xuống ~30–60 giây); [phân công 15 lượt](../giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md) cho Phước, Thiên, Triết, hạn 17/11; đóng băng 19/11 |
-| **W5-5 do PO nghiệm thu thay TV3** | Ngoại lệ quy trình do PO quyết | Chưa có lần kiểm độc lập của người phụ trách sandbox | Thiên tự chạy lại 3 lệnh trong [phiếu W5-5](../giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md) khi có mặt và ghi kết quả dưới biên bản |
+| **Chưa có Recall/F1 trên mẫu độc** | Nhãn do AI soạn phải có người khác kiểm; 0/499 dòng đã kiểm | Chặn thực nghiệm tuần 7–8 | Bằng chứng và ô **kiểm tự động** đã sẵn (rút ~2–3 phút/dòng xuống ~30–60 giây); phân công 15 lượt cho Phước, Thiên, Triết, hạn 17/11; đóng băng 19/11 |
+| **W5-5 do PO nghiệm thu thay TV3** | Ngoại lệ quy trình do PO quyết | Chưa có lần kiểm độc lập của người phụ trách sandbox | Thiên tự chạy lại 3 lệnh trong phiếu W5-5 khi có mặt và ghi kết quả dưới biên bản |
 | **Gói sinh nhiều tiến trình làm trace vượt 2 MB** | Chỉ giữ 2 MB cuối của log | Phần đầu cây tiến trình mất, sự kiện thành `unknown` | An toàn: kết quả `ok=False`, không thể dẫn tới cho phép. Nếu cần: tóm tắt trace ngay trong container |
 | **A-SLM chưa nhận ra canary bằng phán đoán** | Model 4B xếp gói canary vào "chuyển người xem" | Bỏ lỡ một ca độc rõ khi không có sandbox | Có sandbox thì R1 tự từ chối (Hình 4) |
 | **A-TLM (0.8b) mất khả năng phân biệt** khi bằng chứng bị kiểm chặt | Model quá nhỏ cho tác vụ | Mọi gói về "chuyển người xem" | Dùng làm mốc so sánh, không triển khai |
@@ -137,4 +137,4 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
 2. **Hoàn tất bộ nhãn v1:** dữ liệu đã chuẩn bị (499 dòng); **còn chờ người kiểm tra** — việc chính 09–17/11.
 3. **Tập test với họ gói và chiến dịch mới:** **đã chuẩn bị** 240 mẫu độc thuộc 240 cụm khác nhau (bộ Datadog, đọc trong container) và 200 gói lành.
 4. **Văn phòng 3D cho demo cuối kỳ:** đã có 12 tình huống; còn đo FPS trên trình duyệt thật.
-5. Chi tiết tuần 6: [báo cáo tuần 6](BaoCaoTienDo_Tuan06.md); quy trình tuần 7–10: [quy trình thực nghiệm](../ke-hoach/QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md).
+5. Chi tiết tuần 6: [báo cáo tuần 6](BaoCaoTienDo_Tuan06.md); quy trình tuần 7–10: quy trình thực nghiệm.

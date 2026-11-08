@@ -15,8 +15,7 @@ Agent chạy cục bộ (Ollama) đọc install script của gói npm, kết lu�
 | [`data/`](data/) | Bảng nhãn, phiếu kiểm tra chéo, script xử lý dữ liệu |
 | [`viewer/`](viewer/) | Trình xem lại từng bước agent đã làm |
 | [`tests/`](tests/) | Test pytest, test Node và gói mẫu vô hại |
-| [`docs/`](docs/) | Kế hoạch, nhật ký tuần, báo cáo tiến độ, phiếu giao việc |
-| [`archive/`](archive/) | File cũ, chỉ để tra cứu |
+| [`docs/`](docs/) | Nhật ký tuần, báo cáo tiến độ, ảnh kết quả |
 
 Mỗi thư mục có `README.md` riêng. Quy tắc làm việc và an toàn: [`AGENTS.md`](AGENTS.md).
 
@@ -34,4 +33,4 @@ Cần Ollama đang chạy và có model ghi trong `experiments/configs/`. Mọi 
 
 ## Không đưa lên Git
 
-`data/samples/` (mẫu độc thật), `reports/` (kết quả chạy), file `.tgz`, `sandbox/out/`, `docs/lms/`.
+`data/samples/` (mẫu độc thật), `reports/` (kết quả chạy), file `.tgz`, `sandbox/out/`, `docs/lms/`. Tài liệu nội bộ của nhóm (`docs/ke-hoach/`, `docs/giao-viec/`, `docs/brownfield/`, `docs/ban-giao/`, `archive/`) chỉ giữ trên máy.

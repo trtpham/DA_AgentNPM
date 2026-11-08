@@ -62,11 +62,11 @@ Agent hoàn thành ca phân tích tĩnh trên tập dev nhỏ; lưu kết quả 
 
 ## Cải thiện chất lượng I1–I4 ngày 2026-11-04 (Claude)
 
-*Ghi ở tuần 4 vì đồ án đang ở tuần 4; phạm vi theo [kế hoạch cải thiện](../../archive/ke-hoach-da-xong/KE_HOACH_CAI_THIEN_2026-11-03.md).*
+*Ghi ở tuần 4 vì đồ án đang ở tuần 4; phạm vi theo kế hoạch cải thiện.*
 
 ### I1 — lý do quyết định cụ thể
 
-- **Ngày / người thực hiện / người kiểm tra:** 2026-11-04 / Claude, cải thiện I1 theo [kế hoạch cải thiện](../../archive/ke-hoach-da-xong/KE_HOACH_CAI_THIEN_2026-11-03.md) và Gate B0 ngày 03/11 / chờ TV2 review.
+- **Ngày / người thực hiện / người kiểm tra:** 2026-11-04 / Claude, cải thiện I1 theo kế hoạch cải thiện và Gate B0 ngày 03/11 / chờ TV2 review.
 - **Đã làm (I1 — lý do quyết định cụ thể; không đổi luật approve/deny, không đổi schema):**
   - `extract_indicators` trả thêm `incomplete`: các file `.node` không có trong gói (gộp thành một dòng), file nguồn không đọc được, chạm giới hạn độ sâu require, 30 chỉ báo hoặc 100 file.
   - Chỉ báo mới `external_install` cho lệnh tải mã ngoài nằm trong mã nguồn, ví dụ ``execSync(`npm install …`)``.

@@ -22,3 +22,9 @@ docs/lms/
 .mcp.json
 .vscode/
 .idea/
+# Tài liệu nội bộ của nhóm: chỉ giữ trên máy, không đưa lên GitHub (PO quyết định 08/11/2026).
+docs/ban-giao/
+docs/brownfield/
+docs/giao-viec/
+docs/ke-hoach/
+archive/

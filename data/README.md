@@ -24,7 +24,7 @@ Sau ngày 19/11 sẽ có thêm `labels-v1.csv`: bản đóng băng, chỉ gồm 
 | `review_450/metadata_review_450.csv` | Kết quả đối chiếu manifest tuần 2 (445 khớp, 5 lỗi 404) |
 | `review_450/triage/` | Kết quả phân loại theo từng batch, để chạy tiếp khi bị ngắt |
 
-File cũ hơn đã chuyển vào [`archive/data/`](../archive/data/).
+File cũ hơn đã chuyển vào `archive/data/` (chỉ trên máy).
 
 ## Quy trình
 
@@ -63,4 +63,4 @@ Mẫu độc: `datadog_container --zips 800`, rồi `propose_labels 10 --limit 4
 - Nhóm A/B/C **không phải nhãn**. Nhóm A chỉ nghĩa là công cụ tĩnh không thấy dấu hiệu.
 - Nhãn nháp và ô kiểm tự động không bao giờ thay chữ ký của người kiểm tra.
 - Không chạy nội dung cột `hook_commands`: đó là văn bản không tin cậy của nhà phát hành gói.
-- Phân công kiểm tra: [PHAN_CONG_KIEM_TRA_CHEO.md](../docs/giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md). Kế hoạch dữ liệu: [KE_HOACH_DU_LIEU_400.md](../docs/ke-hoach/KE_HOACH_DU_LIEU_400.md).
+- Phân công kiểm tra: PHAN_CONG_KIEM_TRA_CHEO.md. Kế hoạch dữ liệu: KE_HOACH_DU_LIEU_400.md.

@@ -106,7 +106,7 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 
 ### Chạy theo batch ngày 2026-10-29
 
-- Chia 450 ứng viên thành **25 batch × 18 gói** trong [`archive/data/review_450-batches/`](../../archive/data/review_450-batches/), chạy xong cả 25 batch. Mỗi batch ghi CSV sau khi hoàn tất và được kiểm tra khi chạy lại, nên có thể tiếp tục sau khi mạng ngắt.
+- Chia 450 ứng viên thành **25 batch × 18 gói** trong `archive/data/review_450-batches/`, chạy xong cả 25 batch. Mỗi batch ghi CSV sau khi hoàn tất và được kiểm tra khi chạy lại, nên có thể tiếp tục sau khi mạng ngắt.
 - Kết quả hợp nhất: 450 cặp tên/phiên bản duy nhất; 445 manifest khớp, 5 HTTP 404; từng trường metadata khớp file tổng `metadata_review_450.csv`. Lượt này chỉ đọc manifest và lệnh lifecycle, không AI scan hoặc thực thi gói. Nhãn trong `labels.csv` vẫn do lượt xem mã và kiểm tra chéo riêng quyết định.
 - Kiểm thử sau khi thêm batch runner: 67/67 pytest PASS; Semgrep `--config auto --error` PASS; `git diff --check` PASS. Chạy lại batch 1 báo `already complete`, không gọi Registry lần nữa.
 

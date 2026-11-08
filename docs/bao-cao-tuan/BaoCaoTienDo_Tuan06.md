@@ -60,7 +60,7 @@ Nhóm chưa có ảnh buổi báo cáo tuần 6. Khi có, thêm `../hinh-anh/tua
 
 | Vướng | Nguyên nhân | Hướng xử lý |
 | --- | --- | --- |
-| 0/516 dòng đã kiểm tra chéo | Nhãn do AI soạn nên phải có người khác kiểm; chưa ai điền phiếu | [Phân công 15 lượt](../giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md): mỗi người ~6–7 giờ, hạn 17/11 |
+| 0/516 dòng đã kiểm tra chéo | Nhãn do AI soạn nên phải có người khác kiểm; chưa ai điền phiếu | Phân công 15 lượt: mỗi người ~6–7 giờ, hạn 17/11 |
 | Nghiệm thu W5-5 do PO làm thay TV3 | Ngoại lệ quy trình do PO quyết | TV3 tự chạy lại 3 lệnh trong phiếu khi có mặt |
 
 ## 5. Đề xuất tuần 7 và cách thực hiện
@@ -68,4 +68,4 @@ Nhóm chưa có ảnh buổi báo cáo tuần 6. Khi có, thêm `../hinh-anh/tua
 1. **09–17/11:** cả 3 người kiểm tra chéo theo bảng phân công.
 2. **19/11:** đóng băng nhãn v1 (`freeze_labels`, sàn 300 mẫu).
 3. **20–23/11:** chạy 6 cấu hình và GuardDog trên dev trong container; quét ngưỡng 0,50–0,95, chọn theo luật đã ghi sẵn (0 gói độc được cho phép → F1 cao nhất); Gate đổi ngưỡng.
-4. Các bước và lệnh: [quy trình thực nghiệm tuần 7–10](../ke-hoach/QUY_TRINH_THUC_NGHIEM_TUAN_07_10.md).
+4. Các bước và lệnh: quy trình thực nghiệm tuần 7–10.

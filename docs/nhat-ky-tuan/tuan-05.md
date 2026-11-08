@@ -2,11 +2,11 @@
 
 ## Kế hoạch
 
-Bốn đầu việc gốc của tuần 5 (theo [kế hoạch tổng thể](../ke-hoach/KE_HOACH.md)):
+Bốn đầu việc gốc của tuần 5 (theo kế hoạch tổng thể):
 
 - [x] Kiểm tra giới hạn mạng, quyền, RAM, PID, thời gian và dữ liệu mồi của sandbox (W5-1; chạy lại trên image 08/11: 14/14 test Docker PASS; RAM vượt 256 MB do swap — sửa opt-in, chờ TV3).
 - [x] Chuẩn hóa kết quả tiến trình, file và kết nối thành JSON có thể đối chiếu với mã nguồn (W5-2, W5-3, `behavior_events` 07/11).
-- [x] Chỉ nối `run_sandbox` vào agent sau khi chứng minh cách ly bằng mẫu mô phỏng (`sandbox: true`, chỉ gói thử vô hại; W5-5 nghiệm thu 08/11 — PO nghiệm thu thay TV3, xem [phiếu W5-5](../giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md#biên-bản-nghiệm-thu-08112026)).
+- [x] Chỉ nối `run_sandbox` vào agent sau khi chứng minh cách ly bằng mẫu mô phỏng (`sandbox: true`, chỉ gói thử vô hại; W5-5 nghiệm thu 08/11 — PO nghiệm thu thay TV3, xem phiếu W5-5).
 - [x] Bổ sung làm rõ mã bị rối khi cần; không mở rộng quá phạm vi install script (W5-7; thêm `decode_literal`, `resolve_value` 07/11).
 
 ### Kế hoạch chi tiết (lập ngày 04/11/2026)
@@ -199,11 +199,11 @@ Sandbox trả kết quả có thể tái hiện và không chạm secret thật;
 ### Giao việc W5-5 và W5-10 (2026-11-05)
 
 - **W5-8:** PO chốt mốc A (cùng ngày, cùng code) → **PASS**, xem mục W5-8.
-- **W5-5:** đã soạn hướng dẫn và checklist nghiệm thu cho TV3: [giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md](../giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md). Trạng thái: **chờ TV3** (hạn đề xuất 07/11). W5-6 vẫn khóa.
-- **W5-10:** đã soạn hướng dẫn kiểm tra chéo: [giao-viec/W5-10_KIEM_TRA_CHEO_NHAN.md](../giao-viec/W5-10_KIEM_TRA_CHEO_NHAN.md).
+- **W5-5:** đã soạn hướng dẫn và checklist nghiệm thu cho TV3: giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md. Trạng thái: **chờ TV3** (hạn đề xuất 07/11). W5-6 vẫn khóa.
+- **W5-10:** đã soạn hướng dẫn kiểm tra chéo: giao-viec/W5-10_KIEM_TRA_CHEO_NHAN.md.
   - Phân công đề xuất: TV1 lượt 1 + 4 (40 dòng), TV3 lượt 2 + 3 (36 dòng); TV2 chốt.
   - Hiện trạng: `check` cả 4 phiếu đều `pending` (20/18/18/20). Trạng thái: **chờ người kiểm tra** (hạn đề xuất 09/11).
-- Tin nhắn soạn sẵn: [giao-viec/TIN_NHAN_GUI_NHOM.md](../../archive/giao-viec/TIN_NHAN_GUI_NHOM.md). Claude không gửi tin nhắn thay nhóm.
+- Tin nhắn soạn sẵn: giao-viec/TIN_NHAN_GUI_NHOM.md. Claude không gửi tin nhắn thay nhóm.
 
 ## Ảnh kết quả
 
@@ -287,6 +287,6 @@ Có 2 Gate B0 ngày 05/11 trong `docs/brownfield/TRANSITION_APPROVAL.md`. Owner:
 ### W5-5 — Nghiệm thu cách ly (08/11/2026)
 
 - Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11 (ngoại lệ quy trình do PO quyết; TV3 chưa tự chạy lại).
-- Căn cứ: test Docker `14 passed`; `repro_sandbox --runs 3`: `all_same: true`, `no_host_leak: true`; bảng 9 fixture trong [phiếu W5-5](../giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md).
+- Căn cứ: test Docker `14 passed`; `repro_sandbox --runs 3`: `all_same: true`, `no_host_leak: true`; bảng 9 fixture trong phiếu W5-5.
 - Swap: phương án 1 — `--memory-swap 256m` là mặc định; fixture `memory` dừng ở 192 MB (trước 448 MB); test Docker chạy lại sau khi đổi: `14 passed`.
 - Kết luận: **ĐẠT**. W5-6 mở cho gói thử vô hại; gói thật và corpus mô phỏng vẫn không chạy trong container.

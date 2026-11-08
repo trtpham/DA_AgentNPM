@@ -45,7 +45,7 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 
 *Thay ảnh này bằng ảnh kết quả thật khi có bằng chứng.*
 
-### Hoàn thiện việc dở tuần 2–5 (08/11/2026, kế hoạch: [KE_HOACH_HOAN_THIEN_2026-11-08.md](../../archive/ke-hoach-da-xong/KE_HOACH_HOAN_THIEN_2026-11-08.md))
+### Hoàn thiện việc dở tuần 2–5 (08/11/2026, kế hoạch: KE_HOACH_HOAN_THIEN_2026-11-08.md)
 
 - **Build lại image:** `docker build -t agent-npm-sandbox:local sandbox` → `sha256:ac8579db8b8071c53019b82784d34ba24fd326caf0d489a6847279394a7d54e0` (cũ: `b657e013…`); `/opt/canary` có đủ 8 file canary.
 - **Test Docker:** `RUN_SANDBOX_TESTS=1 py -3.14 -m pytest -q tests/test_sandbox_limits.py` → PASS 14/14 (8 cũ + 6 mới: canary C2, ghi `/etc` được ghi nhận, hardening giữ cài đặt lành, hardening bỏ swap).
@@ -62,7 +62,7 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 - **S2 — Datadog trong container:** `data/scripts/datadog_container.py` liệt kê 25 267 ZIP ở commit cố định `72c723be…`, lấy 800 ZIP ngẫu nhiên (seed 20261108), đọc trong container dùng một lần: 783 đọc được, 476 có hook và file điểm vào, 429 cụm mã cài đặt khác nhau. Sửa lỗi tên gói scope (thư mục Datadog dùng `@scope@name`).
 - **S3 — đủ gói lành:** quét lại 29 gói vượt giới hạn giải nén (nhóm A 132 → 147); đề xuất lượt 6–7 (nhóm A) và 8–9 ("B nhẹ": chỉ `child_process`/gọi mạng, không luồng secret, không shell, không làm rối).
 - **S4/D-6:** lượt 10–15, 240 mẫu độc, chọn xoay vòng theo cụm; bằng chứng 238/240 sạch, 2 dòng được đánh dấu để loại.
-- **S1:** 15 lượt, 516 dòng, [phân công](../giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md) cho Phước, Thiên, Triết; hạn 17/11.
+- **S1:** 15 lượt, 516 dòng, phân công cho Phước, Thiên, Triết; hạn 17/11.
 - **S6 — sẵn sàng tuần 7–10:** `freeze_labels.py` (chỉ dòng `verified`, chia theo cụm, test 60%), `experiments/run_isolated.py` (agent và `--guarddog` trong container, Ollama qua `host.docker.internal`), `experiments/threshold_sweep.py` (quét 0,50–0,95 bằng chính `decide()`, trace nay ghi `inputs`). Chạy thử trên 2 gói `@swc/core`: agent R7_review giống chạy trên máy chủ; GuardDog 0 issue; `metrics`/`threshold_sweep` đọc được.
 - **Kiểm chứng:** pytest PASS; test Docker 14/14 (lượt trước); bằng chứng 9 lượt mới qua container.
 - **Còn chờ người thật:** kiểm tra chéo 516 dòng.
