@@ -71,3 +71,29 @@ def test_guarddog_mode_uses_its_image_without_ollama_and_writes_baseline_layout(
     assert iso.run_guarddog("gd-1", rows, tmp_path, runner) == {"done": 1, "skipped": 0, "errors": 0}
     assert (tmp_path / "gd-1" / "guarddog" / "a@1.0.0.json").is_file()
     assert (tmp_path / "gd-1" / "guarddog" / "guarddog_meta.json").is_file()
+
+
+def test_guarddog_findings_keep_location_but_not_code():
+    result = {"ok": True, "error": None, "data": {"issues": 1, "rules": ["shady-links"], "errors": {},
+              "results": {"shady-links": [{"location": "a.js:7", "code": "const u = 'https://x';", "message": "m"}],
+                          "other": []}}}
+    stripped = iso.strip_code(result)
+    assert stripped["data"]["results"]["shady-links"] == [{"location": "a.js:7", "message": "m"}]
+    assert stripped["data"]["issues"] == 1 and iso.strip_code({"ok": False, "data": None}) == {"ok": False, "data": None}
+
+
+def test_metrics_lists_unreadable_files_instead_of_stopping(tmp_path, monkeypatch):
+    from pathlib import Path
+    from experiments.metrics import load_results
+    (tmp_path / "a@1.json").write_text('{"package": "a@1"}', encoding="utf-8")
+    (tmp_path / "b@1.json").write_text('{"package": "b@1"}', encoding="utf-8")
+    original = Path.read_text
+
+    def blocked(self, *args, **kwargs):
+        if self.name == "b@1.json":
+            raise OSError(22, "Invalid argument")
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", blocked)
+    unreadable = []
+    assert load_results(tmp_path, unreadable) == [{"package": "a@1"}] and unreadable == ["b@1.json"]

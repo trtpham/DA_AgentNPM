@@ -74,3 +74,9 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 - Kết quả: lượt lành nhóm A (5–7) ~90% "khớp"; "B nhẹ" (8–9) phần lớn "cần xem"; lượt độc Datadog (10–15) ~40% "khớp", 7–16 "nghi ngờ"/lượt (đoạn trích 150 dòng đầu có thể chưa chứa hành vi).
 - **Windows Defender** cách ly bằng chứng `.md` của lượt độc (10, 13, 14, 15) và cả bản HTML dùng ký tự mã hóa (Defender tự giải). Không thêm ngoại lệ: bằng chứng nay là `round-N.json` (đoạn trích base64, cho script) và `round-N.html` (đoạn trích XOR + base64, trình duyệt giải và hiển thị bằng `textContent`, không chạy). Sau đổi: 0/30 file bị chặn.
 - **GuardDog** chạy trên 499 dòng trong container (`reports/guarddog-all-1108`), đang chạy.
+
+### Baseline GuardDog trên 499 dòng (08/11/2026) — số TẠM
+
+- `py -3.14 -m experiments.run_isolated guarddog-all-1108 --guarddog --labels reports/all-candidates-499.csv` (container dùng một lần, GuardDog 2.6.0): 499/499 lượt xong, 2 lỗi quét.
+- Defender cách ly 16/500 file kết quả vì GuardDog trích nguyên văn đoạn mã khớp luật (trường `code`). Đã sửa: kết quả chỉ giữ luật, vị trí, thông báo; 483 file được làm sạch, 16 gói quét lại; `metrics` liệt kê file không đọc được thay vì dừng. Sau sửa: 0 file bị chặn.
+- **Điểm TẠM theo nhãn chưa kiểm tra** (220 lành, 277 độc, 2 nghi vấn; KHÔNG dùng trong báo cáo cuối): Precision 0,960 · Recall 0,771 · F1 0,855 · FPR 0,041 (9/220 gói lành bị báo) · 62 gói độc không bị báo. Chấm lại bằng `experiments.metrics` khi có `data/labels-v1.csv` (19/11), không cần quét lại.

@@ -96,6 +96,21 @@ def inside(job: dict) -> dict:
 GUARDDOG_IMAGE = "agent-npm-guarddog:2.6.0"
 
 
+def strip_code(result: dict) -> dict:
+    """Drop the matched source text from GuardDog findings, keep rule, location and message.
+
+    The `code` field quotes the malware itself; Windows Defender quarantined 16 of 500 result files
+    because of it (08/11/2026). Scores only need the issue count and the rules.
+    """
+    data = result.get("data")
+    if not data:
+        return result
+    findings = {rule: [{key: value for key, value in item.items() if key != "code"} if isinstance(item, dict) else item
+                       for item in items] if isinstance(items, list) else items
+                for rule, items in (data.get("results") or {}).items()}
+    return {**result, "data": {**data, "results": findings}}
+
+
 def inside_guarddog(job: dict) -> dict:
     """Container side (GuardDog image): materialize the source and scan it with GuardDog, static only."""
     from experiments.baseline_guarddog import parse_report
@@ -106,7 +121,7 @@ def inside_guarddog(job: dict) -> dict:
         directory = materialize(row, Path("/tmp/work"))
         completed = subprocess.run(["guarddog", "npm", "scan", str(directory), "--output-format", "json"],
                                    capture_output=True, text=True, timeout=600, check=False)
-        result = parse_report(completed.stdout)
+        result = strip_code(parse_report(completed.stdout))
     except Exception as error:  # scored as an error, like a failed baseline scan
         result = {"ok": False, "data": None, "error": f"{type(error).__name__}: {str(error)[:200]}"}
     finally:
