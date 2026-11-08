@@ -3,6 +3,7 @@
 import argparse
 import functools
 import json
+import sys
 import re
 import sqlite3
 import time
@@ -184,7 +185,10 @@ def _tool(package: str, name: str, arguments: dict, allowed: tuple[str, ...] = D
         # Strict arguments: known keys only, required keys present, exact JSON types (bool is not int).
         if (isinstance(arguments, dict) and set(arguments) <= set(properties) and set(required) <= set(arguments)
                 and all(type(value) is _JSON_TYPES[properties[key]["type"]] for key, value in arguments.items())):
-            return function(package, **arguments)
+            try:
+                return function(package, **arguments)
+            except Exception as error:  # AGENTS 6.1: a tool never raises into the agent loop
+                return {"ok": False, "data": None, "error": f"tool failed: {type(error).__name__}"}
         return {"ok": False, "data": None, "error": "invalid tool call"}
     if name == "read_manifest" and arguments == {}:
         return read_manifest(package)
@@ -198,6 +202,22 @@ def _tool(package: str, name: str, arguments: dict, allowed: tuple[str, ...] = D
     if name == "extract_indicators" and arguments == {}:
         return extract_indicators(package)
     return {"ok": False, "data": None, "error": "invalid tool call"}
+
+
+def _fit(result: dict, limit: int) -> dict:
+    """Copy of a tool result whose longest lists are halved until its JSON fits `limit` characters."""
+    data = json.loads(json.dumps(result["data"]))
+    lists = [key for key, value in data.items() if isinstance(value, list) and value]
+    while lists and len(json.dumps({**result, "data": data}, ensure_ascii=False)) > limit - 200:
+        key = max(lists, key=lambda name: len(json.dumps(data[name], ensure_ascii=False)))
+        data[key] = data[key][:len(data[key]) // 2]
+        lists = [name for name in lists if data[name]]
+    data["truncated"] = True
+    data["shortened_for_model"] = "lists were shortened to fit; narrow the request (e.g. search_code text)"
+    fitted = {**result, "data": data}
+    if len(json.dumps(fitted, ensure_ascii=False)) > limit:
+        return {"ok": False, "data": None, "error": "tool result too large"}
+    return fitted
 
 
 def _source(file: str, start: int, content: str) -> dict:
@@ -271,13 +291,24 @@ NETWORK_DESTINATIONS = frozenset({"network-request", "download-code", "binary-do
 
 def _static_flows(package: str) -> list[str]:
     """B7(b): secret/env -> network flows that tools.explore.trace_flow finds on the install path."""
+    try:
+        return _static_flows_unguarded(package)
+    except Exception:  # a heuristic must never stop the analysis; R7_flow then relies on (a) and (c)
+        return []
+
+
+STATIC_FLOW_FILES, STATIC_FLOW_SECONDS = 20, 6.0
+
+
+def _static_flows_unguarded(package: str) -> list[str]:
     traced = explore.trace_requires(package)
     if not traced["ok"]:
         return []
-    found = []
-    for file in traced["data"]["files"]:
-        if not file.endswith((".js", ".cjs", ".mjs")):
-            continue
+    found, deadline = [], time.monotonic() + STATIC_FLOW_SECONDS
+    scripts = [file for file in traced["data"]["files"] if file.endswith((".js", ".cjs", ".mjs"))]
+    for file in scripts[:STATIC_FLOW_FILES]:
+        if time.monotonic() > deadline:
+            break
         result = explore.trace_flow(package, file)
         for flow in (result["data"] or {}).get("flows", []):
             if flow["source_kind"] in ("secret_file", "env") and flow["sink_kind"] == "network":
@@ -495,6 +526,11 @@ class _Session:
             content = json.dumps(self.blind(name, arguments, result), ensure_ascii=False)
             if name in EXPLORE_TOOLS or name == "sandbox_report":
                 content = blind_text(content, self.names)  # L1: file paths and snippets may name the package
+                if len(content) > 16000 and result["ok"]:
+                    # These tools take no line range, so "request fewer lines" would loop; shorten the lists.
+                    # The shortened copy is also what counts as seen (track_hits), never the full one.
+                    result = _fit(result, 14000)
+                    content = blind_text(json.dumps(result, ensure_ascii=False), self.names)
             if len(content) > 16000:
                 result = {"ok": False, "data": None, "error": "tool result too large; request fewer lines"}
                 content = json.dumps(result)
@@ -912,6 +948,9 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
 
 
 def main() -> None:
+    # Model text and reasons are not limited to the console code page (cp1252 on Windows); a
+    # character it cannot show must not stop a batch (2026-11-08: '→' did).
+    sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description="Analyze an extracted npm package without executing it")
     parser.add_argument("package", help="path to an extracted package")
     from experiments.run_batch import FEATURE_TYPES, load_config, variants  # run_batch imports this module

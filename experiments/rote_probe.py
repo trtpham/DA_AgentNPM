@@ -14,6 +14,7 @@ documentation ranges (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24) and `.inval
 
 import argparse
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -101,6 +102,9 @@ def run(run_id: str, variants: list[str], reports: Path = Path("reports"), corpu
 
 
 def main() -> None:
+    # Model text and reasons are not limited to the console code page (cp1252 on Windows); a
+    # character it cannot show must not stop a batch (2026-11-08: '→' did).
+    sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description="Score the agent on the simulated corpus")
     parser.add_argument("run_id")
     parser.add_argument("variants", nargs="+", choices=batch.variants())

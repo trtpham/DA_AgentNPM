@@ -359,3 +359,14 @@ def test_inspect_binary_large_file_is_truncated(tmp_path):
         stream.write(b"\0")
     data = inspect_binary(package, "big.bin")["data"]
     assert data["format"] == "PE" and data["truncated"]
+
+
+def test_trace_flow_stays_fast_on_long_chained_files(tmp_path):
+    import time
+    body = "\n".join(f"const v{j} = process.env.X + v{max(0, j - 1)}; fs.writeFileSync(p, v{j});" for j in range(4000))
+    package = _package(tmp_path, {}, {"big.js": body})
+    started = time.monotonic()
+    data = trace_flow(package, "big.js")["data"]
+    assert time.monotonic() - started < 5  # was minutes before 2026-11-08 (quadratic taint search)
+    assert data["truncated"] and len(data["flows"]) == 30
+    assert all(len(flow["via"]) <= 5 for flow in data["flows"])

@@ -225,6 +225,9 @@ def run_batch(run_id: str, variant: str, inputs: list[dict], reports: Path = Pat
 
 
 def main() -> None:
+    # Model text and reasons are not limited to the console code page (cp1252 on Windows); a
+    # character it cannot show must not stop a batch (2026-11-08: '→' did).
+    sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description="Run the agent over packages; resumes an existing run id")
     parser.add_argument("run_id")
     parser.add_argument("variant", choices=variants())

@@ -18,6 +18,7 @@ import os
 import posixpath
 import re
 import shlex
+import time
 from collections import Counter
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -694,8 +695,9 @@ MODULE_LINE = re.compile(r"\brequire\s*\(\s*['\"]|^\s*(?:import|export)\b")
 ASSIGNMENT = re.compile(r"(?<![\w$.])(?:(?:var|let|const)\s+)?([A-Za-z_$][\w$]*)\s*(?:\+|\|\||\?\?)?=(?![=>])\s*(.*)")
 
 
-def _uses(text: str, name: str) -> bool:
-    return re.search(r"(?<![\w$.])" + re.escape(name) + r"(?![\w$])", text) is not None
+TOKEN = re.compile(r"(?<![\w$.])[A-Za-z_$][\w$]*")  # identifiers, not `.property` accesses
+MAX_VIA = 5
+FLOW_SECONDS = 2.0  # per file; a slower analysis returns what it has with `truncated`
 
 
 def _blocks(lines: list[str]) -> tuple[list[int], dict[int, int]]:
@@ -757,6 +759,11 @@ def trace_flow(package: str, file: str) -> dict:
                 if depth <= 0:
                     break
             statements.append((match.group(1), span))
+        # Identifier tokens of each line, computed once: lookups below are set operations, so the
+        # cost grows with the file size instead of (statements x variables) regex searches.
+        tokens = [set(TOKEN.findall(line)) for line in code]
+        deadline = time.monotonic() + FLOW_SECONDS
+        incomplete: list[str] = []
         # Taint: variable -> (source line, source kind, via names). A variable is also a network
         # handle when its right side opens a connection (`const req = https.request(...)`).
         taint: dict[str, tuple[int, str, list[str]]] = {}
@@ -766,14 +773,16 @@ def trace_flow(package: str, file: str) -> dict:
             for name, span in statements:
                 if name in taint:
                     continue
+                if time.monotonic() > deadline:
+                    break
                 for offset in span:
                     if offset in source_lines:
                         taint[name] = (offset, source_lines[offset], [name])
                         break
-                    used = next((other for other in taint if other != name and _uses(code[offset - 1], other)), None)
+                    used = sorted((taint[other][0], other) for other in tokens[offset - 1] & taint.keys() if other != name)
                     if used:
-                        origin = taint[used]
-                        taint[name] = (origin[0], origin[1], origin[2] + [name])
+                        origin = taint[used[0][1]]
+                        taint[name] = (origin[0], origin[1], (origin[2] + [name])[-MAX_VIA:])
                         break
                 changed |= name in taint
             if not changed:
@@ -783,11 +792,12 @@ def trace_flow(package: str, file: str) -> dict:
                 handles.add(name)
         handle_call = (re.compile(r"(?<![\w$.])(?:" + "|".join(map(re.escape, sorted(handles))) +
                                   r")\.(?:end|write|send)\s*\(") if handles else None)
+        home_vars = {name for name, origin in taint.items() if origin[1] == "home_path"}
         sinks = []
         for number, line in enumerate(code, 1):
             if MODULE_LINE.search(lines[number - 1]):
                 continue
-            outside_var = any(_uses(line, name) for name, origin in taint.items() if origin[1] == "home_path")
+            outside_var = bool(tokens[number - 1] & home_vars)
             if handle_call and handle_call.search(line) or NETWORK_SINK.search(line) and "(" in line:
                 kind = "network"
             elif PROCESS_SINK.search(line):
@@ -809,18 +819,26 @@ def trace_flow(package: str, file: str) -> dict:
             flows.append({"source_line": source_line, "source_kind": source_kind, "sink_line": sink["line"],
                           "sink_kind": sink["kind"], "via": via, "confidence": confidence})
 
+        scoped = [item for item in sources if block_at[item["line"] - 1]]  # top-level sources never pair by block
         for sink in sinks:
+            if len(flows) > MAX_FLOWS:
+                break
+            if time.monotonic() > deadline:
+                incomplete.append(f"time limit ({FLOW_SECONDS:g} s) reached at line {sink['line']}")
+                break
             if sink["line"] in source_lines and source_lines[sink["line"]] != "network_input":
                 add(sink["line"], source_lines[sink["line"]], sink, [], "direct")
-            for name, (origin, kind, via) in taint.items():
-                if _uses(code[sink["line"] - 1], name) and origin != sink["line"]:
+            for name in sorted(tokens[sink["line"] - 1] & taint.keys()):
+                origin, kind, via = taint[name]
+                if origin != sink["line"]:
                     add(origin, kind, sink, via, "via_variable")
-            for item in sources:
-                block = block_at[item["line"] - 1]
-                if (block and item["line"] < sink["line"]
-                        and _inside(block_at[sink["line"] - 1], block, parent)):
+            for item in scoped:
+                if item["line"] >= sink["line"]:
+                    break  # sources are in line order
+                if _inside(block_at[sink["line"] - 1], block_at[item["line"] - 1], parent):
                     add(item["line"], item["kind"], sink, [], "same_function")
-        incomplete = [f"flow limit ({MAX_FLOWS}) reached"] if len(flows) > MAX_FLOWS else []
+        if len(flows) > MAX_FLOWS:
+            incomplete.append(f"flow limit ({MAX_FLOWS}) reached")
         return _ok({"untrusted": True, "file": file, "sources": sources[:MAX_POINTS], "sinks": sinks[:MAX_POINTS],
                     "flows": flows[:MAX_FLOWS], "truncated": bool(incomplete), "incomplete": incomplete,
                     "counts_as_seen": False})

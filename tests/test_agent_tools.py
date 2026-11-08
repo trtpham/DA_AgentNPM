@@ -134,3 +134,30 @@ def test_run_one_passes_tools_only_when_configured(tmp_path):
     batch.run_one(item, tmp_path / "run", config, None, fake)
     batch.run_one(item, tmp_path / "run2", {**config, "tools": ["read_file"]}, None, fake)
     assert "tools" not in calls[0] and calls[1]["tools"] == ["read_file"]
+
+
+def test_large_exploration_result_is_shortened_not_replaced_by_an_error(tmp_path):
+    package = _package(tmp_path, "1;\n", {f"file{i:03}.txt": "x\n" for i in range(250)})
+    replies = iter([_call("list_files"), _call("read_file", file="setup.js"),
+                    {"role": "assistant", "content": json.dumps(_verdict("1", "other"))}])
+    sent = []
+
+    def chat(_model, messages, final=False):
+        sent.append(list(messages))
+        return next(replies)
+
+    analyze(package, "fake", chat=chat, tools=DEFAULT_TOOLS + ("list_files",))
+    listed = json.loads([message for message in sent[1] if message.get("tool_name") == "list_files"][0]["content"])
+    assert listed["ok"] and listed["data"]["truncated"] and 0 < len(listed["data"]["files"]) < 252
+    assert len(json.dumps(listed)) <= 16000
+
+
+def test_exploration_tool_crash_is_an_error_result(tmp_path, monkeypatch):
+    from agent import run
+
+    def boom(_package):
+        raise RecursionError("deep")
+
+    monkeypatch.setitem(run.EXPLORE_TOOLS, "list_files", run.EXPLORE_TOOLS["list_files"][:3] + (boom,))
+    assert _tool(_package(tmp_path, "1;\n"), "list_files", {}, ALL_TOOLS) == {
+        "ok": False, "data": None, "error": "tool failed: RecursionError"}

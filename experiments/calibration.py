@@ -11,6 +11,7 @@ changed here: changing them needs its own Gate, based on this table.
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from experiments.dataset import load_labels
@@ -77,6 +78,9 @@ def markdown(results: dict[str, dict]) -> str:
 
 
 def main() -> None:
+    # Model text and reasons are not limited to the console code page (cp1252 on Windows); a
+    # character it cannot show must not stop a batch (2026-11-08: '→' did).
+    sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description="Confidence calibration of finished runs (measurement only)")
     parser.add_argument("run_ids", nargs="+")
     parser.add_argument("--reports", type=Path, default=Path("reports"))

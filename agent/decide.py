@@ -42,7 +42,7 @@ def decide(verdict: Verdict | None, evidence_checks: list[dict], *, canary_touch
             return result("benign", "review", "R7_review", f"Human review required: {detail}")
         if flow_risks:
             # B7: only stricter (approve -> review); deny, R1-R6 and the thresholds are untouched.
-            return result("benign", "review", "R7_flow", "Benign verdict over a sensitive-source → network flow: "
+            return result("benign", "review", "R7_flow", "Benign verdict over a sensitive-source -> network flow: "
                           + "; ".join(list(flow_risks)[:5]))
         if sandbox_risks:
             # C7: the sandbox saw the package write a start-up file; only stricter (approve -> review).
