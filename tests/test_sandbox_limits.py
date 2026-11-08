@@ -56,7 +56,7 @@ def test_process_limit_refuses_children():
 def test_memory_limit_stops_the_script():
     result, values = run("memory")
     assert "memory" not in values and not result["ok"]
-    assert int(values.get("allocated_mb", "0")) < 512
+    assert int(values.get("allocated_mb", "0")) <= 256  # no swap since 08/11 (was 448 MB with swap)
     assert result["data"]["outcome"] == "oom" and result["error"] == "sandbox out of memory"
 
 

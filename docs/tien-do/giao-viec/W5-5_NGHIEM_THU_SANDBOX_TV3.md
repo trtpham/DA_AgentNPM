@@ -106,3 +106,13 @@ Claude đã chạy đúng các lệnh ở bước 2 trên máy của Triết lú
 
 - **ĐẠT** hoặc **ĐẠT CÓ ĐIỀU KIỆN:** Triết duyệt Gate B0 riêng cho W5-6. Claude làm điều kiện (nếu có) rồi nối sandbox vào agent.
 - **KHÔNG ĐẠT:** Claude sửa theo lý do của TV3; TV3 nghiệm thu lại. W5-6 chờ đến khi đạt.
+
+## Biên bản nghiệm thu (08/11/2026)
+
+### W5-5 — Nghiệm thu cách ly
+- **Người nghiệm thu:** Phạm Minh Triết (TV2, PO) nghiệm thu thay Nguyễn Đình Thiên (TV3), dựa trên lần chạy ngày 08/11. Đây là **ngoại lệ quy trình do PO quyết** (quy trình gốc yêu cầu TV3 tự chạy và ký); TV3 chưa tự chạy lại.
+- **Ngày:** 08/11/2026.
+- **Lần chạy làm căn cứ:** Claude chạy các lệnh ở bước 2 lúc 09:45 ngày 08/11 trên máy của Triết (Docker 29.1.3, image `sha256:ac8579db…`): `14 passed`, `all_same: true`, `no_host_leak: true`; bảng "Kết quả chạy lại ngày 08/11" ở trên.
+- **Swap:** phương án 1. `--memory-swap 256m` đã thành mặc định trong `sandbox/run.py`. Chạy lại sau khi đổi: test Docker `14 passed`; fixture `memory` dừng ở **192 MB** (trước: 448 MB), outcome `oom`, mã 137.
+- **Kết luận:** ĐẠT.
+- **Phạm vi được mở:** W5-6 (sandbox trong agent) cho gói thử vô hại `tests/fixtures/packages` và `tests/fixtures/sandbox-limits`. Gói thật và corpus mô phỏng vẫn **không** chạy trong container khi chưa có Gate riêng.

@@ -2,7 +2,7 @@
 
 **Thành viên:** Lê Đặng Thiên Phước · Phạm Minh Triết · Nguyễn Đình Thiên
 
-**Giai đoạn:** Hoàn thiện sandbox và công cụ mở rộng · **Ngày cập nhật:** 08/11/2026 (bản đầu 05/11) · **Nghiệm thu:** chờ TV3 Nguyễn Đình Thiên (cách ly sandbox, W5-5), TV2 Phạm Minh Triết (agent)
+**Giai đoạn:** Hoàn thiện sandbox và công cụ mở rộng · **Ngày cập nhật:** 08/11/2026 (bản đầu 05/11) · **Nghiệm thu:** W5-5 cách ly sandbox — Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11 (ngoại lệ do PO quyết); agent — TV2 Phạm Minh Triết
 
 > Số liệu trong báo cáo đều lấy từ lần chạy thật ngày 04–08/11/2026 trên máy của nhóm. Phần cập nhật 07–08/11 nằm ở mục 4.3. Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết từng việc ở [nhật ký tuần 5](tuan-05.md); kịch bản demo ở [hướng dẫn demo](HUONG_DAN_DEMO_TUAN05.md).
 
@@ -31,7 +31,7 @@ Mục tiêu tuần 5 là **chứng minh sandbox cách ly được mã của gói
 
 ## 2. Demo bao nhiêu phần trăm (kèm ảnh)
 
-Ngày 05/11 nhóm demo được **6/8 phần dự kiến (75%)**. Đến 08/11 làm thêm được phần nối sandbox (chạy được, còn chờ TV3 ký để bật mặc định), thành **7/8 (88%)**. Phần còn lại bị chặn bởi việc của người, không phải lỗi kỹ thuật (xem mục 4).
+Ngày 05/11 nhóm demo được **6/8 phần dự kiến (75%)**. Đến 08/11 làm thêm được phần nối sandbox (chạy được, còn chờ TV3 ký để bật mặc định), thành **7/8 (88%)**; W5-5 nghiệm thu ngày 08/11. Phần còn lại bị chặn bởi việc của người, không phải lỗi kỹ thuật (xem mục 4).
 
 | Phần trình diễn | Kết quả |
 | --- | --- |
@@ -41,7 +41,7 @@ Ngày 05/11 nhóm demo được **6/8 phần dự kiến (75%)**. Đến 08/11 l
 | Agent xử lý mã rút gọn/base64 | **Đạt về quy trình:** gọi `deobfuscate`, trích bằng chứng `install.min.js#pretty:124, 126`. Kết luận vẫn là "chuyển người xem" vì model chưa đọc hết bản đã định dạng. |
 | A-LLM nhanh hơn, kết luận không đổi | **Đạt:** 85,1 → 47,0 giây/gói (−45%), 13/13 kết luận giống mốc. |
 | Đổi tham số model chỉ bằng file cấu hình | **Đạt.** |
-| Nối sandbox vào agent (W5-6) | **Đạt có điều kiện (08/11):** `sandbox: true` trong config, mặc định tắt, chỉ chạy gói thử vô hại. Chạy thật: gói canary bị **từ chối bởi luật R1** (model không đảo được), gói lành vẫn được cho phép. Chờ TV3 ký W5-5 mới bật. |
+| Nối sandbox vào agent (W5-6) | **Đạt (08/11):** `sandbox: true` trong config, chỉ chạy gói thử vô hại. Chạy thật: gói canary bị **từ chối bởi luật R1** (model không đảo được), gói lành vẫn được cho phép. W5-5 đã nghiệm thu 08/11. |
 | Recall/F1 trên mẫu độc | **Chưa làm:** bộ nhãn v1 chưa có người kiểm tra chéo (W5-10). |
 
 ### Sandbox: kết quả trên 9 gói thử
@@ -111,9 +111,9 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
 
 | Vướng | Nguyên nhân | Ảnh hưởng | Hướng xử lý |
 | --- | --- | --- | --- |
-| **Sandbox đã nối nhưng chưa bật** (W5-6) | Theo quy trình, TV3 phải tự chạy lại và ký nghiệm thu cách ly; Claude và PO không ký thay | Mặc định agent vẫn chỉ phân tích tĩnh | Đã chạy lại theo phiếu W5-5 ngày 08/11 và chuẩn bị bằng chứng; TV3 xem, chọn phương án swap, ký |
+| **Nghiệm thu sandbox chưa do TV3 tự làm** (W5-5) | PO nghiệm thu thay TV3 ngày 08/11 dựa trên lần chạy của Claude (ngoại lệ quy trình) | Chưa có lần kiểm tra độc lập của người phụ trách sandbox | TV3 tự chạy lại 3 lệnh trong phiếu khi có mặt và ghi kết quả bên dưới biên bản |
 | **Chưa có Recall/F1 trên mẫu độc** | 4 phiếu kiểm tra chéo nhãn (76 dòng) chưa có người điền. Một người không được vừa gán vừa duyệt nhãn | Chưa so được 3 mô hình với GuardDog trên mẫu độc; **chặn mốc thực nghiệm tuần 7–8** | Phân công người kiểm tra chéo ngay đầu tuần 6; bằng chứng đã chuẩn bị sẵn |
-| **Trần RAM thực tế là 512 MB, không phải 256 MB** | `--memory 256m` không kèm `--memory-swap`, nên Docker cho dùng thêm 256 MB swap. Lần chạy 05/11 thấy script cấp phát được 448 MB rồi mới bị kill | Vẫn bị chặn, nhưng trần rộng gấp đôi thiết kế | **Đã chuẩn bị 08/11:** `--memory-swap 256m` nằm trong `hardening=True`, đo được 192 MB. Chờ TV3 chọn bật làm mặc định |
+| **Trần RAM thực tế là 512 MB, không phải 256 MB** | `--memory 256m` không kèm `--memory-swap`, nên Docker cho dùng thêm 256 MB swap. Lần chạy 05/11 thấy script cấp phát được 448 MB rồi mới bị kill | Vẫn bị chặn, nhưng trần rộng gấp đôi thiết kế | **Đã sửa 08/11:** `--memory-swap 256m` là mặc định (phương án 1 của W5-5); fixture `memory` dừng ở 192 MB |
 | **Gói sinh nhiều tiến trình làm trace vượt 2 MB** | Chỉ giữ 2 MB cuối của log | Phần đầu cây tiến trình mất, sự kiện thành `unknown` | An toàn (`ok=False`, không thể dẫn tới cho phép). Tuần 6 tóm tắt trace ngay trong container |
 | **A-SLM chưa nhận ra canary** | Model 4B xếp gói thử canary vào "chuyển người xem" thay vì từ chối | Không nguy hiểm (không cho phép), nhưng bỏ lỡ một ca độc rõ ràng | Đã có bù bằng sandbox (`canary_touched` → luật R1), kiểm chứng 08/11; có hiệu lực khi bật sandbox |
 | **Không gói swc thật nào được tự động cho phép** | Script cài của swc tải mã ngoài gói và cần file nhị phân không có trong gói | Thiết kế an toàn chủ động: không thấy hết thì chuyển người xem | Giữ nguyên; giải thích trong báo cáo cuối kỳ |

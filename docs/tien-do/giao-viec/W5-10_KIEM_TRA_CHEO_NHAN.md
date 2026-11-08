@@ -6,14 +6,26 @@
 
 Bộ nhãn là "đáp án" để chấm agent. Nhãn sai thì mọi con số Precision, Recall, F1 cuối kỳ đều sai. Nhãn v1 do Codex/Claude soạn, nên **phải có một người thật khác kiểm tra lại**. Việc này đang **chặn mốc thực nghiệm tuần 7–8**.
 
+## Bắt đầu nhanh (cập nhật 08/11/2026)
+
+Trạng thái hiện tại: cả 4 phiếu đều trống (`check` ra `pending` 20/18/18/20). Claude **không** điền phiếu: người kiểm tra phải là người thật, khác người soạn nhãn.
+
+1. Ngồi ở máy của Triết, mở thư mục `D:\DACN\DA_AgentNPM` bằng VS Code.
+2. Mở song song 2 file của lượt mình: phiếu `data/review_rounds/round-N.csv` (để điền) và bằng chứng `data/review_rounds/evidence/round-N.md` (để đọc).
+   - **Phước:** lượt 1 (20 gói lành) rồi lượt 4 (20 gói độc).
+   - **Thiên:** lượt 2 và lượt 3 (mỗi lượt 18 gói của một chiến dịch).
+3. Với từng dòng: tìm cùng `id` trong file bằng chứng, trả lời 3 câu ở mục "Cách kiểm tra một dòng", rồi điền 5 cột cuối (`decision`, `reviewer` = họ tên thật, `reviewed_at` = `2026-11-DD`, `observed_behavior`, `note`).
+4. Lưu, rồi chạy `py -3.14 -m data.scripts.review_sheet check data/review_rounds/round-N.csv` cho tới khi ra `'complete': True, 'problems': []`.
+5. Báo Triết. Triết chạy `check` cho cả 4 phiếu và commit.
+
 ## Phân công
 
 | Người | Phiếu | Nội dung | Số dòng | Ước tính |
 | --- | --- | --- | --- | --- |
-| **TV1** | `round-1.csv` | Gói lành (esbuild, swc…) | 20 | ~1 giờ |
-| **TV1** | `round-4.csv` | Gói độc thuộc các họ khác | 20 | ~1,5 giờ |
-| **TV3** | `round-2.csv` | Chiến dịch `npm-token-worm-2026-03` | 18 | ~1 giờ |
-| **TV3** | `round-3.csv` | Chiến dịch `shai-hulud-2-2025-11` | 18 | ~1 giờ |
+| **TV1 Lê Đặng Thiên Phước** | `round-1.csv` | Gói lành (esbuild, swc…) | 20 | ~1 giờ |
+| **TV1 Lê Đặng Thiên Phước** | `round-4.csv` | Gói độc thuộc các họ khác | 20 | ~1,5 giờ |
+| **TV3 Nguyễn Đình Thiên** | `round-2.csv` | Chiến dịch `npm-token-worm-2026-03` | 18 | ~1 giờ |
+| **TV3 Nguyễn Đình Thiên** | `round-3.csv` | Chiến dịch `shai-hulud-2-2025-11` | 18 | ~1 giờ |
 | **TV2 Triết** | — | Chạy lệnh `check`, chốt nhãn, commit | — | ~20 phút |
 
 Hai lượt 2 và 3 mỗi lượt là một chiến dịch, các gói có mã gần giống nhau, nên làm nhanh hơn. TV3 nhận ít dòng hơn vì còn nghiệm thu sandbox (W5-5).

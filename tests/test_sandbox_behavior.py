@@ -50,6 +50,7 @@ def test_docker_command_keeps_core_flags_and_passes_fake_env():
     command = docker_command(Path("/pkg"))
     assert command[command.index("--network") + 1] == "none"
     assert command[command.index("--memory") + 1] == "256m"
+    assert command[command.index("--memory-swap") + 1] == "256m"  # no swap (W5-5 option 1, 08/11)
     assert "size=1m" in command[command.index("--tmpfs", command.index("--tmpfs") + 1) + 1]
     assert f"NPM_TOKEN={CANARY['environment_vars']['NPM_TOKEN']}" in command
     assert "--ulimit" not in command  # C6 is opt-in
@@ -57,7 +58,7 @@ def test_docker_command_keeps_core_flags_and_passes_fake_env():
 
 def test_hardening_adds_limits_only_when_asked():
     command = docker_command(Path("/pkg"), hardening=True)
-    assert "nofile=256:256" in command and command[command.index("--memory-swap") + 1] == "256m"
+    assert "nofile=256:256" in command and command.count("--memory-swap") == 1
     assert not any(part.startswith("/tmp") for part in command)  # a /tmp tmpfs would loosen --read-only
     assert command[-2:] == ["agent-npm-sandbox:local", "/usr/local/bin/run_install.sh"]
 

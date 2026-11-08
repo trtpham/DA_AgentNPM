@@ -184,11 +184,9 @@ def touched_canaries(opened: set[str], trace: str, stdout: str, stderr: str) -> 
     return touched
 
 
-# C6 + C1: extra limits, opt-in until TV3 accepts them (W5-5); the default command is unchanged.
-# --memory-swap equal to --memory removes swap: without it the `memory` fixture reached 448 MB.
-# No tmpfs on /tmp: with --read-only, /tmp is already unwritable; a tmpfs there loosened the
-# sandbox and made npm's own trace overflow the 2 MB cap (measured 2026-11-08).
-HARDENING = ["--ulimit", "nofile=256:256", "--ulimit", "fsize=67108864:67108864", "--memory-swap", "256m"]
+# C6: extra ulimits, still opt-in. No tmpfs on /tmp: with --read-only, /tmp is already unwritable;
+# a tmpfs there loosened the sandbox and made npm's own trace overflow the 2 MB cap (2026-11-08).
+HARDENING = ["--ulimit", "nofile=256:256", "--ulimit", "fsize=67108864:67108864"]
 
 
 def docker_command(root: Path, hardening: bool = False) -> list[str]:
@@ -198,7 +196,9 @@ def docker_command(root: Path, hardening: bool = False) -> list[str]:
         "docker", "run", "--rm", "--network", "none", "--read-only",
         "--cap-drop", "ALL", "--cap-add", "SYS_PTRACE",
         "--security-opt", "no-new-privileges",
-        "--pids-limit", "64", "--memory", "256m", "--cpus", "1",
+        # --memory-swap equal to --memory removes swap (C1, W5-5 option 1, PO 08/11): without it the
+        # `memory` fixture reached 448 MB under a 256 MB limit.
+        "--pids-limit", "64", "--memory", "256m", "--memory-swap", "256m", "--cpus", "1",
         "--user", "10001:10001", "--tmpfs", "/work:rw,exec,nosuid,size=64m,uid=10001,gid=10001",
         "--tmpfs", "/home/agent:rw,noexec,nosuid,size=1m,uid=10001,gid=10001",
         "--mount", f"type=bind,source={root},target=/input,readonly",

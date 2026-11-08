@@ -356,3 +356,16 @@ Mở lại một phần Phần C của `docs/tien-do/KE_HOACH_TOOLS_AGENT_SANDBO
 - **Không làm:** C1 (`--memory-swap`), C3 (sinkhole mạng), C5 (chạy 2 lần), không chạy corpus mô phỏng trong container, không đổi `--network none`/`--memory`.
 - **Kiểm chứng:** pytest với `subprocess.run` giả và log strace viết tay; không chạy Docker trong đợt này. TV3 build lại image và chạy `RUN_SANDBOX_TESTS=1` khi nghiệm thu.
 - Owner: Claude. Reviewer: TV3 (sandbox), TV2 (agent). Rollback: revert commit `sandbox: …`.
+
+## Gate B0 — W5-5 nghiệm thu sandbox và bỏ swap (2026-11-08)
+
+DECISION: APPROVED FOR IMPLEMENTATION
+PO: Phạm Minh Triết
+APPROVED_AT: 2026-11-08 Asia/Saigon
+EVIDENCE_REFERENCES: chat với Claude 08/11: "Ký W5-5 cho tôi luôn đi"; trả lời câu hỏi về cách ghi: "Ghi: "Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11", chọn phương án swap 1, bật --memory-swap 256m làm mặc định, chạy lại test Docker. Ghi thêm Gate."
+
+- **Nghiệm thu W5-5:** PO nghiệm thu thay TV3 (ngoại lệ quy trình, ghi rõ trong [phiếu W5-5](../tien-do/giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md)); căn cứ là lần chạy 08/11 do Claude thực hiện.
+- **Thay đổi:** `sandbox/run.py` thêm `--memory-swap 256m` vào lệnh `docker run` mặc định (chỉ chặt hơn). `HARDENING` còn `--ulimit nofile`, `--ulimit fsize`, vẫn opt-in.
+- **Mở:** W5-6 cho `tests/fixtures/packages` và `tests/fixtures/sandbox-limits`. **Không mở:** gói thật, corpus mô phỏng trong container, đổi `--network none`.
+- **Kiểm chứng:** `RUN_SANDBOX_TESTS=1 py -3.14 -m pytest -q tests/test_sandbox_limits.py` → 14 passed sau khi đổi; `memory` 192 MB.
+- Owner: Claude. Reviewer: TV3 (khi có mặt). Rollback: revert commit `sandbox: …` ngày 08/11.
