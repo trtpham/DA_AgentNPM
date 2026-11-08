@@ -45,11 +45,11 @@ Probe chỉ chứng minh mô hình **biết dùng công cụ**; nó không đo k
 
 **Hình 1.** Ba mô hình trong Ollama (ảnh chụp PowerShell ngày 28/10/2026).
 
-![Ba mô hình trong Ollama](hinh-anh/tuan-01-ollama-list-2026-10-28.png)
+![Ba mô hình trong Ollama](../hinh-anh/tuan-01-ollama-list-2026-10-28.png)
 
 **Hình 2.** Kết quả probe gọi công cụ (ảnh chụp ngày 28/10/2026).
 
-![Kết quả probe gọi công cụ](hinh-anh/tuan-01-probe-2026-10-28.png)
+![Kết quả probe gọi công cụ](../hinh-anh/tuan-01-probe-2026-10-28.png)
 
 ## 3. Ảnh chụp lúc báo cáo
 
@@ -64,4 +64,4 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 1** để đ�
 
 Ngoài ra, tuần 2 sẽ bắt đầu tìm ứng viên dữ liệu, nhưng chỉ đưa vào bảng nhãn những gói có bằng chứng `file:dòng`.
 
-*Ghi chú đối chiếu sau (04/11/2026):* các hạng mục trên đã làm ở tuần 2–4; chi tiết ở [báo cáo tuần 2](BaoCaoTienDo_Tuan02.md) và [nhật ký tuần 1](tuan-01.md).
+*Ghi chú đối chiếu sau (04/11/2026):* các hạng mục trên đã làm ở tuần 2–4; chi tiết ở [báo cáo tuần 2](BaoCaoTienDo_Tuan02.md) và [nhật ký tuần 1](../nhat-ky-tuan/tuan-01.md).

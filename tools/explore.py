@@ -1,6 +1,6 @@
 """Read-only exploration tools for an extracted package (plan Phần A: A1–A10).
 
-Rules shared by every tool (docs/tien-do/KE_HOACH_TOOLS_AGENT_SANDBOX.md, Phần A):
+Rules shared by every tool (docs/ke-hoach/KE_HOACH_TOOLS_AGENT_SANDBOX.md, Phần A):
 - never import, eval or run package code, no subprocess; files are only read as bytes or text;
 - every file goes through `tools.static._safe_file` (blocks `..`, absolute paths, symlinks, > 256 KB);
 - `node_modules/` is skipped and directory symlinks are not followed;

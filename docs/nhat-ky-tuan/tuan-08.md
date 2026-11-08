@@ -19,6 +19,6 @@ Có bảng kết quả và ca sai tái hiện được; không đưa nhãn thậ
 
 ## Ảnh kết quả
 
-![Chưa có ảnh kết quả tuần 08](hinh-anh/chua-co-anh.svg)
+![Chưa có ảnh kết quả tuần 08](../hinh-anh/chua-co-anh.svg)
 
 *Thay ảnh này bằng ảnh kết quả thật khi có bằng chứng.*

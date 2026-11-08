@@ -22,7 +22,7 @@ Các vấn đề đã thấy trong trace là cơ sở cho kế hoạch:
 
 ### I1. Lý do quyết định phải đúng và cụ thể — *ưu tiên cao nhất* (cần Gate B0)
 
-> **Trạng thái 04/11: PASS.** A-LLM và A-SLM đều 10/10 lý do đúng; số đo ở [nhật ký tuần 4](tuan-04.md).
+> **Trạng thái 04/11: PASS.** A-LLM và A-SLM đều 10/10 lý do đúng; số đo ở [nhật ký tuần 4](../../docs/nhat-ky-tuan/tuan-04.md).
 
 - **Vì sao:** người xem `review` cần biết chính xác điều gì chặn approve. Hiện lý do đúng ở gói swc chỉ là nhờ trùng hợp.
 - **Việc làm:**
@@ -48,7 +48,7 @@ Các vấn đề đã thấy trong trace là cơ sở cho kế hoạch:
 
 ### I3. Tốc độ (không đổi kết luận)
 
-> **Trạng thái 04/11: ĐẠT một phần.** Giây/gói trung vị trên 13 gói dev: A-TLM −59%, A-SLM −30%, **A-LLM +62% (không đạt)**. Token vào/ra đã được ghi trong trace. Còn mở: tìm nguyên nhân A-LLM chậm ([nhật ký tuần 4](tuan-04.md)).
+> **Trạng thái 04/11: ĐẠT một phần.** Giây/gói trung vị trên 13 gói dev: A-TLM −59%, A-SLM −30%, **A-LLM +62% (không đạt)**. Token vào/ra đã được ghi trong trace. Còn mở: tìm nguyên nhân A-LLM chậm ([nhật ký tuần 4](../../docs/nhat-ky-tuan/tuan-04.md)).
 
 - **Vì sao:** A-LLM mất khoảng 50–100 giây cho một gói swc. Chạy lô 76 gói × 3 model mất nhiều giờ.
 - **Việc làm:**

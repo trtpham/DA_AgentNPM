@@ -20,7 +20,7 @@ Agent hoàn thành ca phân tích tĩnh trên tập dev nhỏ; lưu kết quả 
 
 ## Ảnh kết quả
 
-![Sơ đồ tổng hợp phần tích hợp đã kiểm chứng](hinh-anh/tuan-04-tich-hop.svg)
+![Sơ đồ tổng hợp phần tích hợp đã kiểm chứng](../hinh-anh/tuan-04-tich-hop.svg)
 
 *Hình SVG tổng hợp kết quả test; không phải ảnh chụp màn hình hay phép đo trên gói thật.*
 

@@ -25,6 +25,6 @@ Có bảng ngưỡng, lý do chọn ngưỡng và script tái hiện; không dù
 
 ## Ảnh kết quả
 
-![Chưa có ảnh kết quả tuần 07](hinh-anh/chua-co-anh.svg)
+![Chưa có ảnh kết quả tuần 07](../hinh-anh/chua-co-anh.svg)
 
 *Thay ảnh này bằng ảnh kết quả thật khi có bằng chứng.*

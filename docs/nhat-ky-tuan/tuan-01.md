@@ -16,7 +16,7 @@
 
 ## Ảnh kết quả
 
-![Ảnh chụp PowerShell hiển thị ba model trong Ollama](hinh-anh/tuan-01-ollama-list-2026-10-28.png)
+![Ảnh chụp PowerShell hiển thị ba model trong Ollama](../hinh-anh/tuan-01-ollama-list-2026-10-28.png)
 
 *Ảnh PowerShell do Phạm Minh Triết cung cấp ngày 28/10/2026.*
 
@@ -38,7 +38,7 @@
 | A-SLM (4B) | 49.18 | 49.22 |
 | A-TLM (0.8B) | 180.65 | 181.12 |
 
-![Hai lượt probe 20 lần cho cả ba model](hinh-anh/tuan-01-probe-2026-10-28.png)
+![Hai lượt probe 20 lần cho cả ba model](../hinh-anh/tuan-01-probe-2026-10-28.png)
 
 *Ảnh PowerShell do Phạm Minh Triết cung cấp ngày 28/10/2026. Probe dùng công cụ giả, không phân tích gói npm; các tốc độ trên không phải kết quả benchmark chất lượng hay độ chính xác của agent. Reviewer độc lập vẫn chưa ký nghiệm thu tuần 1.*
 

@@ -1,6 +1,6 @@
 # Kế hoạch xử lý tồn đọng — Claude tiếp nhận ngày 03/11/2026
 
-Kế hoạch này bổ sung cho [bàn giao](../../docs/ban-giao/BAN_GIAO_CHO_CLAUDE_2026-11-03.md) (H0–H4). Thứ tự làm như sau: **đóng tồn đọng và vá lỗi đã xác minh trước**, sau đó mới cải thiện dần. Mỗi mục ghi Owner, Reviewer, điều kiện bắt đầu, DoD và việc cần PO quyết. Chưa có mục nào được đánh dấu xong.
+Kế hoạch này bổ sung cho [bàn giao](../ban-giao/BAN_GIAO_CHO_CLAUDE_2026-11-03.md) (H0–H4). Thứ tự làm như sau: **đóng tồn đọng và vá lỗi đã xác minh trước**, sau đó mới cải thiện dần. Mỗi mục ghi Owner, Reviewer, điều kiện bắt đầu, DoD và việc cần PO quyết. Chưa có mục nào được đánh dấu xong.
 
 ## 0. Cơ sở của kế hoạch (đã kiểm ngày 03/11)
 
@@ -73,7 +73,7 @@ Chỉ sửa tài liệu/cấu hình, không đổi logic, nên nằm trong phạ
 ### B5. Đo lại sau khi vá (cần Ollama)
 
 - Ma trận cố định: 3 fixture (`benign`, `canary`, `no-hook`) × 3 model × **3 lần** mỗi ô, cùng commit và cấu hình. Ghi ở mỗi ô: verdict hợp lệ không, số bước, thời gian, `rule` cuối, loại lỗi.
-- Lưu vào **chính** `docs/tien-do/tuan-03.md`, kèm `run_id` để viewer mở lại được.
+- Lưu vào **chính** `docs/nhat-ky-tuan/tuan-03.md`, kèm `run_id` để viewer mở lại được.
 - **DoD:** bảng đủ 27 lượt. A-TLM được phép FAIL, miễn kết thúc bằng fallback an toàn và **không còn** 15 bước lặp vô ích. Không suy rộng ra độ chính xác trên npm.
 
 ## Giai đoạn C — Đóng tồn đọng dữ liệu tuần 2 (H1)

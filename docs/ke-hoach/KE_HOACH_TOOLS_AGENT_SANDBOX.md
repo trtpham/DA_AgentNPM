@@ -439,7 +439,7 @@
   4. ít bước hơn.
 - **Ghi kết quả:**
   - `reports/<run>-summary.json`;
-  - bảng so sánh trong `docs/tien-do/tuan-05.md` (hoặc `tuan-06.md` nếu sang tuần 6).
+  - bảng so sánh trong `docs/nhat-ky-tuan/tuan-05.md` (hoặc `tuan-06.md` nếu sang tuần 6).
 
 ## Phần E — Thứ tự làm, commit, rollback
 
@@ -450,7 +450,7 @@
 | 3 | A11: nối công cụ theo config, dòng đã xem, prompt, L3 mở rộng | `agent/run.py`, `experiments/run_batch.py`, `experiments/configs/*`, `AGENTS.md` §6.4 | `agent: …` |
 | 4 | B4 + B1 + B7 (chặn ca bẫy) | `tools/static.py`, `agent/run.py`, `agent/decide.py` | `agent: …` |
 | 5 | B2, B3, B5, B6 | `agent/run.py`, `experiments/calibration.py` | `agent: …` |
-| 6 | D1, D2 + log | `docs/tien-do/…` | `docs: …` |
+| 6 | D1, D2 + log | `docs/nhat-ky-tuan/…` | `docs: …` |
 | 7 | C1–C6 + test Docker | `sandbox/*`, `tests/test_sandbox*.py`, fixture mới | `sandbox: …` |
 | 8 | C7 | `agent/run.py`, `experiments/run_batch.py` | `agent: …` |
 | 9 | D4, D5 + log + push (D3 hoãn) | — | `docs: …` |

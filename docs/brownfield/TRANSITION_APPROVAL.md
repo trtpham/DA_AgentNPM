@@ -234,7 +234,7 @@ EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “tôi đ�
 DECISION: APPROVED FOR IMPLEMENTATION
 PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-04 Asia/Saigon
-EVIDENCE_REFERENCES: trả lời trong chat với Claude “Bắt đầu W5-1, W5-8” cho kế hoạch tuần 5 trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../tien-do/tuan-05.md).
+EVIDENCE_REFERENCES: trả lời trong chat với Claude “Bắt đầu W5-1, W5-8” cho kế hoạch tuần 5 trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../nhat-ky-tuan/tuan-05.md).
 
 - Phạm vi W5-1: thêm 6 fixture vô hại trong `tests/fixtures/sandbox-limits/` và test chạy chúng **chỉ trong container** `agent-npm-sandbox:local`. Không sửa `sandbox/` ở bước này. Test chỉ chạy khi đặt `RUN_SANDBOX_TESTS=1`.
 - Phạm vi W5-8: đo thời gian từng lượt Ollama của A-LLM trên 3 fixture và 10 bản swc dev đã duyệt; so `num_ctx`. Chỉ đổi code agent sau khi có số đo và báo PO.
@@ -246,7 +246,7 @@ EVIDENCE_REFERENCES: trả lời trong chat với Claude “Bắt đầu W5-1, W
 DECISION: APPROVED FOR IMPLEMENTATION
 PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-04 Asia/Saigon
-EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “triển khai công việc tuần 5”, cho bảng kế hoạch trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../tien-do/tuan-05.md).
+EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “triển khai công việc tuần 5”, cho bảng kế hoạch trong [`../../ke-hoach-nhat-ky-tuan/tuan-05.md`](../nhat-ky-tuan/tuan-05.md).
 
 - W5-2/W5-3: sửa `sandbox/run.py` (thêm `outcome`, cây PID và `by_actor`); giữ hợp đồng `{ok, data, error}` và các trường cũ. TV3 review.
 - W5-4: chạy lại fixture trong container `agent-npm-sandbox:local`; chỉ fixture vô hại của nhóm.
@@ -260,7 +260,7 @@ EVIDENCE_REFERENCES: tin nhắn trong chat với Claude ngày 04/11: “triển 
 DECISION: APPROVED — START AFTER WEEK 5 MILESTONE
 PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-04 Asia/Saigon
-EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 04/11 cho [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_VAN_PHONG_3D.md`](../tien-do/KE_HOACH_VAN_PHONG_3D.md): “1. Sau khi tuần 5 ổn định 2. Có 3. Đầy đủ”.
+EVIDENCE_REFERENCES: trả lời trong chat với Claude ngày 04/11 cho [`../../ke-hoach-nhat-ky-tuan/KE_HOACH_VAN_PHONG_3D.md`](../ke-hoach/KE_HOACH_VAN_PHONG_3D.md): “1. Sau khi tuần 5 ổn định 2. Có 3. Đầy đủ”.
 
 - Phạm vi: `viewer/server.py` (route `/office`, header CSP, không thêm API) và `viewer/static/office*`. Chỉ đọc trace, không sửa agent, công cụ, sandbox hay luật quyết định.
 - Thư viện: Three.js ghim phiên bản, chép vào `viewer/static/vendor/` kèm LICENSE (MIT), không dùng CDN.
@@ -322,7 +322,7 @@ EVIDENCE_REFERENCES: chat với Claude:
 - 05/11: "tất cả những tools cần thiết để việc phân tích tường minh, chi tiết, sâu hơn", R7_flow "Có, làm cùng đợt", "add more tools to plan", "enhance ability of agents and sandbox more", "enhance the plan more detailed";
 - 07/11: "Do 5 question by your own best choices", sau đó thu hẹp phạm vi còn A và B ("ok do it").
 
-Kế hoạch chi tiết và các quyết định: `docs/tien-do/KE_HOACH_TOOLS_AGENT_SANDBOX.md` (§6).
+Kế hoạch chi tiết và các quyết định: `docs/ke-hoach/KE_HOACH_TOOLS_AGENT_SANDBOX.md` (§6).
 
 - **A — 10 công cụ chỉ đọc** (`tools/explore.py`), bọc `untrusted`, không chạy mã gói:
   - tập công cụ theo model (`tools:` trong config);
@@ -347,7 +347,7 @@ PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-07 Asia/Saigon
 EVIDENCE_REFERENCES: chat với Claude 07/11: "Enhance more tools, agent's ability, sandbox for project. Make sure no break the core, just enhance."; trả lời câu hỏi phạm vi sandbox: "Chỉ phần không chạy mã".
 
-Mở lại một phần Phần C của `docs/tien-do/KE_HOACH_TOOLS_AGENT_SANDBOX.md`:
+Mở lại một phần Phần C của `docs/ke-hoach/KE_HOACH_TOOLS_AGENT_SANDBOX.md`:
 
 - **C2:** thêm canary giả (5 file, 3 biến môi trường) và nhận diện chúng; tmpfs `/home/agent` giữ 1 MB.
 - **C4:** phân tích strace theo hành vi (`connects`, `persistence_writes`, `process_tree`), test trên log viết tay.
@@ -364,7 +364,7 @@ PO: Phạm Minh Triết
 APPROVED_AT: 2026-11-08 Asia/Saigon
 EVIDENCE_REFERENCES: chat với Claude 08/11: "Ký W5-5 cho tôi luôn đi"; trả lời câu hỏi về cách ghi: "Ghi: "Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11", chọn phương án swap 1, bật --memory-swap 256m làm mặc định, chạy lại test Docker. Ghi thêm Gate."
 
-- **Nghiệm thu W5-5:** PO nghiệm thu thay TV3 (ngoại lệ quy trình, ghi rõ trong [phiếu W5-5](../tien-do/giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md)); căn cứ là lần chạy 08/11 do Claude thực hiện.
+- **Nghiệm thu W5-5:** PO nghiệm thu thay TV3 (ngoại lệ quy trình, ghi rõ trong [phiếu W5-5](../giao-viec/W5-5_NGHIEM_THU_SANDBOX_TV3.md)); căn cứ là lần chạy 08/11 do Claude thực hiện.
 - **Thay đổi:** `sandbox/run.py` thêm `--memory-swap 256m` vào lệnh `docker run` mặc định (chỉ chặt hơn). `HARDENING` còn `--ulimit nofile`, `--ulimit fsize`, vẫn opt-in.
 - **Mở:** W5-6 cho `tests/fixtures/packages` và `tests/fixtures/sandbox-limits`. **Không mở:** gói thật, corpus mô phỏng trong container, đổi `--network none`.
 - **Kiểm chứng:** `RUN_SANDBOX_TESTS=1 py -3.14 -m pytest -q tests/test_sandbox_limits.py` → 14 passed sau khi đổi; `memory` 192 MB.

@@ -19,6 +19,6 @@ Bản nháp báo cáo có nguồn cho số liệu, khớp phiên bản mã và c
 
 ## Ảnh kết quả
 
-![Chưa có ảnh kết quả tuần 09](hinh-anh/chua-co-anh.svg)
+![Chưa có ảnh kết quả tuần 09](../hinh-anh/chua-co-anh.svg)
 
 *Thay ảnh này bằng ảnh kết quả thật khi có bằng chứng.*

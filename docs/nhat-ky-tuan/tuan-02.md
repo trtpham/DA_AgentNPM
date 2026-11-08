@@ -1,6 +1,6 @@
 # Tuần 02 — Dữ liệu và hợp đồng công cụ
 
-[Báo cáo tuần 02](BaoCaoTienDo_Tuan02.md)
+[Báo cáo tuần 02](../bao-cao-tuan/BaoCaoTienDo_Tuan02.md)
 
 ## Kế hoạch
 
@@ -37,7 +37,7 @@ Dữ liệu v1 có nguồn và nhãn kiểm tra chéo; các test với dữ li�
 
 ## Ảnh kết quả
 
-![Tổng hợp kết quả kiểm thử tuần 02](hinh-anh/tuan-02-ket-qua.svg)
+![Tổng hợp kết quả kiểm thử tuần 02](../hinh-anh/tuan-02-ket-qua.svg)
 
 ## Trạng thái chốt 2026-10-25
 

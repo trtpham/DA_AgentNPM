@@ -33,19 +33,19 @@ Các ảnh dưới đây là màn hình nhóm chụp khi chạy **mẫu mô ph�
 
 **Hình 1.** Agent mở và đọc các dòng mã của mẫu thử.
 
-![Agent đọc từng dòng mã của mẫu thử](hinh-anh/tuan-03-demo-ollama-doc-ma.jpg)
+![Agent đọc từng dòng mã của mẫu thử](../hinh-anh/tuan-03-demo-ollama-doc-ma.jpg)
 
 **Hình 2.** Agent đối chiếu những dòng mã đã đọc trước khi kết luận.
 
-![Agent đối chiếu bằng chứng trước khi kết luận](hinh-anh/tuan-03-demo-ollama-that.jpg)
+![Agent đối chiếu bằng chứng trước khi kết luận](../hinh-anh/tuan-03-demo-ollama-that.jpg)
 
 **Hình 3.** Giao diện cho thấy A-LLM đang thực hiện từng bước.
 
-![Giao diện cho thấy A-LLM đang chạy](hinh-anh/tuan-03-demo-a-llm-live.jpg)
+![Giao diện cho thấy A-LLM đang chạy](../hinh-anh/tuan-03-demo-a-llm-live.jpg)
 
 **Hình 4.** Giao diện hiển thị kết luận của lượt chạy thử.
 
-![Giao diện hiển thị kết luận của lượt chạy thử](hinh-anh/tuan-03-demo-a-llm-ket-luan.jpg)
+![Giao diện hiển thị kết luận của lượt chạy thử](../hinh-anh/tuan-03-demo-a-llm-ket-luan.jpg)
 
 Với gói `esbuild@0.24.0`, nhóm đã lưu lại toàn bộ sáu bước trên máy demo. Khi trình bày, nhóm có thể mở lượt chạy này để thầy xem ba dòng mã trong `install.js` mà agent dùng làm bằng chứng và quyết định cuối. Nhóm chỉ tải gói để đọc, không chạy lệnh cài đặt của gói.
 

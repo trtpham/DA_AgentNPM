@@ -48,7 +48,7 @@ Kết quả agent trên 10 bản `@swc/core` (ngày 03/11):
 
 **Hình 1.** Sơ đồ tổng hợp các phần đã tích hợp. Đây là **hình tổng hợp**, không phải ảnh chụp màn hình.
 
-![Sơ đồ tổng hợp phần tích hợp đã kiểm chứng](hinh-anh/tuan-04-tich-hop.svg)
+![Sơ đồ tổng hợp phần tích hợp đã kiểm chứng](../hinh-anh/tuan-04-tich-hop.svg)
 
 ## 3. Ảnh chụp lúc báo cáo
 
@@ -56,7 +56,7 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 4**. Khi có,
 
 ## 4. Cải thiện chất lượng trong tuần 4 (04/11)
 
-Không thêm chức năng mới; nhóm chỉ làm tốt hơn phần đã có. Chi tiết số đo ở [nhật ký tuần 4](tuan-04.md) và [kế hoạch cải thiện](../../archive/ke-hoach-da-xong/KE_HOACH_CAI_THIEN_2026-11-03.md).
+Không thêm chức năng mới; nhóm chỉ làm tốt hơn phần đã có. Chi tiết số đo ở [nhật ký tuần 4](../nhat-ky-tuan/tuan-04.md) và [kế hoạch cải thiện](../../archive/ke-hoach-da-xong/KE_HOACH_CAI_THIEN_2026-11-03.md).
 
 - **I1 — lý do quyết định cụ thể:** 10/10 gói swc nêu đúng `postinstall.js:125`, 18 file `.node` thiếu và `swc.wasi.cjs` không có trong gói.
 - **I2 — mô hình nhỏ ổn định hơn:** trên 3 mẫu thử × 3 lần, A-TLM tăng từ 2/9 lên 9/9 kết luận hợp lệ; A-LLM và A-SLM giữ 9/9. Cách làm: giới hạn độ dài ngay lúc sinh câu trả lời; định dạng kết luận không bị nới.

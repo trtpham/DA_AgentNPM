@@ -1,6 +1,6 @@
 # Tuần 03 — Công cụ đọc, agent và sandbox cơ bản
 
-[Báo cáo chi tiết và kịch bản demo ngày 24/10/2026](BaoCaoTienDo_Tuan03.md)
+[Báo cáo chi tiết và kịch bản demo ngày 24/10/2026](../bao-cao-tuan/BaoCaoTienDo_Tuan03.md)
 
 ## Kế hoạch
 
@@ -34,7 +34,7 @@ Kiểm tra mã: `rtk python -m pytest -q` → 10 PASS; `rtk semgrep scan --error
 
 ## Ảnh kết quả
 
-![Các công cụ đọc đã kiểm thử của tuần 03](hinh-anh/tuan-03-ket-qua.svg)
+![Các công cụ đọc đã kiểm thử của tuần 03](../hinh-anh/tuan-03-ket-qua.svg)
 
 *Ảnh SVG tổng hợp test của hai công cụ đọc; chưa có ảnh agent hoặc sandbox chạy thật.*
 

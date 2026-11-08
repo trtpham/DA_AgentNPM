@@ -4,7 +4,7 @@
 
 **Giai đoạn:** Hoàn thiện sandbox và công cụ mở rộng · **Ngày cập nhật:** 08/11/2026 (bản đầu 05/11) · **Nghiệm thu:** W5-5 cách ly sandbox — Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11 (ngoại lệ do PO quyết); agent — TV2 Phạm Minh Triết
 
-> Số liệu trong báo cáo đều lấy từ lần chạy thật ngày 04–08/11/2026 trên máy của nhóm. Phần cập nhật 07–08/11 nằm ở mục 4.3. Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết từng việc ở [nhật ký tuần 5](tuan-05.md); kịch bản demo ở [hướng dẫn demo](HUONG_DAN_DEMO_TUAN05.md).
+> Số liệu trong báo cáo đều lấy từ lần chạy thật ngày 04–08/11/2026 trên máy của nhóm. Phần cập nhật 07–08/11 nằm ở mục 4.3. Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết từng việc ở [nhật ký tuần 5](../nhat-ky-tuan/tuan-05.md); kịch bản demo ở [hướng dẫn demo](HUONG_DAN_DEMO_TUAN05.md).
 
 ## 1. Nội dung buổi báo cáo tuần
 
@@ -74,19 +74,19 @@ Ca lệch của A-TLM là gói không có hook. Model 0.8b lặp lại cùng m�
 
 **Hình 1.** Trình xem trace: lô 13 gói của A-LLM. Gói thử canary được kết luận Độc hại. Ảnh chụp màn hình thật, 05/11/2026.
 
-![Trình xem trace — lô 13 gói](hinh-anh/tuan-05-viewer-lo-13-goi.jpg)
+![Trình xem trace — lô 13 gói](../hinh-anh/tuan-05-viewer-lo-13-goi.jpg)
 
 **Hình 2.** Gói thử canary: kết luận Độc hại → **Từ chối** (luật R6). Bằng chứng `inspect.js:2` đọc `/home/agent/.ssh/id_rsa`; lệnh `npm deny-scripts` chỉ lập ở chế độ chạy thử.
 
-![Gói canary bị từ chối kèm bằng chứng](hinh-anh/tuan-05-viewer-canary-deny.jpg)
+![Gói canary bị từ chối kèm bằng chứng](../hinh-anh/tuan-05-viewer-canary-deny.jpg)
 
 **Hình 3.** `@swc/core@1.7.36` (gói lành thật). Model đề xuất "Cho phép, tin cậy 95%", nhưng **luật cứng R7_review chuyển sang người xem**: script tải mã ngoài gói ở `postinstall.js:125`, thiếu 18 file `.node`, không đọc được `swc.wasi.cjs`.
 
-![swc chuyển người xem với lý do cụ thể](hinh-anh/tuan-05-viewer-swc-review.jpg)
+![swc chuyển người xem với lý do cụ thể](../hinh-anh/tuan-05-viewer-swc-review.jpg)
 
 **Hình 4.** Gói thử mã rút gọn: agent gọi `deobfuscate` và trích `install.min.js#pretty:124` và `#pretty:126`.
 
-![Agent đọc bản đã định dạng của mã rút gọn](hinh-anh/tuan-05-viewer-obfuscated-pretty.jpg)
+![Agent đọc bản đã định dạng của mã rút gọn](../hinh-anh/tuan-05-viewer-obfuscated-pretty.jpg)
 
 ## 3. Ảnh chụp lúc báo cáo
 
@@ -133,7 +133,7 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
 - **Sandbox:** build lại image (`sha256:ac8579db…`) với 5 file canary giả mới và 3 biến môi trường giả; test Docker **14/14 PASS**; tái hiện 9 gói thử × 3 lần giống nhau, không lộ biến môi trường của máy thật.
 - **Lỗi tìm ra và đã sửa:** `trace_flow` treo trên file dài; chạy lô dừng vì ký tự Unicode trên console Windows; tmpfs `/tmp` trong chế độ gia cố làm sandbox *lỏng* hơn (đã bỏ).
 - **Bộ kiểm thử:** 139 → **241 PASS**, cộng 14 test sandbox chỉ chạy khi có Docker.
-- Chi tiết: [nhật ký tuần 6](tuan-06.md).
+- Chi tiết: [nhật ký tuần 6](../nhat-ky-tuan/tuan-06.md).
 
 ## 5. Đề xuất tuần 6 và cách thực hiện
 
@@ -142,4 +142,4 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
    - Sau khi ký: bật `sandbox` mặc định cho gói thử, chạy lại ma trận 3 mô hình.
 2. **Hoàn tất bộ nhãn v1:** người kiểm tra chéo (không phải người đã gán nhãn, không phải Claude/Codex) điền 4 phiếu W5-10. Sau đó mới tính Recall/F1 và so với GuardDog, chạy trong môi trường cách ly.
 3. **Tập test:** chọn thêm họ gói và chiến dịch mới từ 450 ứng viên và OSV, chuẩn bị bằng chứng trong container dùng một lần.
-4. **Văn phòng 3D (đã duyệt 04/11):** bắt đầu khi tuần 5 ổn định, phục vụ demo cuối kỳ ([kế hoạch](KE_HOACH_VAN_PHONG_3D.md)).
+4. **Văn phòng 3D (đã duyệt 04/11):** bắt đầu khi tuần 5 ổn định, phục vụ demo cuối kỳ ([kế hoạch](../ke-hoach/KE_HOACH_VAN_PHONG_3D.md)).

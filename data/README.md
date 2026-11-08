@@ -21,7 +21,7 @@ Các script `.py` ở thư mục này tạo/lọc/kiểm tra dữ liệu; `REVIE
 
 `candidates.csv` lưu **metadata ứng viên**. `source_label=malicious` là nhãn advisory; `unlabeled` nghĩa là nguồn không khẳng định benign. `review_status=needs_independent_review` nghĩa là nhóm chưa kiểm tra chéo. GitHub Advisory và bản OSV tương ứng có cùng nguồn gốc nên không tính là hai lượt kiểm tra độc lập. Chỉ chuyển dòng sang `labels.csv` sau khi TV2 hoặc người được TV2 ủy quyền xác minh đúng tên, phiên bản, install hook, hành vi và ghi người kiểm tra/quyết định vào [hồ sơ tuần 2](REVIEW_WEEK2.md). Không tải hoặc đưa tarball độc vào Git.
 
-Theo phân công trong `docs/tien-do/KE_HOACH.md`, TV1 phụ trách dữ liệu và Phạm Minh Triết (TV2) phụ trách kiểm tra chéo. Ngày 29/10/2026, TV2 ủy quyền Codex duyệt các gói lành; hồ sơ ghi Codex là người thực hiện, không coi đây là chữ ký kiểm tra trực tiếp của TV2.
+Theo phân công trong `docs/ke-hoach/KE_HOACH.md`, TV1 phụ trách dữ liệu và Phạm Minh Triết (TV2) phụ trách kiểm tra chéo. Ngày 29/10/2026, TV2 ủy quyền Codex duyệt các gói lành; hồ sơ ghi Codex là người thực hiện, không coi đây là chữ ký kiểm tra trực tiếp của TV2.
 
 Với mỗi ứng viên trong `candidates.csv`, người kiểm tra chéo ghi: `package@version`, bằng chứng install hook, nhãn đề xuất, hành vi chính và lý do kèm nguồn. Xác minh từng mục trước khi chuyển vào `labels.csv`.
 

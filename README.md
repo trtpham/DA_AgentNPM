@@ -2,9 +2,9 @@
 
 **Thành viên:** TV1 Lê Đặng Thiên Phước (dữ liệu và công cụ đọc) · TV2 Phạm Minh Triết (lõi agent, PO) · TV3 Nguyễn Đình Thiên (sandbox và đo lường)
 
-[Kế hoạch thực hiện 10 tuần](docs/tien-do/KE_HOACH.md)
+[Kế hoạch thực hiện 10 tuần](docs/ke-hoach/KE_HOACH.md)
 
-[Kế hoạch và nhật ký theo tuần](docs/tien-do/README.md)
+[Kế hoạch và nhật ký theo tuần](docs/README.md)
 
 ## Cấu trúc thư mục
 
@@ -24,10 +24,15 @@ tests/          test pytest (test_*.py); js/ là test Node của văn phòng 3D
     corpus/     22 gói mô phỏng lành/độc theo cặp + EXPECTED.json (đáp án nằm ngoài thư mục gói)
     replays/    phản hồi Ollama ghi lại để test hồi quy không cần model
     strace/ sandbox-limits/   dữ liệu cho test sandbox
-docs/
+docs/           mục lục: docs/README.md
+  ke-hoach/     kế hoạch tổng thể 10 tuần và các kế hoạch đã duyệt
+  nhat-ky-tuan/ nhật ký kỹ thuật từng tuần (tuan-01 … tuan-10)
+  bao-cao-tuan/ báo cáo tiến độ cho giảng viên và hướng dẫn demo
+  giao-viec/    phiếu giao việc cho thành viên (W5-5, W5-10)
+  hinh-anh/     ảnh kết quả thật dùng trong báo cáo
   brownfield/   TRANSITION_APPROVAL.md: mọi Gate B0 do PO duyệt
   ban-giao/     tài liệu bàn giao giữa các trợ lý code
-  tien-do/      kế hoạch, nhật ký tuần, báo cáo tiến độ, hướng dẫn demo, giao việc, hình ảnh
+  lms/          bản LMS docx/pdf (chỉ trên máy, Git ignore)
 archive/        tài liệu và ảnh cũ chỉ để tra cứu lịch sử (không cần để chạy dự án)
 reports/        đầu ra chạy cục bộ (Git ignore)
 ```

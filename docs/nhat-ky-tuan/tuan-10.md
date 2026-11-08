@@ -19,6 +19,6 @@ Demo chạy ổn định dưới 5 phút; kết luận có file/dòng bằng ch�
 
 ## Ảnh kết quả
 
-![Chưa có ảnh kết quả tuần 10](hinh-anh/chua-co-anh.svg)
+![Chưa có ảnh kết quả tuần 10](../hinh-anh/chua-co-anh.svg)
 
 *Thay ảnh này bằng ảnh kết quả thật khi có bằng chứng.*
