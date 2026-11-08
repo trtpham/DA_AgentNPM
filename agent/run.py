@@ -3,6 +3,7 @@
 import argparse
 import functools
 import json
+import os
 import sys
 import re
 import sqlite3
@@ -135,6 +136,18 @@ def _format_schema() -> dict:
 FORMAT_SCHEMA = _format_schema()
 
 
+# Inside the measurement container (experiments.run_isolated) the host's Ollama is reached as
+# host.docker.internal; nothing else is accepted, so the agent can never call a remote service.
+LOCAL_OLLAMA_HOSTS = ("127.0.0.1", "host.docker.internal")
+
+
+def ollama_host() -> str:
+    host = os.environ.get("AGENT_OLLAMA_HOST", "127.0.0.1")
+    if host not in LOCAL_OLLAMA_HOSTS:
+        raise RuntimeError(f"AGENT_OLLAMA_HOST must be one of {LOCAL_OLLAMA_HOSTS}")
+    return host
+
+
 def _chat(model: str, messages: list[dict], final: bool = False, retry: int = 0,
           overrides: dict | None = None, tools: list[dict] | None = None) -> dict:
     settings = {**CHAT_OPTIONS, **(overrides or {})}
@@ -152,8 +165,8 @@ def _chat(model: str, messages: list[dict], final: bool = False, retry: int = 0,
         payload["tools"] = tools or TOOLS
     payload = json.dumps(payload).encode()
     for attempt in range(2):
-        # Ollama's local API uses HTTP; the destination is fixed to loopback.
-        connection = HTTPConnection("127.0.0.1", 11434, timeout=120)
+        # Ollama's local API uses HTTP; the destination is the local machine only (AGENTS §2.8).
+        connection = HTTPConnection(ollama_host(), 11434, timeout=120)
         try:
             connection.request("POST", "/api/chat", payload, {"Content-Type": "application/json"})
             response = connection.getresponse()
@@ -363,9 +376,10 @@ class _Session:
                          data_preview=preview, untrusted=bool(result["ok"]),
                          duration_ms=round((time.monotonic() - started) * 1000))
 
-    def publish_decision(self, decision: dict, checks: list[dict]) -> None:
+    def publish_decision(self, decision: dict, checks: list[dict], inputs: dict | None = None) -> None:
         self.writer.emit("decision", threshold=self.thresholds, evidence_checks=checks, final_label=decision["label"],
-                         final_action=decision["action"], dry_run=True, rule=decision["rule"], reasons=decision["reasons"])
+                         final_action=decision["action"], dry_run=True, rule=decision["rule"], reasons=decision["reasons"],
+                         inputs=inputs)
         if isinstance(self.writer, TraceWriter):
             try:
                 record_decision(self.writer.run_dir.parent / "decisions.sqlite", self.writer.run_id,
@@ -846,12 +860,15 @@ class _Session:
             item.evidence.file == file and
             int(item.evidence.lines.split("-")[0]) <= line <= int(item.evidence.lines.split("-")[-1])
             for item in verdict.behaviors)]
-        decision = decide(verdict, checks, deny_threshold=self.thresholds["deny"], osv_malicious=self.osv_malicious,
-                          approve_threshold=self.thresholds["approve"], auto_approve_allowed=not self.incomplete,
-                          review_reasons=self.incomplete, unexplained_risks=unexplained,
-                          flow_risks=self.flow_risks(verdict, checks), canary_touched=self.canary_touched,
-                          sandbox_risks=self.sandbox_risks)
-        self.publish_decision(decision, checks)
+        # Everything decide() needs besides the thresholds, kept in the trace so experiments.threshold_sweep
+        # can re-decide the same verdict under other thresholds without running the model again.
+        inputs = {"osv_malicious": self.osv_malicious, "auto_approve_allowed": not self.incomplete,
+                  "review_reasons": list(self.incomplete), "unexplained_risks": unexplained,
+                  "flow_risks": self.flow_risks(verdict, checks), "canary_touched": self.canary_touched,
+                  "sandbox_risks": list(self.sandbox_risks)}
+        decision = decide(verdict, checks, deny_threshold=self.thresholds["deny"],
+                          approve_threshold=self.thresholds["approve"], **inputs)
+        self.publish_decision(decision, checks, inputs)
         self.end(step)
         self.legacy(step=step, kind="verdict", status="ok", detail=f"Nhãn {verdict.label} · hành động {verdict.action}",
                     what="Công bố nhãn và hành động do mô hình đề xuất sau kiểm chứng.",

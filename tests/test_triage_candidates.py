@@ -136,3 +136,20 @@ def test_install_hash_ignores_names_paths_and_whitespace(tmp_path):
     assert first == package("b", "pkg-b", "setup.js", "console.log( 'x' );")
     assert first != package("c", "pkg-c", "setup.js", "console.log('y');\n")
     assert len(first) == 64
+
+
+def test_large_pass_overrides_only_rows_that_hit_size_limits(tmp_path, monkeypatch):
+    rows = [{"package": "big", "version": "1.0.0", "group": "C", "reasons": ["ValueError: package exceeds extraction limits"]},
+            {"package": "gone", "version": "1.0.0", "group": "C", "reasons": ["HTTPError: HTTP Error 404: Not Found"]}]
+    (tmp_path / "batch-01.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+    monkeypatch.setattr(triage_module, "candidates", lambda: [
+        {"package": "big", "version": "1.0.0", "source_url": "u1"}, {"package": "gone", "version": "1.0.0", "source_url": "u2"}])
+    sent = []
+
+    def runner(command, input, **_kwargs):
+        sent.append((command, input))
+        return CompletedProcess(command, 0, json.dumps({"package": "big", "version": "1.0.0", "group": "A", "reasons": []}), "")
+
+    assert triage_module.run_large(tmp_path, runner) == 1
+    assert "--large" in sent[0][0] and "size=2g" in " ".join(sent[0][0]) and '"gone"' not in sent[0][1]
+    assert summarize(tmp_path, tmp_path / "s.csv") == {"rows": 2, "groups": {"A": 1, "C": 1}}

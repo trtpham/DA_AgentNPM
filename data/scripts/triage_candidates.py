@@ -183,14 +183,20 @@ def candidates(metadata: Path = METADATA) -> list[dict]:
                 for row in csv.DictReader(stream)]
 
 
-def container_command() -> list[str]:
-    return ["docker", "run", "--rm", "-i", "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,size=512m",
-            "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--memory", "1g", "--pids-limit", "64",
+# Plan S3: packages over the normal limits get one more pass with larger ones (still in tmpfs).
+LARGE_ARCHIVE, LARGE_FILES, LARGE_BYTES = 200 * 1024 * 1024, 20000, 300 * 1024 * 1024
+TOO_LARGE = ("exceeds extraction limits", "archive too large")
+
+
+def container_command(large: bool = False) -> list[str]:
+    tmpfs, memory = ("2g", "3g") if large else ("512m", "1g")
+    return ["docker", "run", "--rm", "-i", "--read-only", "--tmpfs", f"/tmp:rw,noexec,nosuid,size={tmpfs}",
+            "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--memory", memory, "--pids-limit", "64",
             "--user", "10001:10001",
             "--mount", f"type=bind,source={ROOT / 'tools'},target=/app/tools,readonly",
             "--mount", f"type=bind,source={ROOT / 'agent'},target=/app/agent,readonly",
             "--mount", f"type=bind,source={Path(__file__).resolve()},target=/app/triage.py,readonly",
-            IMAGE, "python", "-I", "/app/triage.py", "--inside"]
+            IMAGE, "python", "-I", "/app/triage.py", "--inside", *(["--large"] if large else [])]
 
 
 def run_batch(number: int, rows: list[dict], out_dir: Path = OUT_DIR, runner=subprocess.run) -> Path | None:
@@ -209,9 +215,36 @@ def run_batch(number: int, rows: list[dict], out_dir: Path = OUT_DIR, runner=sub
     return output
 
 
-def summarize(out_dir: Path = OUT_DIR, summary: Path = SUMMARY) -> dict:
+def run_large(out_dir: Path = OUT_DIR, runner=subprocess.run) -> int:
+    """Re-triage the rows that hit the size limits; results go to large.jsonl and override them."""
+    source = {(row["package"], row["version"]): row["source_url"] for row in candidates()}
+    rows = [{"package": item["package"], "version": item["version"], "source_url": source[(item["package"], item["version"])]}
+            for item in _items(out_dir, include_large=False)
+            if item["group"] == "C" and any(word in " ".join(item.get("reasons", [])) for word in TOO_LARGE)]
+    if not rows:
+        return 0
+    completed = runner(container_command(large=True), input="\n".join(json.dumps(row) for row in rows),
+                       capture_output=True, text=True, encoding="utf-8", timeout=7200, check=False)
+    results = [json.loads(line) for line in (completed.stdout or "").splitlines() if line.strip()]
+    if completed.returncode or len(results) != len(rows):
+        raise RuntimeError(f"large pass: {len(results)}/{len(rows)}: {(completed.stderr or '')[-300:]}")
+    (out_dir / "large.jsonl").write_text("".join(json.dumps(item, ensure_ascii=False) + "\n" for item in results),
+                                         encoding="utf-8")
+    return len(results)
+
+
+def _items(out_dir: Path, include_large: bool = True) -> list[dict]:
     items = [json.loads(line) for path in sorted(out_dir.glob("batch-*.jsonl"))
              for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    large = out_dir / "large.jsonl"
+    if include_large and large.is_file():
+        override = {(item["package"], item["version"]): item for item in map(json.loads, large.read_text(encoding="utf-8").splitlines())}
+        items = [override.get((item["package"], item["version"]), item) for item in items]
+    return items
+
+
+def summarize(out_dir: Path = OUT_DIR, summary: Path = SUMMARY) -> dict:
+    items = _items(out_dir)
     with summary.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=FIELDS)
         writer.writeheader()
@@ -232,13 +265,23 @@ def main() -> None:
     sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description="Sort public candidates into review groups (never labels)")
     parser.add_argument("--batch", type=int, help="run only this batch (1-based)")
+    parser.add_argument("--large", action="store_true", help="re-triage only rows that hit the size limits")
     parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.inside:
         sys.path.insert(0, "/app")
+        if args.large:
+            import tools.fetch
+            global MAX_ARCHIVE
+            MAX_ARCHIVE = LARGE_ARCHIVE
+            tools.fetch.MAX_FILES, tools.fetch.MAX_BYTES = LARGE_FILES, LARGE_BYTES
         for line in sys.stdin:
             if line.strip():
                 print(json.dumps(inspect(json.loads(line), Path("/tmp/work")), ensure_ascii=False), flush=True)
+        return
+    if args.large:
+        print(json.dumps({"large_rows": run_large()}), flush=True)
+        print(json.dumps(summarize(), ensure_ascii=False))
         return
     rows = candidates()
     batches = [rows[start:start + BATCH_SIZE] for start in range(0, len(rows), BATCH_SIZE)]

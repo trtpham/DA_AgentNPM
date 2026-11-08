@@ -12,7 +12,8 @@ EVENT_FIELDS = {
     "tool_call": ("tool", "args"),
     "tool_result": ("tool", "ok", "summary", "data_preview", "untrusted", "duration_ms"),
     "verdict": ("verdict", "valid", "validation_errors"),
-    "decision": ("threshold", "evidence_checks", "final_label", "final_action", "dry_run", "rule", "reasons"),
+    # `inputs` (2026-11-08): decide() arguments other than thresholds, for experiments.threshold_sweep.
+    "decision": ("threshold", "evidence_checks", "final_label", "final_action", "dry_run", "rule", "reasons", "inputs"),
     "error": ("kind", "message"),
     "limit": ("reason",),
     "self_check": ("question", "reasons"),  # B1: one question before a benign verdict over a risky flow

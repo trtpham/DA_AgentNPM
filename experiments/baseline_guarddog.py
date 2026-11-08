@@ -26,17 +26,22 @@ def scan_command(package_dir: Path, image: str = IMAGE) -> list[str]:
             image, "npm", "scan", "/scan", "--output-format", "json"]
 
 
+def parse_report(stdout: str) -> dict:
+    """GuardDog JSON output -> tool result (shared with experiments.run_isolated --guarddog)."""
+    report = json.loads(stdout)
+    if not isinstance(report, dict) or "issues" not in report:
+        raise ValueError("unexpected GuardDog output")
+    rules = sorted(rule for rule, findings in (report.get("results") or {}).items() if findings)
+    return {"ok": not report.get("errors"), "data": {"issues": report["issues"], "rules": rules,
+                                                      "errors": report.get("errors") or {},
+                                                      "results": report.get("results") or {}},
+            "error": "; ".join(f"{key}: {value}"[:200] for key, value in (report.get("errors") or {}).items()) or None}
+
+
 def scan(package_dir: Path, image: str = IMAGE, runner=subprocess.run) -> dict:
     try:
         completed = runner(scan_command(package_dir, image), capture_output=True, text=True, timeout=600, check=False)
-        report = json.loads(completed.stdout)
-        if not isinstance(report, dict) or "issues" not in report:
-            raise ValueError("unexpected GuardDog output")
-        rules = sorted(rule for rule, findings in (report.get("results") or {}).items() if findings)
-        return {"ok": not report.get("errors"), "data": {"issues": report["issues"], "rules": rules,
-                                                          "errors": report.get("errors") or {},
-                                                          "results": report.get("results") or {}},
-                "error": "; ".join(f"{key}: {value}"[:200] for key, value in (report.get("errors") or {}).items()) or None}
+        return parse_report(completed.stdout)
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         return {"ok": False, "data": None, "error": str(error)[:300]}
 

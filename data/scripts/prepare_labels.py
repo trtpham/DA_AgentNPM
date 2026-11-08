@@ -10,7 +10,7 @@ from experiments.dataset import FIELDS, load_labels
 LABELS = {"malicious", "suspicious", "benign"}
 
 
-def prepare_labels(source: Path, destination: Path) -> int:
+def prepare_labels(source: Path, destination: Path, test_share: float = 0.2) -> int:
     rows = load_labels(source)
     if not rows:
         raise ValueError("no reviewed labels")
@@ -43,9 +43,9 @@ def prepare_labels(source: Path, destination: Path) -> int:
         for index, (_, group) in enumerate(groups):
             for count, mask in list(possible.items()):
                 possible.setdefault(count + len(group), mask | (1 << index))
-        # Exact 80/20 can be impossible when a cluster contains multiple samples.
+        # An exact share can be impossible when a cluster contains multiple samples.
         counts = [count for count in possible if 0 < count < total] if len(groups) > 1 else [0]
-        chosen = min(counts, key=lambda count: (abs(count - total * 0.2), count))
+        chosen = min(counts, key=lambda count: (abs(count - total * test_share), count))
         mask = possible[chosen]
         for index, (_, group) in enumerate(groups):
             for row in group:
