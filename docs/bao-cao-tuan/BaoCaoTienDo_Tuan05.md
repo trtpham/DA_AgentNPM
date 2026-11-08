@@ -32,7 +32,7 @@ Ngày 05/11 nhóm demo được **6/8 phần (75%)**; đến 08/11 hoàn tất t
 | Sandbox chặn mạng, giới hạn tiến trình, RAM, thời gian; phát hiện đọc canary | **Đạt.** Test Docker **14/14** (08/11, image `sha256:ac8579db…`); 9 gói thử × 3 lần giống hệt nhau |
 | Tách hành vi npm và gói | **Đạt.** Gói lành và gói không có hook: 0 kết nối của gói; gói thử gọi mạng: 5 kết nối của gói; 4 lần tra DNS của npm ghi riêng |
 | Không lộ secret thật | **Đạt.** `no_host_leak: true` (59 biến môi trường đã kiểm; chỉ `127.0.0.1` trùng, có sẵn trong mọi trace npm) |
-| Nối sandbox vào agent (W5-6) | **Đạt.** Gói thử canary bị **từ chối bởi R1** dù model không cần nói gì; gói lành vẫn được cho phép (Hình 4) |
+| Nối sandbox vào agent (W5-6) | **Đạt.** Gói thử canary bị **từ chối bởi R1** dù model không cần nói gì; gói lành vẫn được cho phép (gói canary: Hình 2) |
 | Agent xử lý mã rút gọn/base64 | **Đạt về quy trình:** gọi `deobfuscate`, trích `install.min.js#pretty:124, 126` |
 | A-LLM nhanh hơn, kết luận không đổi | **Đạt:** 85,1 → 47,0 giây/gói (−45%), 13/13 kết luận giống mốc |
 | Chống học vẹt trên 22 gói mô phỏng | **Đạt với A-LLM:** 11/11 gói độc bị từ chối, 0 gói lành bị từ chối, 9/9 cặp phân tách |
@@ -70,41 +70,33 @@ Lệnh `py -3.14 -m experiments.demo_sandbox`; kết quả giống hệt qua 3 l
 | A-SLM | 9 → 6/11 | 1 → 1 (bẫy chú thích; đã chặn ở tuần 6 bằng luật `R7_flow`) | 1 → **0** | 8 → 7/9 |
 | A-TLM | 3 → 0/11 | **1 → 0** (trước đây cho phép một reverse shell) | 0 → 0 | 6 → 0/9 |
 
-**Hình 1.** Trình xem trace: lô 13 gói của A-LLM; gói thử canary được kết luận Độc hại. Ảnh chụp màn hình thật, 05/11/2026.
+**Hình 1.** Sandbox chạy 9 gói thử vô hại trong container tắt mạng. Mỗi gói cố vượt một giới hạn và bị chặn đúng cách: `pids_limit`, `oom` ở 192 MB, `timeout`, ghi ra ngoài bị `EROFS`, gọi mạng bị `ENETUNREACH`. Gói đọc dữ liệu mồi bị ghi nhận đủ 8 file và biến môi trường. Bên dưới: 3 lần chạy lặp lại cho kết quả giống hệt (`all_same: true`), không lộ giá trị nào trong 59 biến môi trường của máy thật (`no_host_leak: true`). Đầu ra thật, chạy lại ngày 08/11.
 
-![Trình xem trace — lô 13 gói](../hinh-anh/tuan-05-viewer-lo-13-goi.jpg)
+![Sandbox chặn đúng từng giới hạn và tái hiện được](../hinh-anh/tuan-05-sandbox-9-goi-thu.png)
 
-**Hình 2.** Gói thử canary: Độc hại → **Từ chối** (R6). Bằng chứng `inspect.js:2` đọc `/home/agent/.ssh/id_rsa`; lệnh `npm deny-scripts` chỉ lập ở chế độ chạy thử.
+**Hình 2.** W5-6: sandbox chạy **trước** model. Bước 07 là kết quả `run_sandbox`: `canary_touched: ["ssh", "environment"]`. Quyết định cuối "Độc hại · Từ chối" theo **luật R1 "Sandbox canary touched"** là của code, model không đảo được. Lượt `c7-1108-a-llm-xs`, ảnh chụp trình xem trace ngày 08/11.
 
-![Gói canary bị từ chối kèm bằng chứng](../hinh-anh/tuan-05-viewer-canary-deny.jpg)
+![Kết quả sandbox dẫn tới luật R1](../hinh-anh/tuan-05-sandbox-r1-canary-deny.png)
 
-**Hình 3.** Gói thử mã rút gọn: agent gọi `deobfuscate` và trích `install.min.js#pretty:124` và `#pretty:126`.
+**Hình 3.** W5-7: gói thử có mã rút gọn một dòng. Agent gọi `deobfuscate` rồi đọc bản đã định dạng `install.min.js#pretty` dòng 120–130, thấy đoạn giải base64 và ghi file. Hai bằng chứng `#pretty:124`, `#pretty:126` được kiểm lại. Nguồn chưa đọc trọn nên chuyển người xem (R8). Lượt `w57c-obf-a-llm`.
 
-![Agent đọc bản đã định dạng của mã rút gọn](../hinh-anh/tuan-05-viewer-obfuscated-pretty.jpg)
+![Agent đọc bản đã định dạng của mã rút gọn](../hinh-anh/tuan-05-doc-ban-pretty.png)
 
-**Hình 4.** W5-6: sandbox chạy trước model. Gói thử canary bị **từ chối bởi luật R1 "Sandbox canary touched"**; đây là quyết định của code, model không đảo được. Ảnh chụp màn hình thật, 08/11/2026 (lượt `c7-1108-a-llm-xs`).
+**Hình 4.** W5-8: thời gian từng gói của A-LLM trước và sau khi thêm `num_gpu: 99`, cùng 13 gói, cùng code. Trung vị **85,1 → 47,0 giây/gói**, cả 13 kết luận giữ nguyên. Số đọc từ `reports/w58-a-llm-ctx16384/` và `reports/w58-a-llm-gpu99/`.
 
-![Sandbox chạm canary dẫn tới R1](../hinh-anh/tuan-05-sandbox-r1-canary-deny.png)
+![A-LLM nhanh hơn sau num_gpu 99](../hinh-anh/tuan-05-a-llm-num-gpu.png)
 
-**Hình 5.** `@swc/core@1.7.36` (gói lành thật): model đề xuất "Cho phép, tin cậy 95%", **luật R7_review chuyển người xem** vì script tải mã ngoài gói.
+**Hình 5.** Chống học vẹt (L1–L4) trên 22 gói mô phỏng đi theo cặp. A-LLM tốt lên ở mọi cột. A-SLM và A-TLM từ chối ít gói độc hơn vì bằng chứng bị kiểm chặt, nhưng A-TLM không còn cho phép gói độc nào. Số đọc từ `reports/corpus-base-summary.json` và `reports/corpus-v2-summary.json`.
 
-![swc chuyển người xem với lý do cụ thể](../hinh-anh/tuan-05-viewer-swc-review.jpg)
+![Chống học vẹt trước và sau](../hinh-anh/tuan-05-chong-hoc-vet.png)
 
-**Hình 6.** Văn phòng 3D — chế độ "Đua 3 model" trên gói canary: A-LLM ra R6 (từ chối), A-SLM và A-TLM ra R8 (chuyển người xem). Ảnh chụp màn hình thật.
+**Hình 6.** Văn phòng 3D (công cụ trình bày) — chế độ "Đua 3 model" trên gói canary: A-LLM ra R6 (từ chối), A-SLM và A-TLM ra R8 (chuyển người xem). Ảnh chụp màn hình thật.
 
 ![Văn phòng 3D: 3 model trên cùng một gói](../hinh-anh/van-phong-3d-dua-3-model.jpg)
 
-**Hình 7.** Văn phòng 3D — kịch bản "Sandbox bắt quả tang (R1)" (nhãn MÔ PHỎNG: dựng từ dữ liệu thiết kế trước khi W5-6 xong).
-
-![Kịch bản sandbox R1 trong văn phòng 3D](../hinh-anh/kich-ban-sandbox-r1.jpg)
-
-**Hình 8.** Chế độ "Xe hàng": cổng npm và khu cách ly — gói canary bị giữ lại, gói lành đi qua.
+**Hình 7.** Văn phòng 3D — chế độ "Xe hàng": cổng npm và khu cách ly. Gói canary bị giữ lại, gói lành đi qua.
 
 ![Cổng npm và khu cách ly](../hinh-anh/xe-hang-cong-cach-ly.png)
-
-**Hình 9.** Toàn cảnh trụ sở văn phòng 3D theo luồng nhận diện → phân tích → kiểm chứng → quyết định.
-
-![Toàn cảnh văn phòng 3D](../hinh-anh/van-phong-3d-tru-so-day-du.jpg)
 
 ## 3. Ảnh chụp lúc báo cáo
 
@@ -127,13 +119,13 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
 | **Chưa có Recall/F1 trên mẫu độc** | Nhãn do AI soạn phải có người khác kiểm; 0/499 dòng đã kiểm | Chặn thực nghiệm tuần 7–8 | Bằng chứng và ô **kiểm tự động** đã sẵn (rút ~2–3 phút/dòng xuống ~30–60 giây); phân công 15 lượt cho Phước, Thiên, Triết, hạn 17/11; đóng băng 19/11 |
 | **W5-5 do PO nghiệm thu thay TV3** | Ngoại lệ quy trình do PO quyết | Chưa có lần kiểm độc lập của người phụ trách sandbox | Thiên tự chạy lại 3 lệnh trong phiếu W5-5 khi có mặt và ghi kết quả dưới biên bản |
 | **Gói sinh nhiều tiến trình làm trace vượt 2 MB** | Chỉ giữ 2 MB cuối của log | Phần đầu cây tiến trình mất, sự kiện thành `unknown` | An toàn: kết quả `ok=False`, không thể dẫn tới cho phép. Nếu cần: tóm tắt trace ngay trong container |
-| **A-SLM chưa nhận ra canary bằng phán đoán** | Model 4B xếp gói canary vào "chuyển người xem" | Bỏ lỡ một ca độc rõ khi không có sandbox | Có sandbox thì R1 tự từ chối (Hình 4) |
+| **A-SLM chưa nhận ra canary bằng phán đoán** | Model 4B xếp gói canary vào "chuyển người xem" | Bỏ lỡ một ca độc rõ khi không có sandbox | Có sandbox thì R1 tự từ chối (Hình 2) |
 | **A-TLM (0.8b) mất khả năng phân biệt** khi bằng chứng bị kiểm chặt | Model quá nhỏ cho tác vụ | Mọi gói về "chuyển người xem" | Dùng làm mốc so sánh, không triển khai |
 | **Windows Defender cách ly file bằng chứng** chứa mã độc dạng chữ | Bằng chứng trích nguyên văn mã độc thật | Người kiểm tra không mở được file | Đã đổi định dạng: JSON base64 + trang HTML giải mã khi xem; 0/30 file bị chặn; không thêm ngoại lệ Defender |
 
 ## 5. Đề xuất tuần 6 (đã thực hiện phần lớn) và việc tiếp theo
 
-1. **Nghiệm thu và nối sandbox:** **xong 08/11** (W5-5, W5-6; Hình 4).
+1. **Nghiệm thu và nối sandbox:** **xong 08/11** (W5-5, W5-6; Hình 2).
 2. **Hoàn tất bộ nhãn v1:** dữ liệu đã chuẩn bị (499 dòng); **còn chờ người kiểm tra** — việc chính 09–17/11.
 3. **Tập test với họ gói và chiến dịch mới:** **đã chuẩn bị** 240 mẫu độc thuộc 240 cụm khác nhau (bộ Datadog, đọc trong container) và 200 gói lành.
 4. **Văn phòng 3D cho demo cuối kỳ:** đã có 12 tình huống; còn đo FPS trên trình duyệt thật.
