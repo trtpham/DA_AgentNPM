@@ -1,0 +1,21 @@
+id,ai_check,ai_signals,ai_note
+suspicious-ma-vu-virus-1.0.3,cần xem,read-env (dòng 2),không thấy dấu hiệu rủi ro
+malicious-exnesss-0.0.1,nghi ngờ,không có,bước bằng chứng báo: HTTPError: HTTP Error 404: Not Found
+suspicious-miurba-alcazaba-99.99.99,khớp,"host_info (dòng 28, 29); read-env (dòng 34, 35, 36, 39…); read-secret-file (dòng 34, 36); env_dump (dòng 36); network (dòng 43, 47); network-request (dòng 43, 47)",có dấu hiệu rủi ro
+malicious-abeya-tg-api-1.0.0,cần xem,"exec_call (dòng 161); execute-process (dòng 161, 188); network-request (dòng 173); binary-download (dòng 173); download-code (dòng 173)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-bael-god-admin-1.0.0,cần xem,"exec_call (dòng 164); execute-process (dòng 164, 200); binary-download (dòng 164, 185); network-request (dòng 185); download-code (dòng 185)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-bael-god-api-1.0.0,cần xem,"exec_call (dòng 161); execute-process (dòng 161, 188); network-request (dòng 173); binary-download (dòng 173); download-code (dòng 173)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-bael-god-thanks-1.0.0,cần xem,"exec_call (dòng 164); execute-process (dòng 164, 200); binary-download (dòng 164, 185); network-request (dòng 185); download-code (dòng 185)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-botty-fork-baby-1.0.0,cần xem,"exec_call (dòng 161); execute-process (dòng 161, 188); network-request (dòng 173); binary-download (dòng 173); download-code (dòng 173)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-cursor-ai-fork-1.0.0,cần xem,"exec_call (dòng 161); execute-process (dòng 161, 188); network-request (dòng 173); binary-download (dòng 173); download-code (dòng 173)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-cursor-app-fork-1.0.0,cần xem,"exec_call (dòng 161); execute-process (dòng 161, 188); network-request (dòng 173); binary-download (dòng 173); download-code (dòng 173)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-custom-telegram-bot-api-1.0.0,cần xem,"exec_call (dòng 161); execute-process (dòng 161, 188); network-request (dòng 173); binary-download (dòng 173); download-code (dòng 173)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-custom-tg-bot-plan-1.0.1,cần xem,"exec_call (dòng 161); execute-process (dòng 161, 188); network-request (dòng 173); binary-download (dòng 173); download-code (dòng 173)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-icon-react-fork-1.0.0,cần xem,"exec_call (dòng 161); execute-process (dòng 161, 188); network-request (dòng 173); binary-download (dòng 173); download-code (dòng 173)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-react-icon-pkg-1.5.2,cần xem,"exec_call (dòng 250); execute-process (dòng 250, 287); binary-download (dòng 250, 267, 279); network-request (dòng 267); download-code (dòng 267, 279)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-sabaoa-tg-api-1.0.0,cần xem,exec_call (dòng 113); execute-process (dòng 113); read-env (dòng 141); binary-download (dòng 141); read-secret-file (dòng 141),có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-sabay-tg-api-1.0.0,cần xem,exec_call (dòng 93); execute-process (dòng 93); read-env (dòng 118); binary-download (dòng 118); read-secret-file (dòng 118),có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-sai-tg-api-1.0.0,cần xem,exec_call (dòng 85); execute-process (dòng 85); read-env (dòng 110); binary-download (dòng 110); read-secret-file (dòng 110),có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-salli-tg-api-1.0.0,cần xem,exec_call (dòng 85); execute-process (dòng 85); read-env (dòng 110); binary-download (dòng 110); read-secret-file (dòng 110),có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-telegram-bot-start-1.0.0,cần xem,"exec_call (dòng 161); execute-process (dòng 161, 188); network-request (dòng 173); binary-download (dòng 173); download-code (dòng 173)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+malicious-telegram-bot-starter-1.2.7,cần xem,"exec_call (dòng 227); execute-process (dòng 227, 259); network-request (dòng 239); binary-download (dòng 239); download-code (dòng 239)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ

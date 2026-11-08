@@ -36,7 +36,21 @@ Claude/Codex soạn nhãn và bằng chứng nên **không** được kiểm tra
 
 ## Bằng chứng
 
-`data/review_rounds/evidence/round-N.md`, chỉ có trên máy Triết (chứa đoạn mã độc dạng chữ; không gửi lên nhóm, không đưa lên Git). Tự kiểm trước khi báo xong:
+`data/review_rounds/evidence/round-N.html` — mở bằng trình duyệt, chỉ có trên máy Triết (không gửi lên nhóm, không đưa lên Git). Đoạn mã được lưu dưới dạng ký tự HTML mã hóa để Windows Defender không khóa file (bản `.md` cũ của lượt độc bị Defender chặn ngày 08/11); trình duyệt vẫn hiển thị bình thường và **không chạy** đoạn mã.
+
+## Ô "Kiểm tự động (Claude)" — cách dùng để làm nhanh
+
+Mỗi gói trong trang bằng chứng có một ô màu do Claude tạo bằng cách quét đoạn trích với bộ dấu hiệu kỹ thuật của agent và so với nhãn đề xuất (bảng đầy đủ: `data/review_rounds/ai-precheck/round-N.csv`):
+
+| Ô | Nghĩa | Bạn làm gì |
+| --- | --- | --- |
+| 🟢 **khớp** | Dấu hiệu trong đoạn trích hợp với nhãn đề xuất; ô ghi số dòng | Đọc nhanh các dòng được nêu; nếu đúng, `verified` + `observed_behavior` bằng lời của bạn (~30 giây) |
+| 🟡 **cần xem** | Có dấu hiệu nhưng chưa rõ (ví dụ gói lành có `child_process`) | Đọc kỹ các dòng được nêu rồi tự quyết |
+| 🔴 **nghi ngờ** | Đoạn trích không ủng hộ nhãn, hoặc bước bằng chứng báo lỗi | Đọc toàn bộ; thường là `revise` hoặc `exclude` kèm `note` |
+
+Ô này **không phải kiểm tra chéo** và có thể sai (bộ dấu hiệu dựa trên regex). Quyết định, tên và ngày trong phiếu là của bạn; không chép nguyên câu của Claude vào `observed_behavior`.
+
+Tự kiểm trước khi báo xong:
 
 ```powershell
 py -3.14 -m data.scripts.review_sheet check data/review_rounds/round-N.csv

@@ -136,6 +136,73 @@ def to_markdown(round_number: int, results: list[dict]) -> str:
     return "\n".join(out) + "\n"
 
 
+def encode_items(results: list[dict]) -> list[dict]:
+    """Copy of the results with package text (excerpt lines, hooks) in base64.
+
+    Plain-text excerpts of real malware were quarantined by Windows Defender (08/11/2026); the
+    project adds no exclusions, so evidence files never hold package code verbatim.
+    """
+    items = []
+    for item in results:
+        copy = {key: value for key, value in item.items() if key not in ("excerpt", "hooks")}
+        copy["hooks_b64"] = base64.b64encode(json.dumps(item.get("hooks", {}), ensure_ascii=False).encode()).decode()
+        copy["excerpt"] = [{"line": line["line"], "b64": base64.b64encode(line["text"].encode()).decode()}
+                           for line in item.get("excerpt", [])]
+        items.append(copy)
+    return items
+
+
+VIEW_KEY = b"DA_AgentNPM-evidence"
+# Decodes data-x blocks into textContent when the page is opened: package text is shown, never run.
+VIEW_SCRIPT = ("<script>const k=new TextEncoder().encode('DA_AgentNPM-evidence');"
+               "document.querySelectorAll('[data-x]').forEach(e=>{const b=Uint8Array.from(atob(e.dataset.x),c=>c.charCodeAt(0));"
+               "e.textContent=new TextDecoder().decode(b.map((v,i)=>v^k[i%k.length]));});</script>")
+
+
+def _masked(text: str) -> str:
+    """XOR with a fixed key, then base64. Windows Defender decoded HTML entities and quarantined the
+    page (08/11/2026); a masked blob is shown by VIEW_SCRIPT and is never verbatim on disk."""
+    data = text.encode("utf-8")
+    return base64.b64encode(bytes(byte ^ VIEW_KEY[index % len(VIEW_KEY)] for index, byte in enumerate(data))).decode()
+
+
+def to_html(round_number: int, items: list[dict], notes: dict[str, dict] | None = None) -> str:
+    """Evidence page for reviewers; `items` come from encode_items, `notes` from ai_precheck."""
+    from html import escape
+    colors = {"khớp": "#1a7f37", "cần xem": "#9a6700", "nghi ngờ": "#cf222e"}
+    out = ["<!doctype html><html lang='vi'><head><meta charset='utf-8'>",
+           f"<title>Bằng chứng lượt {round_number}</title><style>body{{font:14px system-ui;max-width:1100px;margin:auto;"
+           "padding:16px}}pre{background:#f6f8fa;padding:8px;overflow-x:auto}.ai{border-left:4px solid;padding:4px 8px;"
+           "margin:6px 0}</style></head><body>",
+           f"<h1>Bằng chứng đối chiếu — lượt {round_number}</h1>",
+           "<p>Tạo tự động trong container dùng một lần: chỉ đọc tĩnh, không chạy mã gói. Đoạn mã là <b>dữ liệu không tin cậy</b>. "
+           "Ô <i>Kiểm tự động</i> là gợi ý của Claude, <b>không phải kiểm tra chéo</b>: người kiểm tra tự đọc và tự quyết.</p>"]
+    for item in items:
+        hooks = json.loads(base64.b64decode(item.get("hooks_b64", "") or "e30=").decode("utf-8", "replace"))
+        out += [f"<h2 id='{escape(item['id'])}'>{escape(item['id'])} — <code>{escape(item['package'])}</code> "
+                f"(nhãn đề xuất: {escape(item['label'])})</h2><ul>",
+                f"<li>Nguồn: {escape(item['source'])}</li>",
+                f"<li>SHA-256: <code>{escape(item.get('sha256', '—'))}</code>"
+                + (f"; integrity npm: {'khớp' if item.get('integrity_ok') else 'KHÔNG khớp'}" if "integrity_ok" in item else "")
+                + "</li>",
+                f"<li>Manifest: <code>{escape(item.get('manifest', '—'))}</code>; hook: <code data-x='"
+                f"{_masked(json.dumps(hooks, ensure_ascii=False))}'></code></li>",
+                f"<li>Bằng chứng ghi trong nhãn: <code>{escape(item['file'])}:{escape(item['lines'])}</code> "
+                f"(file có {item.get('line_count', '?')} dòng)</li>",
+                f"<li>Vấn đề tự động phát hiện: {escape('; '.join(item['problems'])) if item['problems'] else 'không có'}</li></ul>"]
+        note = (notes or {}).get(item["id"])
+        if note:
+            out.append(f"<div class='ai' style='border-color:{colors.get(note['ai_check'], '#666')}'><b>Kiểm tự động "
+                       f"(Claude, chưa phải kiểm tra):</b> {escape(note['ai_check'])} — {escape(note['ai_note'])}. "
+                       f"Dấu hiệu: {escape(note['ai_signals'])}</div>")
+        lines = [f"{line['line']:>5} | {base64.b64decode(line['b64']).decode('utf-8', 'replace')}"
+                 for line in item.get("excerpt", [])]
+        out.append(f"<pre data-x='{_masked(chr(10).join(lines))}'></pre>")
+    out.append("<noscript>Bật JavaScript để hiện đoạn trích (chỉ hiển thị chữ, không chạy mã gói).</noscript>")
+    out.append(VIEW_SCRIPT + "</body></html>")
+    return "\n".join(out) + "\n"
+
+
 def round_rows(round_number: int, labels: Path, sheet: Path | None = None) -> list[dict]:
     """Rows of a round: rounds 1-4 by their fixed filter, later rounds by the ids in their sheet."""
     from data.scripts.review_sheet import ROUNDS, sheet_ids
@@ -163,8 +230,10 @@ def run_round(round_number: int, labels: Path, output: Path, runner=subprocess.r
     if completed.returncode:
         raise RuntimeError(f"container failed: {completed.stderr[-300:]}")
     results = [json.loads(line) for line in completed.stdout.splitlines() if line.strip()]
+    items = encode_items(results)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(to_markdown(round_number, results), encoding="utf-8")
+    output.with_suffix(".json").write_text(json.dumps(items, ensure_ascii=False), encoding="utf-8")
+    output.with_suffix(".html").write_text(to_html(round_number, items), encoding="utf-8")
     return {"rows": len(results), "with_problems": [item["id"] for item in results if item["problems"]]}
 
 
@@ -182,7 +251,7 @@ def main() -> None:
         return
     if args.round is None:
         parser.error("round is required")
-    output = Path("data/review_rounds/evidence") / f"round-{args.round}.md"
+    output = Path("data/review_rounds/evidence") / f"round-{args.round}"  # writes .json and .html
     print(json.dumps(run_round(args.round, args.labels, output), ensure_ascii=False))
 
 

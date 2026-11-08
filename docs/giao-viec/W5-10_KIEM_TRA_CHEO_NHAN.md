@@ -11,7 +11,7 @@ Bộ nhãn là "đáp án" để chấm agent. Nhãn sai thì mọi con số Pre
 Trạng thái hiện tại: cả 4 phiếu đều trống (`check` ra `pending` 20/18/18/20). Claude **không** điền phiếu: người kiểm tra phải là người thật, khác người soạn nhãn.
 
 1. Ngồi ở máy của Triết, mở thư mục `D:\DACN\DA_AgentNPM` bằng VS Code.
-2. Mở song song 2 file của lượt mình: phiếu `data/review_rounds/round-N.csv` (để điền) và bằng chứng `data/review_rounds/evidence/round-N.md` (để đọc).
+2. Mở song song 2 file của lượt mình: phiếu `data/review_rounds/round-N.csv` (để điền) và bằng chứng `data/review_rounds/evidence/round-N.html` (mở bằng trình duyệt để đọc; ô màu "Kiểm tự động" là gợi ý của Claude, xem [cách dùng](PHAN_CONG_KIEM_TRA_CHEO.md#ô-kiểm-tự-động-claude--cách-dùng-để-làm-nhanh)).
    - **Phước:** lượt 1 (20 gói lành) rồi lượt 4 (20 gói độc).
    - **Thiên:** lượt 2 và lượt 3 (mỗi lượt 18 gói của một chiến dịch).
 3. Với từng dòng: tìm cùng `id` trong file bằng chứng, trả lời 3 câu ở mục "Cách kiểm tra một dòng", rồi điền 5 cột cuối (`decision`, `reviewer` = họ tên thật, `reviewed_at` = `2026-11-DD`, `observed_behavior`, `note`).
@@ -24,7 +24,7 @@ Toàn bộ 15 lượt, người và hạn: [PHAN_CONG_KIEM_TRA_CHEO.md](PHAN_CON
 
 | Lượt | Nội dung | Người | Số dòng |
 | --- | --- | --- | --- |
-| `round-5.csv` | 40 gói lành **nháp** từ phân loại tĩnh nhóm A (D-2); bằng chứng `evidence/round-5.md` | TV3 Nguyễn Đình Thiên | 40 |
+| `round-5.csv` | 40 gói lành **nháp** từ phân loại tĩnh nhóm A (D-2); bằng chứng `evidence/round-5.html` | Phạm Minh Triết (theo phân công 08/11) | 40 |
 
 Với lượt 5, cột `label` = `benign` chỉ là đề xuất của Claude. Đọc đoạn trích; nếu thấy hành vi khác (gọi mạng, đọc secret…) hoặc đoạn trích không đủ, chọn `revise`/`exclude` và ghi `note`.
 
@@ -47,7 +47,7 @@ Với mỗi lượt `N` được giao, có 2 file:
 | File | Nằm ở | Ghi chú |
 | --- | --- | --- |
 | `data/review_rounds/round-N.csv` | Có trong Git | Phiếu để **điền** |
-| `data/review_rounds/evidence/round-N.md` | **Chỉ có trên máy Triết** (không đưa lên Git) | Bằng chứng để **đọc** |
+| `data/review_rounds/evidence/round-N.html` | **Chỉ có trên máy Triết** (không đưa lên Git) | Bằng chứng để **đọc** |
 
 File bằng chứng chứa **đoạn mã độc dưới dạng chữ**. Đọc thì vô hại, nhưng:
 - Cách tốt nhất là làm ngay trên máy của Triết.

@@ -66,3 +66,11 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 - **S6 — sẵn sàng tuần 7–10:** `freeze_labels.py` (chỉ dòng `verified`, chia theo cụm, test 60%), `experiments/run_isolated.py` (agent và `--guarddog` trong container, Ollama qua `host.docker.internal`), `experiments/threshold_sweep.py` (quét 0,50–0,95 bằng chính `decide()`, trace nay ghi `inputs`). Chạy thử trên 2 gói `@swc/core`: agent R7_review giống chạy trên máy chủ; GuardDog 0 issue; `metrics`/`threshold_sweep` đọc được.
 - **Kiểm chứng:** pytest PASS; test Docker 14/14 (lượt trước); bằng chứng 9 lượt mới qua container.
 - **Còn chờ người thật:** kiểm tra chéo 516 dòng.
+
+### Kiểm tự động hỗ trợ người kiểm tra (08/11/2026, PO chọn "cách 1")
+
+- PO đề nghị Claude đánh `verified` và ghi tên người phụ trách; Claude từ chối vì đó là ghi sai người đã kiểm tra. PO chọn cách 1: Claude kiểm trước, người thật xác nhận.
+- `data/scripts/ai_precheck.py`: quét đoạn trích bằng dấu hiệu cụ thể (đường dẫn secret thật, `eval`/`new Function`, file khởi động, `curl | sh`, dump `process.env`, lệnh, gọi mạng, thông tin máy, làm rối) và các họ kỹ thuật của agent; ghi "khớp / cần xem / nghi ngờ" kèm số dòng vào `data/review_rounds/ai-precheck/round-N.csv` và vào trang bằng chứng, luôn ghi là của Claude, chưa phải kiểm tra. Phiếu kiểm tra không đổi.
+- Kết quả: lượt lành nhóm A (5–7) ~90% "khớp"; "B nhẹ" (8–9) phần lớn "cần xem"; lượt độc Datadog (10–15) ~40% "khớp", 7–16 "nghi ngờ"/lượt (đoạn trích 150 dòng đầu có thể chưa chứa hành vi).
+- **Windows Defender** cách ly bằng chứng `.md` của lượt độc (10, 13, 14, 15) và cả bản HTML dùng ký tự mã hóa (Defender tự giải). Không thêm ngoại lệ: bằng chứng nay là `round-N.json` (đoạn trích base64, cho script) và `round-N.html` (đoạn trích XOR + base64, trình duyệt giải và hiển thị bằng `textContent`, không chạy). Sau đổi: 0/30 file bị chặn.
+- **GuardDog** chạy trên 499 dòng trong container (`reports/guarddog-all-1108`), đang chạy.
