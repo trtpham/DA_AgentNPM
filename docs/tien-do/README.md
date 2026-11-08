@@ -5,8 +5,8 @@ Mọi tài liệu về kế hoạch, tiến độ và báo cáo tuần của đ�
 ## Kế hoạch
 
 - [Kế hoạch tổng thể 10 tuần](KE_HOACH.md)
-- [Kế hoạch xử lý tồn đọng khi Claude tiếp nhận (03/11/2026)](KE_HOACH_XU_LY_TON_DONG_2026-11-03.md)
-- [Kế hoạch cải thiện chất lượng I1–I7 (03/11/2026)](KE_HOACH_CAI_THIEN_2026-11-03.md)
+- (Đã xong, lưu trữ) [Kế hoạch xử lý tồn đọng khi Claude tiếp nhận (03/11/2026)](../../archive/ke-hoach-da-xong/KE_HOACH_XU_LY_TON_DONG_2026-11-03.md)
+- (Đã xong, lưu trữ) [Kế hoạch cải thiện chất lượng I1–I7 (03/11/2026)](../../archive/ke-hoach-da-xong/KE_HOACH_CAI_THIEN_2026-11-03.md)
 
 ## Theo tuần
 
@@ -16,7 +16,7 @@ Mọi tài liệu về kế hoạch, tiến độ và báo cáo tuần của đ�
 | 02 | Dữ liệu và hợp đồng công cụ | [tuan-02.md](tuan-02.md) | [BaoCaoTienDo_Tuan02.md](BaoCaoTienDo_Tuan02.md) |
 | 03 | Công cụ đọc, agent và sandbox cơ bản | [tuan-03.md](tuan-03.md) | [BaoCaoTienDo_Tuan03.md](BaoCaoTienDo_Tuan03.md) |
 | 04 | Tích hợp công cụ tĩnh và baseline | [tuan-04.md](tuan-04.md) | [BaoCaoTienDo_Tuan04.md](BaoCaoTienDo_Tuan04.md) |
-| 05 | Hoàn thiện sandbox và công cụ mở rộng | [tuan-05.md](tuan-05.md) | — |
+| 05 | Hoàn thiện sandbox và công cụ mở rộng | [tuan-05.md](tuan-05.md) | [BaoCaoTienDo_Tuan05.md](BaoCaoTienDo_Tuan05.md) |
 | 06 | Quyết định và chạy lô | [tuan-06.md](tuan-06.md) | — |
 | 07 | Hiệu chỉnh trên tập phát triển | [tuan-07.md](tuan-07.md) | — |
 | 08 | Đánh giá trên tập kiểm tra | [tuan-08.md](tuan-08.md) | — |

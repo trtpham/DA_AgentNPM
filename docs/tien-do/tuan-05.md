@@ -203,7 +203,7 @@ Sandbox trả kết quả có thể tái hiện và không chạm secret thật;
 - **W5-10:** đã soạn hướng dẫn kiểm tra chéo: [giao-viec/W5-10_KIEM_TRA_CHEO_NHAN.md](giao-viec/W5-10_KIEM_TRA_CHEO_NHAN.md).
   - Phân công đề xuất: TV1 lượt 1 + 4 (40 dòng), TV3 lượt 2 + 3 (36 dòng); TV2 chốt.
   - Hiện trạng: `check` cả 4 phiếu đều `pending` (20/18/18/20). Trạng thái: **chờ người kiểm tra** (hạn đề xuất 09/11).
-- Tin nhắn soạn sẵn: [giao-viec/TIN_NHAN_GUI_NHOM.md](giao-viec/TIN_NHAN_GUI_NHOM.md). Claude không gửi tin nhắn thay nhóm.
+- Tin nhắn soạn sẵn: [giao-viec/TIN_NHAN_GUI_NHOM.md](../../archive/giao-viec/TIN_NHAN_GUI_NHOM.md). Claude không gửi tin nhắn thay nhóm.
 
 ## Ảnh kết quả
 

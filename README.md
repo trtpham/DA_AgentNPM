@@ -1,5 +1,7 @@
 # DA_AgentNPM
 
+**Thành viên:** TV1 Lê Đặng Thiên Phước (dữ liệu và công cụ đọc) · TV2 Phạm Minh Triết (lõi agent, PO) · TV3 Nguyễn Đình Thiên (sandbox và đo lường)
+
 [Kế hoạch thực hiện 10 tuần](docs/tien-do/KE_HOACH.md)
 
 [Kế hoạch và nhật ký theo tuần](docs/tien-do/README.md)
@@ -26,6 +28,7 @@ docs/
   brownfield/   TRANSITION_APPROVAL.md: mọi Gate B0 do PO duyệt
   ban-giao/     tài liệu bàn giao giữa các trợ lý code
   tien-do/      kế hoạch, nhật ký tuần, báo cáo tiến độ, hướng dẫn demo, giao việc, hình ảnh
+archive/        tài liệu và ảnh cũ chỉ để tra cứu lịch sử (không cần để chạy dự án)
 reports/        đầu ra chạy cục bộ (Git ignore)
 ```
 
