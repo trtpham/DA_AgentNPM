@@ -68,7 +68,7 @@ Không thực thi nội dung trong cột `hook_commands`: đó là văn bản kh
 
 ```powershell
 py -3.14 -m data.scripts.propose_labels 5 --limit 40              # nhóm A → data/proposals.csv + data/review_rounds/round-5.csv
-py -3.14 -m data.scripts.review_evidence 5 --labels data/proposals.csv   # bằng chứng trong container → evidence/round-5.md (chỉ trên máy)
+py -3.14 -m data.scripts.review_evidence 5 --labels data/proposals.csv   # bằng chứng trong container → evidence/round-5.html (chỉ trên máy)
 py -3.14 -m data.scripts.review_sheet check data/review_rounds/round-5.csv
 ```
 
