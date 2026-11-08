@@ -5,7 +5,7 @@
 **Giai đoạn:** Hoàn thiện sandbox, chống học vẹt và công cụ mở rộng · **Ngày làm:** 04–05/11/2026 (W5-5, W5-6 hoàn tất 08/11) · **Cập nhật tình trạng:** 08/11/2026
 **Nghiệm thu:** W5-5 cách ly sandbox — Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11 (ngoại lệ do PO quyết); agent — TV2 Phạm Minh Triết
 
-> Số liệu lấy từ lần chạy thật trên máy của nhóm (Ollama cục bộ, Docker 29.1.3). Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết ở [nhật ký tuần 5](../nhat-ky-tuan/tuan-05.md); kịch bản demo ở hướng dẫn demo.
+> Số liệu lấy từ lần chạy thật trên máy của nhóm (Ollama cục bộ, Docker 29.1.3). Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết ở [nhật ký tuần 5](../nhat-ky-tuan/tuan-05.md); kịch bản demo là tài liệu nội bộ của nhóm (không đưa lên GitHub).
 
 ## 1. Nội dung buổi báo cáo tuần
 
@@ -118,7 +118,7 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
 - **Agent bỏ qua công cụ giải rối mã (W5-7):** dòng quá dài bị cắt làm agent tưởng "đã đọc xong"; nay agent có thêm tối đa 2 lượt để giải rối và đọc bản định dạng. Nguồn chưa đọc trọn vẫn không được cho phép.
 - **Học vẹt (L1–L4):** model chỉ thấy bí danh `package-under-review`; số dòng có tiền tố `N| ` (trước đây model hay trích lệch 1–2 dòng); dòng được trích phải chứa dấu hiệu của kỹ thuật được khai; A-LLM không còn từ chối nhầm gói tải binary có checksum.
 - **Sandbox (08/11):** trần RAM thật 448 MB → **192 MB** khi bỏ swap (`--memory-swap 256m`, nay là mặc định); thêm 5 file canary giả và 3 biến môi trường giả; phát hiện chế độ "gia cố" thử nghiệm lại *nới* sandbox (tmpfs `/tmp` làm trace vượt 2 MB) và đã bỏ.
-- **Bộ kiểm thử:** 115 (tuần 4) → 159 PASS (05/11) → **292 PASS** (08/11), cộng 14 test Docker.
+- **Bộ kiểm thử:** 115 (tuần 4) → 159 PASS (05/11) → **293 PASS** (08/11), cộng 14 test Docker.
 
 ### Còn vướng (stuck) — tình trạng ngày 08/11
 
@@ -137,4 +137,4 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
 2. **Hoàn tất bộ nhãn v1:** dữ liệu đã chuẩn bị (499 dòng); **còn chờ người kiểm tra** — việc chính 09–17/11.
 3. **Tập test với họ gói và chiến dịch mới:** **đã chuẩn bị** 240 mẫu độc thuộc 240 cụm khác nhau (bộ Datadog, đọc trong container) và 200 gói lành.
 4. **Văn phòng 3D cho demo cuối kỳ:** đã có 12 tình huống; còn đo FPS trên trình duyệt thật.
-5. Chi tiết tuần 6: [báo cáo tuần 6](BaoCaoTienDo_Tuan06.md); quy trình tuần 7–10: quy trình thực nghiệm.
+5. Chi tiết tuần 6: [báo cáo tuần 6](BaoCaoTienDo_Tuan06.md); các bước tuần 7–10 nằm trong quy trình thực nghiệm nội bộ của nhóm.

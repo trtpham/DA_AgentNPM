@@ -2,9 +2,9 @@
 
 **Thành viên:** Lê Đặng Thiên Phước · Phạm Minh Triết · Nguyễn Đình Thiên
 
-**Giai đoạn:** Công cụ đọc, agent và sandbox cơ bản · **Ngày báo cáo:** 01/11/2026 · **Cập nhật:** 04/11/2026 · **Nghiệm thu:** TV2 Phạm Minh Triết, 04/11/2026
+**Giai đoạn:** Công cụ đọc, agent và sandbox cơ bản · **Ngày báo cáo:** 01/11/2026 · **Cập nhật:** 04/11 và 08/11/2026 · **Nghiệm thu:** TV2 Phạm Minh Triết, 04/11/2026
 
-> Mục 1–6 giữ nguyên nội dung đã trình bày ngày 01/11. Những vướng mắc ở mục 4 đã được xử lý; kết quả mới ở **mục 7**.
+> Mục 1–6 giữ nguyên nội dung đã trình bày ngày 01/11. Kết quả xử lý ngày 03–04/11 ở **mục 7**; tình trạng từng vướng mắc tính đến 08/11 ở **mục 8**.
 
 Thưa thầy, trong tuần 3 nhóm đã cho các agent chạy được ở mức thử nghiệm. Khi kiểm tra một gói, nhóm có thể cho thầy xem agent đọc những file nào, nhận ra dấu hiệu gì và dựa vào đâu để đưa ra đề xuất. Nhóm mới chứng minh được quy trình hoạt động; độ chính xác của AI vẫn cần được đánh giá trên dữ liệu đã kiểm tra chéo.
 
@@ -116,3 +116,16 @@ Kết quả cuối đúng như mong đợi:
 - Ngày 04/11, bộ kiểm thử đạt **115/115 bài**.
 
 **Vẫn giữ giới hạn.** Đây là kết quả trên mẫu mô phỏng vô hại, không phải độ chính xác trên gói npm thật. Kết quả trên gói npm thật nằm ở [báo cáo tuần 4](BaoCaoTienDo_Tuan04.md).
+
+## 8. Tình trạng các vướng mắc của tuần 3 (08/11/2026)
+
+| Vướng mắc tuần 3 | Tình trạng 08/11 | Ở đâu |
+| --- | --- | --- |
+| A-LLM trả 3 kết quả sai định dạng trước khi đúng | **Đã gỡ.** Giới hạn độ dài ngay lúc sinh câu trả lời; 13/13 gói dev cho kết luận hợp lệ | Mục 7, [báo cáo tuần 4](BaoCaoTienDo_Tuan04.md) |
+| A-TLM hết 15 bước không có kết luận | **Đã gỡ phần định dạng:** 9/9 mẫu thử, 13/13 gói dev hợp lệ. Model vẫn quá nhỏ để phân biệt lành/độc khi bằng chứng bị kiểm chặt, nên chỉ dùng làm mốc so sánh | [Báo cáo tuần 5](BaoCaoTienDo_Tuan05.md) |
+| Sandbox chạy riêng, chưa nối vào agent | **Đã gỡ 08/11.** Sandbox chạy trước model; gói chạm dữ liệu mồi bị từ chối bằng luật R1, model không đảo được | [Báo cáo tuần 5](BaoCaoTienDo_Tuan05.md), Hình 4 |
+| 450 gói mới có thông tin ban đầu | **Đã gỡ.** Tải và đọc tĩnh cả 450 gói trong container: 147 gói không thấy dấu hiệu rủi ro, 268 gói cần người đọc, 35 gói chưa phân loại được. 200 gói lành được đưa vào phiếu kiểm tra | [Báo cáo tuần 6](BaoCaoTienDo_Tuan06.md) |
+| 76 nhãn chưa được người kiểm tra chéo | **Còn tắc.** Bộ nhãn đã mở rộng thành 499 dòng (sau lọc trùng), mỗi dòng có trang bằng chứng và ô kiểm tự động; **0/499 dòng** đã có người ký. Hạn kiểm tra 17/11, đóng băng nhãn v1 ngày 19/11 | [Báo cáo tuần 6](BaoCaoTienDo_Tuan06.md) |
+| Chưa có ảnh chụp buổi báo cáo | Vẫn chưa có | — |
+
+Bộ kiểm thử: 72 bài (01/11) → 115 (04/11) → **293 bài PASS** (08/11), cộng 14 bài kiểm thử sandbox trong Docker.

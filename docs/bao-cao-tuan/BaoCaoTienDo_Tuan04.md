@@ -83,7 +83,7 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 4**. Khi có,
 | Vướng của tuần 4 | Tình trạng 08/11 | Hướng xử lý |
 | --- | --- | --- |
 | **Recall/F1 và so với GuardDog trên mẫu độc** | **Còn tắc.** Đã chuẩn bị 499 dòng nhãn (sau lọc trùng) kèm bằng chứng và ô kiểm tự động; 0 dòng đã được người kiểm tra | 3 người kiểm tra theo bảng phân công 15 lượt, hạn 17/11; đóng băng nhãn v1 ngày 19/11 |
-| **GuardDog chỉ chạy được trên gói lành tải về máy** | **Đã gỡ:** `run_isolated --guarddog` chạy GuardDog trong container dùng một lần cho cả gói độc (tải và giải nén trong bộ nhớ container) | Đang quét 499 dòng; chấm điểm chính thức khi có nhãn v1 |
+| **GuardDog chỉ chạy được trên gói lành tải về máy** | **Đã gỡ:** `run_isolated --guarddog` chạy GuardDog trong container dùng một lần cho cả gói độc (tải và giải nén trong bộ nhớ container) | **Đã quét xong cả 499 dòng** ngày 08/11 (`guarddog-all-1108`), không file kết quả nào bị Windows Defender chặn. Chỉ chấm điểm chính thức khi có nhãn v1, vì nhãn hiện vẫn là bản nháp |
 | A-LLM chậm (I3) | **Đã gỡ** ở tuần 5 (W5-8): 85,1 → 47,0 giây/gói, kết luận giữ nguyên 13/13 | — |
 | Gộp lý do `.node` thiếu với "quét thiếu" chung | **Đã gỡ** (I1): lý do riêng, gộp thành một dòng | — |
 | Lời gọi mạng của npm lẫn với của gói trong sandbox | **Đã gỡ** ở tuần 5 (W5-3): gắn tác nhân `npm`/`package` cho từng sự kiện | — |
