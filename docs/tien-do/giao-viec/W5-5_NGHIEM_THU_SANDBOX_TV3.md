@@ -82,6 +82,26 @@ TV3 tự dán đoạn dưới vào cuối mục W5-4 trong [`../tuan-05.md`](../
 - Kết luận: ĐẠT / ĐẠT CÓ ĐIỀU KIỆN (<điều kiện>) / KHÔNG ĐẠT (<lý do>).
 ```
 
+## Kết quả chạy lại ngày 08/11/2026 (Claude chạy, để TV3 đối chiếu — chưa phải nghiệm thu)
+
+Claude đã chạy đúng các lệnh ở bước 2 trên máy của Triết lúc 09:45 ngày 08/11/2026 (Docker 29.1.3, linux; image `sha256:ac8579db8b8071c53019b82784d34ba24fd326caf0d489a6847279394a7d54e0`). Log đầy đủ: `reports/w5-5-rerun-1108.log` (chỉ có trên máy, không lên Git). Theo quy trình, **Claude và PO không ký thay**: TV3 tự chạy lại, tự đánh dấu cột "Đạt?" ở bước 3, chọn phương án swap ở bước 4 và ký ở bước 5.
+
+| # | Tiêu chí | Kết quả Claude đo được ngày 08/11 |
+| --- | --- | --- |
+| 1 | Không ra được mạng | `network`: `https=ENETUNREACH dns=EAI_AGAIN`, outcome `ok` |
+| 2 | Không ghi được vào gói gốc và hệ thống | `write-outside`: `/input`, `/etc`, `/usr/local` = `EROFS`; `$HOME` ghi được (tmpfs 1 MB trong container); lần ghi `/etc` có trong `persistence_writes` |
+| 3 | Giới hạn số tiến trình | `processes`: `spawned=200 refused=158`, outcome `pids_limit`, `ok=✘` |
+| 4 | Giới hạn RAM | `memory`: outcome `oom`, mã 137, cấp phát được **448 MB** với lệnh mặc định; **192 MB** khi `hardening=True` (có `--memory-swap 256m`) |
+| 5 | Giới hạn thời gian | `timeout`: outcome `timeout`, mã 124 |
+| 6 | Phát hiện đọc secret mồi | `canary-all`: đủ 8 file (`npmrc, ssh, aws, git_credentials, docker, kube, gh, solana`) + `environment` + `env:NPM_TOKEN` |
+| 7 | Không lộ biến môi trường máy thật | `repro_sandbox`: `no_host_leak: true` (59 giá trị đã kiểm; `127.0.0.1` được loại vì có sẵn trong trace npm) |
+| 8 | Tách hành vi npm và gói | `benign`/`no-hook`: mạng `4/0/0`; `network`: `4/5/0` |
+| 9 | Tái hiện được | `repro_sandbox --runs 3`: 9 fixture × 3 lần giống nhau (`all_same: true`) |
+| 10 | Lỗi sandbox không thể thành "cho phép" | `processes`, `memory`, `timeout` đều `ok = ✘`; agent: sandbox lỗi → luật `R7_review` (test `test_failed_sandbox_blocks_approval_and_runner_error_is_contained`) |
+
+- Test Docker: `14 passed` (98,8 giây).
+- **Đề xuất của Claude cho bước 4 (TV3 quyết):** phương án 1. Lý do: 448 MB gần gấp đôi trần thiết kế 256 MB; cờ đã có sẵn và đo được 192 MB; 3 gói thử lành vẫn cài bình thường khi bật (`test_hardening_keeps_harmless_installs_working`).
+
 ## Sau khi TV3 ký
 
 - **ĐẠT** hoặc **ĐẠT CÓ ĐIỀU KIỆN:** Triết duyệt Gate B0 riêng cho W5-6. Claude làm điều kiện (nếu có) rồi nối sandbox vào agent.

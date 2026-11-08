@@ -2,9 +2,9 @@
 
 **Thành viên:** Lê Đặng Thiên Phước · Phạm Minh Triết · Nguyễn Đình Thiên
 
-**Giai đoạn:** Hoàn thiện sandbox và công cụ mở rộng · **Ngày cập nhật:** 05/11/2026 · **Nghiệm thu:** chờ TV3 (cách ly sandbox), TV2 Phạm Minh Triết (agent)
+**Giai đoạn:** Hoàn thiện sandbox và công cụ mở rộng · **Ngày cập nhật:** 08/11/2026 (bản đầu 05/11) · **Nghiệm thu:** chờ TV3 Nguyễn Đình Thiên (cách ly sandbox, W5-5), TV2 Phạm Minh Triết (agent)
 
-> Số liệu trong báo cáo đều lấy từ lần chạy thật ngày 04–05/11/2026 trên máy của nhóm. Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết từng việc ở [nhật ký tuần 5](tuan-05.md); kịch bản demo ở [hướng dẫn demo](HUONG_DAN_DEMO_TUAN05.md).
+> Số liệu trong báo cáo đều lấy từ lần chạy thật ngày 04–08/11/2026 trên máy của nhóm. Phần cập nhật 07–08/11 nằm ở mục 4.3. Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết từng việc ở [nhật ký tuần 5](tuan-05.md); kịch bản demo ở [hướng dẫn demo](HUONG_DAN_DEMO_TUAN05.md).
 
 ## 1. Nội dung buổi báo cáo tuần
 
@@ -31,7 +31,7 @@ Mục tiêu tuần 5 là **chứng minh sandbox cách ly được mã của gói
 
 ## 2. Demo bao nhiêu phần trăm (kèm ảnh)
 
-Nhóm demo được **6/8 phần dự kiến (75%)**. Hai phần chưa demo được đều **bị chặn bởi việc của người**, không phải lỗi kỹ thuật (xem mục 4).
+Ngày 05/11 nhóm demo được **6/8 phần dự kiến (75%)**. Đến 08/11 làm thêm được phần nối sandbox (chạy được, còn chờ TV3 ký để bật mặc định), thành **7/8 (88%)**. Phần còn lại bị chặn bởi việc của người, không phải lỗi kỹ thuật (xem mục 4).
 
 | Phần trình diễn | Kết quả |
 | --- | --- |
@@ -41,7 +41,7 @@ Nhóm demo được **6/8 phần dự kiến (75%)**. Hai phần chưa demo đư
 | Agent xử lý mã rút gọn/base64 | **Đạt về quy trình:** gọi `deobfuscate`, trích bằng chứng `install.min.js#pretty:124, 126`. Kết luận vẫn là "chuyển người xem" vì model chưa đọc hết bản đã định dạng. |
 | A-LLM nhanh hơn, kết luận không đổi | **Đạt:** 85,1 → 47,0 giây/gói (−45%), 13/13 kết luận giống mốc. |
 | Đổi tham số model chỉ bằng file cấu hình | **Đạt.** |
-| Nối sandbox vào agent (W5-6) | **Chưa làm:** chờ TV3 nghiệm thu cách ly (W5-5). |
+| Nối sandbox vào agent (W5-6) | **Đạt có điều kiện (08/11):** `sandbox: true` trong config, mặc định tắt, chỉ chạy gói thử vô hại. Chạy thật: gói canary bị **từ chối bởi luật R1** (model không đảo được), gói lành vẫn được cho phép. Chờ TV3 ký W5-5 mới bật. |
 | Recall/F1 trên mẫu độc | **Chưa làm:** bộ nhãn v1 chưa có người kiểm tra chéo (W5-10). |
 
 ### Sandbox: kết quả trên 9 gói thử
@@ -111,19 +111,35 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
 
 | Vướng | Nguyên nhân | Ảnh hưởng | Hướng xử lý |
 | --- | --- | --- | --- |
-| **Chưa nối sandbox vào agent** (W5-6) | Theo quy trình, phải có TV3 nghiệm thu cách ly trước. Agent sắp được phép "chạy" mã gói, nên không làm tắt bước này | Agent vẫn chỉ phân tích tĩnh; canary chạm thật chưa tự dẫn tới deny | TV3 xem bảng W5-1…W5-4 và ký nghiệm thu; sau đó xin Gate riêng và làm W5-6 ở tuần 6 |
+| **Sandbox đã nối nhưng chưa bật** (W5-6) | Theo quy trình, TV3 phải tự chạy lại và ký nghiệm thu cách ly; Claude và PO không ký thay | Mặc định agent vẫn chỉ phân tích tĩnh | Đã chạy lại theo phiếu W5-5 ngày 08/11 và chuẩn bị bằng chứng; TV3 xem, chọn phương án swap, ký |
 | **Chưa có Recall/F1 trên mẫu độc** | 4 phiếu kiểm tra chéo nhãn (76 dòng) chưa có người điền. Một người không được vừa gán vừa duyệt nhãn | Chưa so được 3 mô hình với GuardDog trên mẫu độc; **chặn mốc thực nghiệm tuần 7–8** | Phân công người kiểm tra chéo ngay đầu tuần 6; bằng chứng đã chuẩn bị sẵn |
-| **Trần RAM thực tế là 512 MB, không phải 256 MB** | `--memory 256m` không kèm `--memory-swap`, nên Docker cho dùng thêm 256 MB swap. Lần chạy 05/11 thấy script cấp phát được 448 MB rồi mới bị kill | Vẫn bị chặn, nhưng trần rộng gấp đôi thiết kế | Đề xuất thêm `--memory-swap 256m`; chờ TV3 duyệt vì thay đổi sandbox |
+| **Trần RAM thực tế là 512 MB, không phải 256 MB** | `--memory 256m` không kèm `--memory-swap`, nên Docker cho dùng thêm 256 MB swap. Lần chạy 05/11 thấy script cấp phát được 448 MB rồi mới bị kill | Vẫn bị chặn, nhưng trần rộng gấp đôi thiết kế | **Đã chuẩn bị 08/11:** `--memory-swap 256m` nằm trong `hardening=True`, đo được 192 MB. Chờ TV3 chọn bật làm mặc định |
 | **Gói sinh nhiều tiến trình làm trace vượt 2 MB** | Chỉ giữ 2 MB cuối của log | Phần đầu cây tiến trình mất, sự kiện thành `unknown` | An toàn (`ok=False`, không thể dẫn tới cho phép). Tuần 6 tóm tắt trace ngay trong container |
-| **A-SLM chưa nhận ra canary** | Model 4B xếp gói thử canary vào "chuyển người xem" thay vì từ chối | Không nguy hiểm (không cho phép), nhưng bỏ lỡ một ca độc rõ ràng | Sẽ bù bằng tín hiệu sandbox (`canary_touched` → luật R1) ở W5-6 |
+| **A-SLM chưa nhận ra canary** | Model 4B xếp gói thử canary vào "chuyển người xem" thay vì từ chối | Không nguy hiểm (không cho phép), nhưng bỏ lỡ một ca độc rõ ràng | Đã có bù bằng sandbox (`canary_touched` → luật R1), kiểm chứng 08/11; có hiệu lực khi bật sandbox |
 | **Không gói swc thật nào được tự động cho phép** | Script cài của swc tải mã ngoài gói và cần file nhị phân không có trong gói | Thiết kế an toàn chủ động: không thấy hết thì chuyển người xem | Giữ nguyên; giải thích trong báo cáo cuối kỳ |
+
+### 4.3 Cập nhật 07–08/11/2026
+
+- **Công cụ phân tích mới** (Gate B0 07/11): 10 công cụ chỉ đọc (`list_files`, `search_code`, `trace_requires`, `trace_flow`, `inspect_scripts`, `decode_literal`, `resolve_value`, `list_endpoints`, `inspect_binary`, `file_stats`), bật theo từng model bằng config `A-*-X`. Config cũ giữ nguyên.
+- **Luật mới, chỉ chặt hơn:** `R7_flow` (benign trên luồng secret/env → mạng, hoặc có chữ hướng tới người phân tích) và `R7_sandbox` (sandbox thấy gói ghi file khởi động) đổi "cho phép" thành "chuyển người xem".
+- **Đo trên 22 gói mô phỏng, model thật:**
+
+| Config | Gói độc bị từ chối | Gói độc bị cho phép | Gói lành được cho phép | Gói lành bị từ chối | Cặp phân tách |
+| --- | --- | --- | --- | --- | --- |
+| A-LLM → A-LLM-X | 11/11 → 11/11 | 0 → 0 | 7/11 → 6/11 | 0 → 0 | 9/9 → 9/9 |
+| A-SLM → A-SLM-X | 6/11 → 7/11 | **1 → 0** | 2/11 → 4/11 | 0 → 0 | 7/9 → 8/9 |
+| A-TLM → A-TLM-X | 0/11 → 0/11 | 0 → 0 | 0/11 → 2/11 | 0 → 0 | 0/9 → 2/9 |
+
+- **Sandbox:** build lại image (`sha256:ac8579db…`) với 5 file canary giả mới và 3 biến môi trường giả; test Docker **14/14 PASS**; tái hiện 9 gói thử × 3 lần giống nhau, không lộ biến môi trường của máy thật.
+- **Lỗi tìm ra và đã sửa:** `trace_flow` treo trên file dài; chạy lô dừng vì ký tự Unicode trên console Windows; tmpfs `/tmp` trong chế độ gia cố làm sandbox *lỏng* hơn (đã bỏ).
+- **Bộ kiểm thử:** 139 → **241 PASS**, cộng 14 test sandbox chỉ chạy khi có Docker.
+- Chi tiết: [nhật ký tuần 6](tuan-06.md).
 
 ## 5. Đề xuất tuần 6 và cách thực hiện
 
-1. **Nghiệm thu và nối sandbox:**
-   - TV3 nghiệm thu cách ly (W5-5) và duyệt `--memory-swap 256m`.
-   - Sau đó làm W5-6: sandbox chạy **trước** model; chạm canary thì từ chối; sandbox lỗi hoặc hết giờ thì luôn chuyển người xem, không bao giờ cho phép.
-   - Chạy lại ma trận 3 mô hình, so trước/sau.
-2. **Hoàn tất bộ nhãn v1:** người kiểm tra chéo điền 4 phiếu. Sau đó mới tính Recall/F1 và so với GuardDog, chạy trong môi trường cách ly.
+1. **Nghiệm thu sandbox (cập nhật 08/11):**
+   - Phần kỹ thuật W5-6 đã xong và đã chạy thử; còn TV3 Nguyễn Đình Thiên tự chạy lại theo phiếu W5-5, chọn phương án swap và ký.
+   - Sau khi ký: bật `sandbox` mặc định cho gói thử, chạy lại ma trận 3 mô hình.
+2. **Hoàn tất bộ nhãn v1:** người kiểm tra chéo (không phải người đã gán nhãn, không phải Claude/Codex) điền 4 phiếu W5-10. Sau đó mới tính Recall/F1 và so với GuardDog, chạy trong môi trường cách ly.
 3. **Tập test:** chọn thêm họ gói và chiến dịch mới từ 450 ứng viên và OSV, chuẩn bị bằng chứng trong container dùng một lần.
 4. **Văn phòng 3D (đã duyệt 04/11):** bắt đầu khi tuần 5 ổn định, phục vụ demo cuối kỳ ([kế hoạch](KE_HOACH_VAN_PHONG_3D.md)).
