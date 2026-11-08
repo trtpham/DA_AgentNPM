@@ -90,3 +90,17 @@ Lần chạy 08/11 trên 76 nhãn + 40 đề xuất: giữ **99**, bỏ 17 (đ�
 ## Báo cáo độ phủ (D-4)
 
 `py -3.14 -m data.scripts.data_report` so bộ nhãn sau lọc trùng (D-3) với chỉ tiêu v1 (≥ 400 mẫu, ≥ 180 lành, ≥ 180 độc, ≥ 40 cụm, cụm ≤ 12). Chỉ dòng `verified` trong phiếu kiểm tra mới được tính. Ngày 08/11: 0/400 verified; 99 dòng sau lọc trùng đang chờ kiểm tra. Luồng mẫu độc từ Datadog: [phiếu D-5](../docs/giao-viec/D_DU_LIEU_DATADOG_VM.md).
+
+## Mẫu độc từ Datadog trong container (S2/D-6, 08/11/2026)
+
+```powershell
+py -3.14 -m data.scripts.datadog_container --zips 800                 # metadata → data/datadog/candidates-batch-*.jsonl
+py -3.14 -m data.scripts.propose_labels 10 --limit 40 --datadog       # lượt độc, xoay vòng theo cụm, tối đa 12/cụm
+py -3.14 -m data.scripts.review_evidence 10 --labels data/proposals.csv
+```
+
+Repo Datadog ở commit cố định `72c723be547033c558244520524b117c8d71663b`; ZIP chỉ nằm trong tmpfs của container; `data/datadog/` chỉ chứa metadata (tên, phiên bản, hook, hash, file điểm vào, lý do phân loại). Nhãn `malicious` là của Datadog; người kiểm tra xác nhận hành vi trên đường cài đặt.
+
+## Đóng băng nhãn v1 (19/11)
+
+`py -3.14 -m data.scripts.freeze_labels --output data/labels-v1.csv` — chỉ dòng `verified`, mô tả nháp được thay bằng `observed_behavior` của người kiểm tra, chia dev/test theo cụm (test 60%). Phân công kiểm tra: [PHAN_CONG_KIEM_TRA_CHEO.md](../docs/giao-viec/PHAN_CONG_KIEM_TRA_CHEO.md).
