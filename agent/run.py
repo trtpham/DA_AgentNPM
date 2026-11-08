@@ -63,6 +63,9 @@ SANDBOX_TOOL = {"type": "function", "function": {
     "description": "Read what the offline sandbox install recorded: outcome, canaries touched, connects, start-up file writes, processes",
     "parameters": {"type": "object", "properties": {}}}}
 FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures"
+# Harmless fixtures the sandbox may run. The simulated-malicious corpus (tests/fixtures/corpus) is
+# excluded: Gate B0 2026-11-07 does not allow running it in a container (plan Q1).
+SANDBOX_FIXTURES = (FIXTURES / "packages", FIXTURES / "sandbox-limits")
 
 
 def tool_schemas(names: tuple[str, ...] = DEFAULT_TOOLS) -> list[dict]:
@@ -900,10 +903,10 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
             sandbox_runner=None) -> tuple[Verdict, int]:
     if not 1 <= max_steps <= 15:
         raise ValueError("max_steps must be between 1 and 15")
-    if sandbox and not Path(package).resolve().is_relative_to(FIXTURES):
+    if sandbox and not any(Path(package).resolve().is_relative_to(root) for root in SANDBOX_FIXTURES):
         # C7 is off by default and limited to the project's own harmless fixtures until TV3 accepts
         # the sandbox (W5-5) and a separate Gate allows real packages.
-        raise ValueError("sandbox=True runs only on packages under tests/fixtures")
+        raise ValueError("sandbox=True runs only on tests/fixtures/packages and tests/fixtures/sandbox-limits")
     if type(repeat_limit) is not int or not 1 <= repeat_limit <= 9:
         raise ValueError("repeat_limit must be between 1 and 9")
     tools = tuple(tools) if tools else DEFAULT_TOOLS

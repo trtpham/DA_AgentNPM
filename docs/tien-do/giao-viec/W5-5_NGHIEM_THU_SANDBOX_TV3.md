@@ -15,19 +15,30 @@ Bước tiếp theo (W5-6) sẽ cho agent **chạy thật** script cài đặt c
 - Mục **"W5-11"**: phát hiện trần RAM thực tế là 512 MB do swap.
 - File [`../../sandbox/run.py`](../../../sandbox/run.py), đoạn lệnh `docker run` (các cờ `--network none`, `--read-only`, `--cap-drop ALL`, `--pids-limit 64`, `--memory 256m`…).
 
-### Bước 2 — Tự chạy lại (khoảng 3 phút máy chạy)
+### Bước 2 — Tự chạy lại (khoảng 5 phút máy chạy)
 
-Làm trên máy của Triết (có sẵn image và Python 3.14). Bật **Docker Desktop**, mở PowerShell tại `D:\DACN\DA_AgentNPM`:
+> **Cập nhật 08/11/2026:** image đã được build lại để có 5 file canary mới (C2). Nếu máy chưa có image mới, build lại trước (khoảng 1 phút, cần mạng để tải `node:22-bookworm-slim` lần đầu):
+>
+> ```powershell
+> docker build -t agent-npm-sandbox:local sandbox
+> ```
+
+Làm trên máy của Triết (có sẵn Python 3.14). Bật **Docker Desktop**, mở PowerShell tại `D:\DACN\DA_AgentNPM`:
 
 ```powershell
 docker image inspect agent-npm-sandbox:local --format '{{.Id}}'
 ```
-Phải ra `sha256:b657e0130392664d3bf49d80af7055ab9f5319265839111270e0b11610242b82`.
+Bản build 08/11 ra `sha256:ac8579db8b8071c53019b82784d34ba24fd326caf0d489a6847279394a7d54e0`. Build lại trên máy khác có thể ra digest khác (image gốc `node:22` thay đổi); khi đó ghi digest mới vào nhật ký.
 
 ```powershell
 $env:RUN_SANDBOX_TESTS="1"; py -3.14 -m pytest -q tests/test_sandbox_limits.py
 ```
-Phải ra **`8 passed`** (khoảng 80 giây).
+Phải ra **`14 passed`** (khoảng 2 phút; 8 test cũ + 6 test C2/C6).
+
+```powershell
+py -3.14 -m experiments.repro_sandbox --runs 3
+```
+Chạy 9 fixture × 3 lần (khoảng 6 phút), in `all_same` và `no_host_leak`; kết quả lưu ở `reports/repro-sandbox.json`.
 
 ```powershell
 py -3.14 -m experiments.demo_sandbox
@@ -55,7 +66,7 @@ In bảng 9 dòng (khoảng 90 giây). So với bảng trong `tuan-05.md`.
 
 `--memory 256m` không kèm `--memory-swap`, nên Docker cho thêm 256 MB swap. Script thử cấp phát được 448 MB rồi mới bị kill.
 
-- **Phương án 1 (đề xuất):** nghiệm thu **có điều kiện**: thêm `--memory-swap 256m` trước khi làm W5-6. Claude sửa 1 dòng, thêm test, chạy lại, rồi TV3 xem kết quả.
+- **Phương án 1 (đề xuất):** nghiệm thu **có điều kiện**: thêm `--memory-swap 256m` trước khi làm W5-6. **Đã chuẩn bị 08/11:** cờ này nằm trong `run_sandbox(..., hardening=True)`; đo được 448 MB khi tắt, 192 MB khi bật (test `test_hardening_removes_swap_so_memory_stays_under_the_limit`). Nếu TV3 chọn phương án 1, chỉ cần đổi mặc định `hardening` thành `True`.
 - **Phương án 2:** chấp nhận trần 512 MB và ghi rõ trong báo cáo.
 
 ### Bước 5 — Ký nghiệm thu

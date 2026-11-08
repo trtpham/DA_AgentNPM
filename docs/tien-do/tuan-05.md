@@ -4,10 +4,10 @@
 
 Bốn đầu việc gốc của tuần 5 (theo [kế hoạch tổng thể](KE_HOACH.md)):
 
-- [ ] Kiểm tra giới hạn mạng, quyền, RAM, PID, thời gian và dữ liệu mồi của sandbox.
-- [ ] Chuẩn hóa kết quả tiến trình, file và kết nối thành JSON có thể đối chiếu với mã nguồn.
-- [ ] Chỉ nối `run_sandbox` vào agent sau khi chứng minh cách ly bằng mẫu mô phỏng.
-- [ ] Bổ sung làm rõ mã bị rối khi cần; không mở rộng quá phạm vi install script.
+- [x] Kiểm tra giới hạn mạng, quyền, RAM, PID, thời gian và dữ liệu mồi của sandbox (W5-1; chạy lại trên image 08/11: 14/14 test Docker PASS; RAM vượt 256 MB do swap — sửa opt-in, chờ TV3).
+- [x] Chuẩn hóa kết quả tiến trình, file và kết nối thành JSON có thể đối chiếu với mã nguồn (W5-2, W5-3, `behavior_events` 07/11).
+- [ ] Chỉ nối `run_sandbox` vào agent sau khi chứng minh cách ly bằng mẫu mô phỏng (đã có `sandbox: true`, mặc định tắt, chỉ fixture; **chờ TV3 ký W5-5** mới bật).
+- [x] Bổ sung làm rõ mã bị rối khi cần; không mở rộng quá phạm vi install script (W5-7; thêm `decode_literal`, `resolve_value` 07/11).
 
 ### Kế hoạch chi tiết (lập ngày 04/11/2026)
 

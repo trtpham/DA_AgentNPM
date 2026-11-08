@@ -102,7 +102,7 @@ def _fake_result(canaries=(), writes=(), ok=True, outcome="ok"):
         "by_actor": {"package": {"files_outside_package": []}}}}
 
 
-def _benign(file="setup.js", lines="5", technique="write-package-file"):
+def _benign(file="postinstall.js", lines="2", technique="write-package-file"):
     return {"role": "assistant", "content": json.dumps({
         "package": "x", "label": "benign", "confidence": 0.95, "description": "Writes a build marker next to the package",
         "behaviors": [{"behavior": "Writes a marker", "technique": technique, "severity": "low",
@@ -118,14 +118,14 @@ def _run(tmp_path, runner, replies, **kwargs):
         seen.append(list(messages))
         return next(replies)
 
-    writer = TraceWriter(tmp_path / "reports" / "run-1", "twin-safe")
-    result, _ = analyze(str(FIXTURES / "corpus" / "twin-safe"), "fake", chat=chat, trace=writer, sandbox=True,
+    writer = TraceWriter(tmp_path / "reports" / "run-1", "benign-package")
+    result, _ = analyze(str(FIXTURES / "packages" / "benign-package"), "fake", chat=chat, trace=writer, sandbox=True,
                         sandbox_runner=runner, **kwargs)
     events = [json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()]
     return result, next(event for event in events if event["type"] == "decision"), seen
 
 
-READ = {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "setup.js"}}}]}
+READ = {"role": "assistant", "tool_calls": [{"function": {"name": "read_file", "arguments": {"file": "postinstall.js"}}}]}
 REPORT = {"role": "assistant", "tool_calls": [{"function": {"name": "sandbox_report", "arguments": {}}}]}
 
 
@@ -161,5 +161,9 @@ def test_sandbox_is_off_by_default_and_only_for_fixtures(tmp_path):
     assert "sandbox_report" not in [item["function"]["name"] for item in tool_schemas()]
     with pytest.raises(ValueError, match="tests/fixtures"):
         analyze(str(tmp_path), "fake", sandbox=True, sandbox_runner=lambda _package: _fake_result())
+    # The simulated-malicious corpus is never run in a container (Gate B0 2026-11-07, plan Q1).
+    with pytest.raises(ValueError, match="tests/fixtures/packages"):
+        analyze(str(FIXTURES / "corpus" / "twin-safe"), "fake", sandbox=True,
+                sandbox_runner=lambda _package: _fake_result())
     with pytest.raises(ValueError, match="sandbox=True"):
         analyze(str(FIXTURES / "corpus" / "twin-safe"), "fake", tools=["read_file", "sandbox_report"])

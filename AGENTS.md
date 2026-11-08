@@ -87,7 +87,7 @@ Chuỗi `tên@phiên_bản`, ví dụ `plain-crypto-js@4.2.1`.
 | `extract_indicators` | `package` | danh sách `{type, file, line, snippet}`: URL, IP, `eval`, `new Function`, `child_process`, `process.env`, base64/hex dài, đường dẫn nhạy cảm |
 | `submit_verdict` | `verdict` (JSON) | kết thúc vòng lặp |
 
-`run_sandbox` được làm riêng (task TV3-3) và **chưa nối vào agent** ở giai đoạn này.
+`run_sandbox` được làm riêng (task TV3-3). Từ 07/11 có thể nối vào agent bằng `sandbox: true` trong config: **mặc định tắt**, chỉ chạy với `tests/fixtures/` cho tới khi TV3 nghiệm thu (W5-5) và có Gate riêng cho gói thật.
 
 **Bổ sung Gate B0 07/11/2026** (`tools/explore.py`, chỉ đọc, bật theo model bằng trường `tools: [...]` trong `experiments/configs/*.yaml`; config không có trường này giữ đúng 4 công cụ `read_manifest`, `read_file`, `deobfuscate`, `extract_indicators`):
 
@@ -107,7 +107,7 @@ Chuỗi `tên@phiên_bản`, ví dụ `plain-crypto-js@4.2.1`.
 
 Mọi kết quả bọc `untrusted`, tên gói bị thay bằng bí danh. Chỉ hit `counts_as_seen=true` được tính là dòng đã xem. Luật mới chỉ chặt hơn: `R7_flow` (benign trên luồng secret/env → mạng hoặc có chữ hướng tới người phân tích) và `R7_sandbox` (sandbox thấy gói ghi file khởi động) đều đổi approve thành review.
 
-Chưa làm (để sau): `osv_lookup`, `typosquat_check`, `diff_versions`, `deobfuscate`, nối sandbox vào agent, SQLite, phòng thủ prompt injection, hiệu chỉnh ngưỡng.
+Chưa làm (để sau): `typosquat_check`, sandbox cho gói thật, hiệu chỉnh ngưỡng (B6 mới chỉ đo). Đã có từ tuần 4–6: OSV/Registry (`tools/intel.py`, chỉ dùng cho luật R5), `diff_versions`, `deobfuscate`, SQLite (`decisions.sqlite`), che danh tính gói (L1) và chỉ báo `analyst_directive`.
 
 ### 6.5. Định dạng kết luận (Pydantic, `agent/schema.py`)
 
