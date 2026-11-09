@@ -19,7 +19,7 @@ Tuần 4, nhóm đưa agent từ mẫu thử sang **gói npm thật** (chỉ gó
 5. **Tính chỉ số** (`experiments/metrics.py`, TV3-5): confusion matrix, Precision, Recall, F1, tỷ lệ báo nhầm (FPR), tỷ lệ chuyển người xem, tỷ lệ kết luận hợp lệ. Lượt chạy lỗi vẫn nằm trong mẫu số.
 6. **Cải thiện chất lượng I1–I4** (04/11): lý do quyết định cụ thể, model nhỏ ổn định hơn, đo tốc độ, tách mã cho dễ bảo trì.
 
-> *Góp ý của thầy trong buổi gặp tuần 4:* **[nhóm bổ sung theo ghi chép buổi gặp]**. Báo cáo không tự ghi nội dung trao đổi khi nhóm chưa xác nhận.
+> *Đánh giá tiến độ của thầy (tuần 3–4):* “Nhóm giữ hướng hiện tại, làm tốt. Thầy cần agent kèm sandbox, bộ nhãn đã được kiểm tra chéo, bảng precision, recall, F1, FPR so với GuardDog đo sau khi đã khóa cấu hình, và bảng so sánh khi bỏ sandbox cũng như khi có và không có OSV. Nhóm đừng thêm công cụ mới nữa. Kết quả này đủ để viết thành bài báo nếu nhóm muốn.”
 
 ## 2. Demo bao nhiêu phần trăm (kèm ảnh)
 

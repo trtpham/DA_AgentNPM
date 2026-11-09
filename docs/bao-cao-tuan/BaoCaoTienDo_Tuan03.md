@@ -16,6 +16,8 @@ Nhóm cũng cho chạy thử môi trường cách ly bằng Docker với mẫu m
 
 Sau buổi gặp, nhóm ghi nhận góp ý của thầy là **cần tìm và hoàn thiện dữ liệu**. Nhóm đã tổng hợp 450 gói để xem xét và lập bảng 76 nhãn có nguồn tham khảo, dấu hiệu và vị trí mã. Tuy nhiên, người kiểm tra chéo chưa xác nhận lại từng nhãn trên mã gốc. Vì vậy nhóm chưa dùng bảng này để công bố độ chính xác.
 
+> *Đánh giá tiến độ của thầy (tuần 3–4):* “Nhóm giữ hướng hiện tại, làm tốt. Thầy cần agent kèm sandbox, bộ nhãn đã được kiểm tra chéo, bảng precision, recall, F1, FPR so với GuardDog đo sau khi đã khóa cấu hình, và bảng so sánh khi bỏ sandbox cũng như khi có và không có OSV. Nhóm đừng thêm công cụ mới nữa. Kết quả này đủ để viết thành bài báo nếu nhóm muốn.”
+
 ## 2. Nhóm demo được đến đâu?
 
 Trong sáu phần nhóm dự kiến trình diễn, hiện có **năm phần đã chạy được (khoảng 83% nội dung demo)**. Con số này cho biết mức độ sẵn sàng của buổi trình diễn, không thể hiểu là AI dự đoán đúng 83%.
