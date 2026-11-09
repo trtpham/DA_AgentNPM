@@ -2,9 +2,9 @@
 
 ## Kế hoạch
 
-- [ ] Kiểm tra file/dòng bằng chứng và áp luật approve/deny, mặc định dry-run (TV1-7).
-- [ ] Chạy lô có resume, báo cáo từng gói và `run_meta.json`; lỗi một gói không dừng lô (TV1-8).
-- [ ] Tạo cấu hình A-LLM, A-SLM, A-TLM dùng cùng agent, công cụ, prompt và dữ liệu.
+- [x] Kiểm tra file/dòng bằng chứng và áp luật approve/deny, mặc định dry-run (TV1-7; `tools/actions.py`, `agent/decide.py`, `tests/test_actions.py`).
+- [x] Chạy lô có resume, báo cáo từng gói và `run_meta.json`; lỗi một gói không dừng lô (TV1-8; `experiments/run_batch.py`, `tests/test_run_batch.py`).
+- [x] Tạo cấu hình A-LLM, A-SLM, A-TLM dùng cùng agent, công cụ, prompt và dữ liệu (`experiments/configs/`; thêm `A-*-X`).
 
 ## Mốc nghiệm thu
 
@@ -22,6 +22,7 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
   - `py -3.14 -m pytest -q`: PASS (239 passed, 8 skipped); `node --test tests/js/*.test.mjs`: PASS (19/19); clone sạch: PASS;
   - corpus 22 gói, model thật, `py -3.14 -m experiments.rote_probe corpus-x1108 A-LLM-X A-SLM-X A-TLM-X`: PASS, 66/66 lượt chạy xong, 0 crash;
   - Docker / `RUN_SANDBOX_TESTS=1`: NOT_RUN (chờ TV3, W5-5); hồi quy 13 gói dev: NOT_RUN.
+  - Cập nhật 09/11 (Claude): `tests/test_actions.py` + `tests/test_run_batch.py` PASS (11); `RUN_SANDBOX_TESTS=1 ... test_sandbox_limits.py` PASS (14); toàn bộ `pytest -q` PASS (305 passed, 14 skipped). Mục kế hoạch được tick theo các kiểm chứng này; TV2 vẫn chưa ký kiểm tra.
 
 | Config | Gói độc bị deny | **Gói độc được approve** | Gói lành được approve | Gói lành bị deny | Cặp phân tách | ECE |
 | --- | --- | --- | --- | --- | --- | --- |
