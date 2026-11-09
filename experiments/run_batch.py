@@ -155,7 +155,7 @@ def run_one(item: dict, run_dir: Path, config: dict, contexts: Path | None, anal
             if not fetched["ok"]:
                 raise RuntimeError(f"fetch failed: {fetched['error']}")
             package_dir = fetched["data"]["dir"]
-        context = None
+        context = item.get("context")  # run_isolated sends the host-built context with the row
         if contexts:
             path = contexts / result_name(item["package"])
             context = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None

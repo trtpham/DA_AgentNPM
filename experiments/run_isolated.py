@@ -2,6 +2,7 @@
 
     docker build -t agent-npm-runner:local experiments/runner
     py -3.14 -m experiments.run_isolated <run_id> A-LLM-X --labels data/labels-v1.csv --split dev
+    py -3.14 -m experiments.run_isolated <run_id> A-LLM-X --labels data/labels-v1.csv --split dev --contexts reports/contexts-v1
 
 Malicious samples must not be unpacked on the Windows host and npm no longer serves them, so each
 batch runs in a container: it downloads the source (npm tarball checked against the registry
@@ -10,6 +11,11 @@ sha512, or the Datadog ZIP at its pinned commit), extracts it into tmpfs, and ru
 is the host's Ollama, reached as host.docker.internal (agent.run.ollama_host accepts nothing else).
 Results and traces come back as text and are written in the usual reports/<run_id>/ layout, so
 experiments.metrics, threshold_sweep and calibration work unchanged. Resumable.
+
+`--contexts DIR` gives the "Agent + OSV" configuration (PO 05/11, Gate B0 2026-11-09): OSV and npm
+Registry context is looked up on the host (name@version only, no package code), cached as JSON in DIR
+and sent into the container with each row. Peak memory (experiments.resources) goes into every result
+and into run_meta.json -> resources.
 """
 
 import argparse
@@ -86,7 +92,9 @@ def inside(job: dict) -> dict:
         return {"result": {"package": package, "variant": config["name"], "model": config["model"],
                            "status": "error", "error": f"source: {type(error).__name__}: {str(error)[:200]}"},
                 "trace": None}
-    result = run_one({"package": package, "dir": directory}, run_dir, config, None)
+    result = run_one({"package": package, "dir": directory, "context": job.get("context")}, run_dir, config, None)
+    from experiments.resources import container_peak_mb
+    result["container_peak_mb"] = container_peak_mb()
     trace = run_dir / trace_filename(package)
     text = trace.read_text(encoding="utf-8") if trace.is_file() else None
     shutil.rmtree("/tmp/work", ignore_errors=True)
@@ -174,8 +182,37 @@ def run_guarddog(run_id: str, rows: list[dict], reports: Path = Path("reports"),
     return counts
 
 
-def run(run_id: str, variant: str, rows: list[dict], reports: Path = Path("reports"), runner=subprocess.run) -> dict:
+def ensure_contexts(rows: list[dict], directory: Path, build=None) -> dict:
+    """Host side: write the missing OSV/Registry context files for `rows` into `directory`.
+
+    A failed OSV lookup is not cached (it would silently read as "OSV knows nothing") and is retried
+    on the next call. A Registry error is kept: removed malware is normally gone from the registry.
+    """
+    from experiments.run_batch import result_name
+    from tools.intel import build_context
+
+    build = build or build_context
+    directory.mkdir(parents=True, exist_ok=True)
+    counts = {"built": 0, "cached": 0, "failed": []}
+    for row in rows:
+        package = f"{row['name']}@{row['version']}"
+        path = directory / result_name(package)
+        if path.is_file():
+            counts["cached"] += 1
+            continue
+        context = build(row["name"], row["version"])
+        if not context["osv"]["ok"]:
+            counts["failed"].append(package)
+            continue
+        path.write_text(json.dumps(context, ensure_ascii=False, indent=2), encoding="utf-8")
+        counts["built"] += 1
+    return counts
+
+
+def run(run_id: str, variant: str, rows: list[dict], reports: Path = Path("reports"), runner=subprocess.run,
+        contexts: Path | None = None, sampler=None) -> dict:
     from experiments import run_batch as batch
+    from experiments.resources import OllamaSampler, merge_resources
 
     if not batch.RUN_ID.fullmatch(run_id):
         raise ValueError("invalid run id")
@@ -188,12 +225,42 @@ def run(run_id: str, variant: str, rows: list[dict], reports: Path = Path("repor
             else batch.run_meta(run_id, config, inputs, None))
     if meta["config"] != config:
         raise ValueError("run_id was started with a different config; use a new run id")
+    if meta_path.is_file() and meta.get("contexts") != (str(contexts) if contexts else None):
+        raise ValueError("run_id was started with different --contexts; use a new run id")
+    meta["contexts"] = str(contexts) if contexts else None
     meta["isolated"] = {"image": IMAGE, "container": "disposable, read-only, tmpfs, cap-drop ALL"}
     todo = [row for row in rows if not (run_dir / batch.result_name(f"{row['name']}@{row['version']}")).is_file()]
     counts = {"done": 0, "skipped": len(rows) - len(todo), "errors": 0}
+    missing: list[str] = []
+
+    def job(row: dict) -> str:
+        context = None
+        if contexts:
+            path = contexts / batch.result_name(f"{row['name']}@{row['version']}")
+            context = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+            if context is None:
+                missing.append(f"{row['name']}@{row['version']}")
+        return json.dumps({"row": row, "config": config, "context": context})
+
+    peaks: list[float | None] = []
+    ollama = sampler or OllamaSampler()
+    try:
+        with ollama:
+            _run_chunks(todo, run_dir, job, runner, counts, peaks)
+    finally:  # keep what was measured even when a container fails mid-run
+        meta.update(last_counts=counts, resources=merge_resources(meta.get("resources"), peaks, ollama.peaks))
+        if missing:
+            meta["contexts_missing"] = sorted(set(meta.get("contexts_missing", [])) | set(missing))
+        meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+    return counts
+
+
+def _run_chunks(todo: list[dict], run_dir: Path, job, runner, counts: dict, peaks: list) -> None:
+    from experiments import run_batch as batch
+
     for start in range(0, len(todo), BATCH):
         chunk = todo[start:start + BATCH]
-        completed = runner(container_command(), input="\n".join(json.dumps({"row": row, "config": config}) for row in chunk),
+        completed = runner(container_command(), input="\n".join(job(row) for row in chunk),
                            capture_output=True, text=True, encoding="utf-8", errors="replace",
                            timeout=7200, check=False)
         outputs = [json.loads(line) for line in (completed.stdout or "").splitlines() if line.strip()]
@@ -207,11 +274,9 @@ def run(run_id: str, variant: str, rows: list[dict], reports: Path = Path("repor
                                                                          encoding="utf-8")
             counts["done"] += 1
             counts["errors"] += result.get("status") == "error"
+            peaks.append(result.get("container_peak_mb"))
             print(json.dumps({key: result.get(key) for key in ("package", "status", "decision", "elapsed_s")},
                              ensure_ascii=False), flush=True)
-    meta.update(last_counts=counts)
-    meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
-    return counts
 
 
 def main() -> None:
@@ -224,6 +289,8 @@ def main() -> None:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--reports", type=Path, default=Path("reports"))
     parser.add_argument("--guarddog", action="store_true", help="GuardDog baseline instead of the agent (no variant)")
+    parser.add_argument("--contexts", type=Path,
+                        help="'Agent + OSV': OSV/Registry context directory (missing files are looked up on the host)")
     parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.inside:
@@ -238,8 +305,15 @@ def main() -> None:
     from experiments.dataset import load_labels
     rows = [row for row in load_labels(args.labels) if not args.split or row["split"] == args.split]
     rows = rows[:args.limit] if args.limit else rows
-    print(json.dumps(run_guarddog(args.run_id, rows, args.reports) if args.guarddog
-                     else run(args.run_id, args.variant, rows, args.reports)))
+    if args.guarddog:
+        print(json.dumps(run_guarddog(args.run_id, rows, args.reports)))
+        return
+    if args.contexts:
+        built = ensure_contexts(rows, args.contexts)
+        print(json.dumps({"contexts": built}, ensure_ascii=False))
+        if built["failed"]:
+            raise SystemExit(f"OSV lookup failed for {len(built['failed'])} rows; rerun to retry")
+    print(json.dumps(run(args.run_id, args.variant, rows, args.reports, contexts=args.contexts)))
 
 
 if __name__ == "__main__":

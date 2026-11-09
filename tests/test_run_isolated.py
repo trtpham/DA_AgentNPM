@@ -97,3 +97,76 @@ def test_metrics_lists_unreadable_files_instead_of_stopping(tmp_path, monkeypatc
     monkeypatch.setattr(Path, "read_text", blocked)
     unreadable = []
     assert load_results(tmp_path, unreadable) == [{"package": "a@1"}] and unreadable == ["b@1.json"]
+
+
+class _FakeSampler:
+    def __init__(self, peaks):
+        self.peaks = peaks
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_exc):
+        return None
+
+
+def _echo_runner(seen):
+    def runner(command, input, **_kwargs):
+        outputs = []
+        for line in input.splitlines():
+            job = json.loads(line)
+            seen.append(job)
+            outputs.append({"result": {"package": f"{job['row']['name']}@1.0.0", "status": "ok",
+                                       "container_peak_mb": 300.0 + len(seen)}, "trace": None})
+        return CompletedProcess(command, 0, "\n".join(map(json.dumps, outputs)), "")
+    return runner
+
+
+def test_contexts_are_built_on_host_once_and_osv_failures_are_not_cached(tmp_path):
+    rows = [{"name": "a", "version": "1.0.0"}, {"name": "b", "version": "1.0.0"}]
+    calls = []
+
+    def build(name, version):
+        calls.append(name)
+        return {"package": f"{name}@{version}", "osv": {"ok": name == "a", "data": {}, "error": None},
+                "registry": {"ok": False, "data": None, "error": "HTTP 404"}}
+
+    first = iso.ensure_contexts(rows, tmp_path / "ctx", build)
+    assert first == {"built": 1, "cached": 0, "failed": ["b@1.0.0"]}
+    assert (tmp_path / "ctx" / "a@1.0.0.json").is_file() and not (tmp_path / "ctx" / "b@1.0.0.json").exists()
+    assert iso.ensure_contexts(rows, tmp_path / "ctx", build)["cached"] == 1 and calls == ["a", "b", "b"]
+
+
+def test_run_sends_context_into_container_and_records_resources(tmp_path, monkeypatch):
+    from experiments import run_batch as batch
+    monkeypatch.setattr(batch, "run_meta", lambda run_id, config, inputs, labels: {"config": config})
+    contexts = tmp_path / "ctx"
+    contexts.mkdir()
+    (contexts / "a@1.0.0.json").write_text(json.dumps({"osv": {"ok": True, "data": {"malicious": True}}}))
+    rows = [{"name": "a", "version": "1.0.0", "source": "s"}, {"name": "b", "version": "1.0.0", "source": "s"}]
+    seen = []
+    sampler = _FakeSampler({"qwen3.5:0.8b": {"size_mb": 900.0, "vram_mb": 900.0}})
+    iso.run("iso-ctx", "A-TLM", rows, tmp_path, _echo_runner(seen), contexts=contexts, sampler=sampler)
+    assert seen[0]["context"]["osv"]["data"]["malicious"] is True and seen[1]["context"] is None
+    meta = json.loads((tmp_path / "iso-ctx" / "run_meta.json").read_text())
+    assert meta["contexts"] == str(contexts) and meta["contexts_missing"] == ["b@1.0.0"]
+    assert meta["resources"]["container_peak_mb"] == 302.0
+    assert meta["resources"]["ollama"]["qwen3.5:0.8b"]["size_mb"] == 900.0
+    with pytest.raises(ValueError, match="contexts"):
+        iso.run("iso-ctx", "A-TLM", rows, tmp_path, _echo_runner([]), contexts=None, sampler=sampler)
+
+
+def test_inside_passes_context_to_agent_and_reports_container_peak(monkeypatch, tmp_path):
+    from experiments import resources, run_batch as batch
+    got = {}
+
+    def fake_run_one(item, run_dir, config, contexts):
+        got.update(item)
+        return {"package": item["package"], "status": "ok"}
+
+    monkeypatch.setattr(batch, "run_one", fake_run_one)
+    monkeypatch.setattr(iso, "materialize", lambda row, work: tmp_path)
+    monkeypatch.setattr(resources, "container_peak_mb", lambda: 123.4)
+    out = iso.inside({"row": {"name": "a", "version": "1.0.0"}, "config": {"name": "A-TLM", "model": "m"},
+                      "context": {"osv": {"ok": True}}})
+    assert got["context"] == {"osv": {"ok": True}} and out["result"]["container_peak_mb"] == 123.4
