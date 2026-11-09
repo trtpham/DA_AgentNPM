@@ -917,10 +917,16 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
             context: dict | None = None, options: dict | None = None,
             tools: list[str] | tuple[str, ...] | None = None, self_check: bool = False,
             guided_reading: bool = False, repeat_limit: int = 3, sandbox: bool = False,
-            sandbox_runner=None) -> tuple[Verdict, int]:
+            sandbox_runner=None, sandbox_recorded: dict | None = None) -> tuple[Verdict, int]:
     if not 1 <= max_steps <= 15:
         raise ValueError("max_steps must be between 1 and 15")
-    if sandbox and not any(Path(package).resolve().is_relative_to(root) for root in SANDBOX_FIXTURES):
+    # A runner may start Docker on the package folder, so it is allowed only on harmless fixtures. A real
+    # package comes with `sandbox_recorded`: a result experiments.sandbox_batch already recorded in a
+    # Docker volume (Gate B0 2026-11-09); nothing is run for it here.
+    if sandbox_recorded is not None and sandbox_runner is not None:
+        raise ValueError("pass either sandbox_runner or sandbox_recorded")
+    if sandbox and sandbox_recorded is None and not any(Path(package).resolve().is_relative_to(root)
+                                                        for root in SANDBOX_FIXTURES):
         # C7 is off by default and limited to the project's own harmless fixtures until TV3 accepts
         # the sandbox (W5-5) and a separate Gate allows real packages.
         raise ValueError("sandbox=True runs only on tests/fixtures/packages and tests/fixtures/sandbox-limits")
@@ -939,7 +945,9 @@ def analyze(package: str, model: str, max_steps: int = 15, chat=_chat, trace: li
     session.writer.emit("run_start", model=model, config_name=None, max_steps=max_steps)
     session.prepare()
     if sandbox:
-        if sandbox_runner is None:
+        if sandbox_recorded is not None:
+            sandbox_runner = lambda _package: sandbox_recorded  # noqa: E731
+        elif sandbox_runner is None:
             from sandbox.run import run_sandbox as sandbox_runner  # Docker is needed only when enabled
         session.run_sandbox_once(sandbox_runner)
     for step in range(1, max_steps + 1):

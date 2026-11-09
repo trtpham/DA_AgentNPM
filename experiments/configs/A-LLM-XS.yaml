@@ -1,4 +1,4 @@
-# A-LLM-X plus the offline sandbox before the model (C7). Runs only on tests/fixtures; off elsewhere.
+# A-LLM-X plus the offline sandbox result (C7). Real packages only through experiments.sandbox_batch results (Gate B0 2026-11-09).
 name: A-LLM-XS
 model: qwen3.5:9b
 max_steps: 15

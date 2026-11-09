@@ -189,7 +189,17 @@ def touched_canaries(opened: set[str], trace: str, stdout: str, stderr: str) -> 
 HARDENING = ["--ulimit", "nofile=256:256", "--ulimit", "fsize=67108864:67108864"]
 
 
-def docker_command(root: Path, hardening: bool = False) -> list[str]:
+VOLUME = re.compile(r"agentnpm-[a-z0-9][a-z0-9-]{0,80}")
+
+
+def docker_command(root: Path | None, hardening: bool = False, volume: str | None = None) -> list[str]:
+    """`root` is a host folder (harmless fixtures only); `volume` is a Docker volume that already holds the
+    extracted package (Gate B0 2026-11-09: real packages never touch the Windows disk)."""
+    if (root is None) == (volume is None) or (volume is not None and not VOLUME.fullmatch(volume)):
+        raise ValueError("exactly one of a package folder or an agentnpm-* volume is required")
+    # The volume holds the runner's home (copied by Docker on first mount); the package is in pkg/.
+    source = (f"type=volume,source={volume},target=/input,readonly,volume-subpath=pkg" if volume
+              else f"type=bind,source={root},target=/input,readonly")
     environment = [f"CANARY_ENV={CANARY['environment']}"]
     environment += [f"{name}={value}" for name, value in CANARY.get("environment_vars", {}).items()]
     return [
@@ -201,7 +211,7 @@ def docker_command(root: Path, hardening: bool = False) -> list[str]:
         "--pids-limit", "64", "--memory", "256m", "--memory-swap", "256m", "--cpus", "1",
         "--user", "10001:10001", "--tmpfs", "/work:rw,exec,nosuid,size=64m,uid=10001,gid=10001",
         "--tmpfs", "/home/agent:rw,noexec,nosuid,size=1m,uid=10001,gid=10001",
-        "--mount", f"type=bind,source={root},target=/input,readonly",
+        "--mount", source,
         *[part for item in environment for part in ("--env", item)],
         *(HARDENING if hardening else []),
         IMAGE, "/usr/local/bin/run_install.sh",
@@ -227,8 +237,24 @@ def run_sandbox(package: Path, hardening: bool = False) -> dict:
         root = package.resolve(strict=True)
         if not root.is_dir() or not (root / "package.json").is_file():
             raise ValueError("package directory required")
-        result = subprocess.run(docker_command(root, hardening), capture_output=True, text=True, timeout=120,
-                                check=False)
+        command = docker_command(root, hardening)
+    except (OSError, ValueError) as error:
+        return {"ok": False, "data": None, "error": str(error)[:300]}
+    return _execute(command)
+
+
+def run_sandbox_volume(volume: str, hardening: bool = False) -> dict:
+    """Same sandbox, package read from a Docker volume prepared by experiments.sandbox_batch."""
+    try:
+        command = docker_command(None, hardening, volume)
+    except ValueError as error:
+        return {"ok": False, "data": None, "error": str(error)[:300]}
+    return _execute(command)
+
+
+def _execute(command: list[str]) -> dict:
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=120, check=False)
         if result.returncode:
             raise RuntimeError(f"Docker failed: {result.stderr[-300:]}")
         status = int(_field(result.stdout, "EXIT"))

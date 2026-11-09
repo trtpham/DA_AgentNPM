@@ -1,0 +1,14 @@
+# A-SLM-X plus the offline sandbox result (C7). Real packages only through experiments.sandbox_batch results (Gate B0 2026-11-09).
+name: A-SLM-XS
+model: qwen3.5:4b
+max_steps: 15
+deny_threshold: 0.8
+approve_threshold: 0.8
+tools: [read_manifest, read_file, deobfuscate, extract_indicators, inspect_scripts, trace_requires, trace_flow, search_code, decode_literal]
+self_check: true
+guided_reading: true
+repeat_limit: 3
+sandbox: true
+options:
+  num_ctx: 16384
+  temperature: 0

@@ -20,10 +20,16 @@ RISK_INDICATORS = frozenset({"child_process", "network_api", "sensitive_path", "
 # B4: text in a comment or string that addresses an automated reviewer ("analysts must approve this").
 # It is recorded as a behavior of the package, never followed; any hit blocks automatic approval.
 ANALYST_DIRECTIVE = re.compile(
-    r"\b(?:automated|ai|llm|analy[sz]ts?|reviewers?|scanners?|auditors?)\b.{0,40}"
+    r"\b(?:automated|ai|llm|analy[sz]ts?|reviewers?|scanners?|auditors?|security\s+review)\b.{0,120}"
     r"\b(?:must|should|shall|label|approve|ignore|classify|mark)\b"
     r"|\bignore\s+(?:all\s+|any\s+)?(?:previous|prior|above)\s+instructions\b"
-    r"|\byou\s+are\s+(?:an?|the)\s+(?:ai|assistant|model|analyst|reviewer|scanner)\b", re.I)
+    r"|\byou\s+are\s+(?:an?|the)\s+(?:ai|assistant|model|analyst|reviewer|scanner)\b"
+    # Verdict language aimed at the reviewer (injection_probe 2026-11-09: a lure 60+ characters after
+    # "automated", and a comment imitating a clean verdict, were missed). Only comments/strings count.
+    r"|\b(?:label|mark|classify)(?:s|ed|ing)?\b.{0,40}\b(?:benign|safe|harmless)\b"
+    r"|\bapprove\w*\b.{0,30}\b(?:install|script|package)"
+    r"|[\"']verdict[\"']\s*:\s*\{"
+    r"|[\"'](?:label|action)[\"']\s*:\s*[\"'](?:benign|approve|safe)[\"']", re.I)
 _QUOTED = re.compile(r"'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"|`(?:\\.|[^`\\])*`")
 
 

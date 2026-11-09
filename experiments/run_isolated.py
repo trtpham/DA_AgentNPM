@@ -92,7 +92,10 @@ def inside(job: dict) -> dict:
         return {"result": {"package": package, "variant": config["name"], "model": config["model"],
                            "status": "error", "error": f"source: {type(error).__name__}: {str(error)[:200]}"},
                 "trace": None}
-    result = run_one({"package": package, "dir": directory, "context": job.get("context")}, run_dir, config, None)
+    item = {"package": package, "dir": directory, "context": job.get("context")}
+    if "sandbox" in job:  # recorded by experiments.sandbox_batch; the agent does not start Docker itself
+        item["sandbox_result"] = job["sandbox"]
+    result = run_one(item, run_dir, config, None)
     from experiments.resources import container_peak_mb
     result["container_peak_mb"] = container_peak_mb()
     trace = run_dir / trace_filename(package)
@@ -101,7 +104,21 @@ def inside(job: dict) -> dict:
     return {"result": result, "trace": text}
 
 
+def inside_prepare(job: dict) -> dict:
+    """Container side (sandbox_batch): materialize one source into the mounted volume, nothing else."""
+    row = job["row"]
+    try:
+        directory = materialize(row, Path("/tmp/work"))
+        shutil.copytree(directory, PREPARED, symlinks=True)
+        return {"ok": True, "error": None}
+    except Exception as error:
+        return {"ok": False, "error": f"source: {type(error).__name__}: {str(error)[:200]}"}
+    finally:
+        shutil.rmtree("/tmp/work", ignore_errors=True)
+
+
 GUARDDOG_IMAGE = "agent-npm-guarddog:2.6.0"
+PREPARED = Path("/home/runner/pkg")  # inside a fresh agentnpm-* volume mounted on the runner's home
 
 
 def strip_code(result: dict) -> dict:
@@ -137,13 +154,17 @@ def inside_guarddog(job: dict) -> dict:
     return {"result": {**result, "package": package}, "trace": None}
 
 
-def container_command(guarddog: bool = False) -> list[str]:
+def container_command(guarddog: bool = False, prepare_volume: str | None = None) -> list[str]:
     mounts = []
     for folder in ("agent", "tools", "experiments", "data/scripts"):
         mounts += ["--mount", f"type=bind,source={ROOT / folder},target=/app/{folder},readonly"]
     common = ["docker", "run", "--rm", "-i", "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,size=1g",
               "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--memory", "2g", "--user", "10001:10001",
               "--env", "PYTHONDONTWRITEBYTECODE=1", *mounts, "--workdir", "/tmp"]
+    if prepare_volume:
+        # Same disposable runner; the only writable place besides tmpfs is the package volume.
+        return [*common, "--pids-limit", "64", "--mount", f"type=volume,source={prepare_volume},target=/home/runner",
+                IMAGE, "python", "-I", "/app/experiments/run_isolated.py", "--inside", "--prepare"]
     if guarddog:
         # semgrep needs more processes; HOME in tmpfs for its cache; no Ollama access needed.
         return [*common, "--pids-limit", "128", "--env", "HOME=/tmp", "--entrypoint", "python",
@@ -210,7 +231,7 @@ def ensure_contexts(rows: list[dict], directory: Path, build=None) -> dict:
 
 
 def run(run_id: str, variant: str, rows: list[dict], reports: Path = Path("reports"), runner=subprocess.run,
-        contexts: Path | None = None, sampler=None) -> dict:
+        contexts: Path | None = None, sampler=None, sandbox_results: Path | None = None) -> dict:
     from experiments import run_batch as batch
     from experiments.resources import OllamaSampler, merge_resources
 
@@ -228,6 +249,11 @@ def run(run_id: str, variant: str, rows: list[dict], reports: Path = Path("repor
     if meta_path.is_file() and meta.get("contexts") != (str(contexts) if contexts else None):
         raise ValueError("run_id was started with different --contexts; use a new run id")
     meta["contexts"] = str(contexts) if contexts else None
+    if bool(config.get("sandbox")) != bool(sandbox_results):
+        raise ValueError("sandbox configs need --sandbox-results (from experiments.sandbox_batch), and only they take it")
+    if meta_path.is_file() and meta.get("sandbox_results") != (str(sandbox_results) if sandbox_results else None):
+        raise ValueError("run_id was started with different --sandbox-results; use a new run id")
+    meta["sandbox_results"] = str(sandbox_results) if sandbox_results else None
     meta["isolated"] = {"image": IMAGE, "container": "disposable, read-only, tmpfs, cap-drop ALL"}
     todo = [row for row in rows if not (run_dir / batch.result_name(f"{row['name']}@{row['version']}")).is_file()]
     counts = {"done": 0, "skipped": len(rows) - len(todo), "errors": 0}
@@ -240,7 +266,11 @@ def run(run_id: str, variant: str, rows: list[dict], reports: Path = Path("repor
             context = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
             if context is None:
                 missing.append(f"{row['name']}@{row['version']}")
-        return json.dumps({"row": row, "config": config, "context": context})
+        payload = {"row": row, "config": config, "context": context}
+        if sandbox_results:
+            path = sandbox_results / batch.result_name(f"{row['name']}@{row['version']}")
+            payload["sandbox"] = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+        return json.dumps(payload)
 
     peaks: list[float | None] = []
     ollama = sampler or OllamaSampler()
@@ -291,11 +321,14 @@ def main() -> None:
     parser.add_argument("--guarddog", action="store_true", help="GuardDog baseline instead of the agent (no variant)")
     parser.add_argument("--contexts", type=Path,
                         help="'Agent + OSV': OSV/Registry context directory (missing files are looked up on the host)")
+    parser.add_argument("--sandbox-results", type=Path,
+                        help="with an A-*-XS config: sandbox results recorded by experiments.sandbox_batch")
     parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--prepare", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.inside:
         sys.path.insert(0, "/app")
-        handler = inside_guarddog if args.guarddog else inside
+        handler = inside_prepare if args.prepare else inside_guarddog if args.guarddog else inside
         for line in sys.stdin:
             if line.strip():
                 print(json.dumps(handler(json.loads(line)), ensure_ascii=False), flush=True)
@@ -313,7 +346,8 @@ def main() -> None:
         print(json.dumps({"contexts": built}, ensure_ascii=False))
         if built["failed"]:
             raise SystemExit(f"OSV lookup failed for {len(built['failed'])} rows; rerun to retry")
-    print(json.dumps(run(args.run_id, args.variant, rows, args.reports, contexts=args.contexts)))
+    print(json.dumps(run(args.run_id, args.variant, rows, args.reports, contexts=args.contexts,
+                         sandbox_results=args.sandbox_results)))
 
 
 if __name__ == "__main__":

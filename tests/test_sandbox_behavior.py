@@ -168,3 +168,23 @@ def test_sandbox_is_off_by_default_and_only_for_fixtures(tmp_path):
                 sandbox_runner=lambda _package: _fake_result())
     with pytest.raises(ValueError, match="sandbox=True"):
         analyze(str(FIXTURES / "corpus" / "twin-safe"), "fake", tools=["read_file", "sandbox_report"])
+
+
+def test_recorded_sandbox_result_applies_r1_to_a_package_outside_fixtures(tmp_path):
+    # Gate B0 2026-11-09: a real package is never run by the agent; its result comes from sandbox_batch.
+    import shutil
+    package = tmp_path / "real-package"
+    shutil.copytree(FIXTURES / "packages" / "benign-package", package)
+    replies = iter([READ, _benign()])
+    writer = TraceWriter(tmp_path / "reports" / "run-1", "real-package")
+    result, _ = analyze(str(package), "fake", chat=lambda _m, _msgs, final=False: next(replies), trace=writer,
+                        sandbox=True, sandbox_recorded=_fake_result(canaries=["npmrc"]))
+    events = [json.loads(line) for line in writer.path.read_text(encoding="utf-8").splitlines()]
+    decision = next(event for event in events if event["type"] == "decision")
+    assert (result.action, decision["rule"]) == ("deny", "R1")
+    missing = iter([READ, _benign()])
+    writer2 = TraceWriter(tmp_path / "reports" / "run-2", "real-package")
+    analyze(str(package), "fake", chat=lambda _m, _msgs, final=False: next(missing), trace=writer2, sandbox=True,
+            sandbox_recorded={"ok": False, "data": None, "error": "no sandbox result recorded"})
+    events = [json.loads(line) for line in writer2.path.read_text(encoding="utf-8").splitlines()]
+    assert next(event for event in events if event["type"] == "decision")["final_action"] != "approve"

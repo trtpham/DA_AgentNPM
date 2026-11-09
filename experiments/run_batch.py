@@ -143,6 +143,16 @@ def select_inputs(labels: Path | None, split: str | None, names: list[str], dirs
     return inputs
 
 
+def sandbox_kwargs(item: dict, config: dict) -> dict:
+    """A sandbox result recorded by experiments.sandbox_batch, for configs with `sandbox: true`.
+
+    A missing result is an incomplete sandbox run, which blocks automatic approval (never an approve)."""
+    if not config.get("sandbox") or "sandbox_result" not in item:
+        return {}
+    recorded = item["sandbox_result"] or {"ok": False, "data": None, "error": "no sandbox result recorded"}
+    return {"sandbox_recorded": recorded}
+
+
 def run_one(item: dict, run_dir: Path, config: dict, contexts: Path | None, analyze=agent_run.analyze) -> dict:
     started = time.monotonic()
     result = {"package": item["package"], "variant": config["name"], "model": config["model"]}
@@ -166,6 +176,7 @@ def run_one(item: dict, run_dir: Path, config: dict, contexts: Path | None, anal
                                      deny_threshold=config["deny_threshold"],
                                      approve_threshold=config["approve_threshold"], context=context,
                                      options=config["options"],
+                                     **sandbox_kwargs(item, config),
                                      **{key: config[key] for key in FEATURE_TYPES if key in config})
             result.update(status="ok", steps=steps, verdict=verdict.model_dump())
         except Exception as error:  # the trace already holds the R2 fallback decision
