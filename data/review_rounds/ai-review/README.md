@@ -12,4 +12,4 @@ Ngày 11/11/2026, theo yêu cầu của PO, Claude đọc bằng chứng của 2
 - Lượt 2, 3, 4, 12, 13, 15 đã kiểm. Mã độc chỉ được giải mã trong bộ nhớ để đọc (không ghi ra đĩa, không giải nén, không chạy). Tiêu chí `verified`: hook chạy đúng file và đoạn trích cho thấy hành vi độc trên đường cài đặt.
 - Lượt 3 (Shai-Hulud 2.0): cả 18 dòng `exclude` vì đoạn trích chỉ thấy `setup_bun.js` chạy ngầm `bun_environment.js`; phần đánh cắp nằm ở file không được trích.
 - Rà lại (main): 4 gói `*-tg-api` ở lượt 4 đổi `exclude` → `verified` (chạy EXE từ ZIP có mật khẩu lúc cài).
-- **Còn thiếu lượt 10, 11, 14** (120 dòng): dừng do hết hạn mức sử dụng tuần, làm tiếp sau 15/11.
+- Lượt 10, 11, 14 (120 dòng) làm tiếp sau khi hạn mức mở lại: 82 `verified`, 9 `revise`, 29 `exclude`. Hai dòng không đọc được đầu ra (`dd-actions-languageservices-2.0.9` ở lượt 11) được để `exclude`.

@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+dd-airbnb-blueimp-file-upload-96.8.0,exclude,,"hành vi nằm ngoài đoạn trích; một dòng mã bị làm rối và bị cắt, không đọc được hành vi",Claude (AI),2026-11-11
+dd-stackgl-gl-conformance-9.99.999,verified,"Thu hostname, user, thư mục home, DNS và toàn bộ biến môi trường (dòng 8-21) rồi POST tới máy chủ OAST bên ngoài (dòng 29-43).",,Claude (AI),2026-11-11
+dd-stellarshift-chain-metadata-1.0.1,verified,Chỉ khi máy có Lark và FortiClient (dòng 26-57) thì tải script từ kho lưu trữ đám mây và chạy qua bash/PowerShell hoặc tải binary rồi thực thi (dòng 60-81).,,Claude (AI),2026-11-11
+dd-free-anthropic-claude-5.1.5,exclude,,"hành vi nằm ngoài đoạn trích; hook chỉ gọi createCache trong ./index, file đó không được hiển thị",Claude (AI),2026-11-11
+dd-local-shopping-cart-1.0.0,exclude,,hành vi nằm ngoài đoạn trích; preinstall và postinstall đều rỗng,Claude (AI),2026-11-11
+dd-ssc-ui-react-9.3.9,verified,"Lấy IP ngoài qua ipinfo, gom hostname, user, home, IP nội bộ và DNS (dòng 44-60) rồi gửi tới Discord webhook (dòng 62-87).",,Claude (AI),2026-11-11
+dd-testing-package-bose-5.1.0,revise,Gửi băm hostname kèm khóa dự án tới máy chủ tunnel và chặn cài đặt nếu chưa trả phí (dòng 21-66).,"suspicious: chỉ gửi giá trị băm của hostname/platform, giống cổng thu phí thử nghiệm, không thấy đánh cắp dữ liệu hay chạy mã từ xa",Claude (AI),2026-11-11
+dd-unisys-auth-99.99.2,verified,"Chạy whoami, id, uname, đọc /etc/passwd, .npmrc, pip.conf, email git và danh sách biến môi trường (dòng 11-40) rồi POST tới máy chủ lạ và beacon DNS kèm hostname (dòng 42-56).",,Claude (AI),2026-11-11
+dd-distylai-1.2.1,verified,"Chạy shell gom hostname, thư mục, user, mã hóa hex rồi gửi qua truy vấn nslookup tới tên miền oastify (dòng 2).",,Claude (AI),2026-11-11
+dd-jameson777-mytest7-1.0.0,verified,"Gửi POST tới IP lạ, giải mã XOR phần phản hồi rồi eval mã nhận được (dòng 19-38).",,Claude (AI),2026-11-11
+dd-upm-template-utils-1.0.6,verified,"Gom hostname, OS, IP nội bộ/công khai, kết quả npm whoami và id (dòng 44-95) rồi POST tới IP lạ (dòng 67-79).",,Claude (AI),2026-11-11
+dd-sparkling-sdk-2.1.0-rc.12,verified,Hook preinstall dùng curl gửi nội dung /etc/passwd tới webhook.site.,,Claude (AI),2026-11-11
+dd-monterosa-sdk-enmasse-99.9.0,verified,"Mã hóa hex hostname và thư mục home, ghép IP nội bộ làm tên miền con của oastify rồi gửi request tới đó (dòng 6-37).",,Claude (AI),2026-11-11
+dd-project-init-tools-1.0.2,exclude,,"hành vi nằm ngoài đoạn trích; chỉ fork tiến trình nền worker.js, file đó không được hiển thị",Claude (AI),2026-11-11
+dd-pino-debugger-1.0.1,exclude,,"hành vi nằm ngoài đoạn trích; script prepare chỉ chạy npm audit và lọc lỗ hổng, không thấy hành vi độc",Claude (AI),2026-11-11
+dd-meteor-react-component-1.0.0,exclude,,"hành vi nằm ngoài đoạn trích; chỉ chạy nền main.js, file đó không được hiển thị",Claude (AI),2026-11-11
+dd-debugger-local-8.8.8,verified,"Hook preinstall dùng curl gửi kết quả whoami tới Burp Collaborator, ghép hostname vào tên miền.",,Claude (AI),2026-11-11
+dd-themeone-event-71.71.85,exclude,,"hành vi nằm ngoài đoạn trích; đoạn trích chỉ có hàm thu thập metadata đám mây, phần gửi đi sau dòng 150 và endpoint chỉ là chuỗi giữ chỗ",Claude (AI),2026-11-11
+dd-grafana-sentry-datasource-1.0.3,verified,"Đọc /etc/passwd, gom hostname, user, home, DNS (dòng 9-28) rồi POST tới máy chủ oastify (dòng 34-56).",,Claude (AI),2026-11-11
+dd-overstock-component-library-v3-4.5.2,verified,Cả ba hook tải script từ máy chủ lạ bằng curl rồi đưa thẳng vào bash.,,Claude (AI),2026-11-11
+dd-github-badge-bot-1.2.8,exclude,,"hành vi nằm ngoài đoạn trích; chỉ gọi hàm trích token và gửi Telegram từ lib/, mã thực thi trong các file đó không được hiển thị",Claude (AI),2026-11-11
+dd-fin-connector-33.12.13,verified,"Gom toàn bộ biến môi trường, danh sách tiến trình, file .env và /etc/passwd (dòng 27-50) rồi POST tới máy chủ ngrok (dòng 52-68).",,Claude (AI),2026-11-11
+dd-circuit-runtime-ui-10.0.1,exclude,,"hành vi nằm ngoài đoạn trích; lệnh node -e bị cắt, chỉ thấy tra DNS tới oastify, phần gửi dữ liệu không hiển thị",Claude (AI),2026-11-11
+dd-test-thegenetic-module-2.2.9,revise,Hook preinstall gửi hostname bằng curl tới localhost.,"suspicious: đích là localhost, không có máy chủ bên ngoài nhận dữ liệu",Claude (AI),2026-11-11
+dd-frontend-clients-core-99.0.6,verified,"Gom hostname, user, home, DNS và package.json (dòng 7-17) rồi POST tới máy chủ oastify (dòng 21-40).",,Claude (AI),2026-11-11
+dd-actsearchserv-0.0.1,verified,"Gom hostname, OS, IP, user hệ thống, npm whoami và thư mục hiện tại (dòng 47-100) rồi POST tới IP lạ (dòng 74-88).",,Claude (AI),2026-11-11
+dd-myisrfn-baileys-mod-1.0.5,exclude,,hành vi nằm ngoài đoạn trích; preinstall chỉ kiểm tra phiên bản Node,Claude (AI),2026-11-11
+dd-rivianlabs-bedrock-0.0.2,verified,Ghép hostname và platform thành tên miền con rồi tra DNS tới máy chủ OAST để báo về (dòng 28-44).,,Claude (AI),2026-11-11
+dd-com.unity.robotics.warehouse.base-1.0.0,exclude,,"hành vi nằm ngoài đoạn trích; dòng mã bị cắt, thấy gom hostname, user, env nhưng phần gửi đi không hiển thị",Claude (AI),2026-11-11
+dd-cryptomus-aurora-kit-9.0.3,revise,Cả ba hook ping tới tên miền OAST mà không kèm dữ liệu máy.,"suspicious: chỉ là beacon báo cài đặt, không thu thập hay gửi dữ liệu",Claude (AI),2026-11-11
+dd-api-cache-worker-6.1.3,verified,"Lấy IP ngoài qua ipinfo, gom hostname, user, home, IP nội bộ và DNS (dòng 44-60) rồi gửi tới Discord webhook (dòng 62-87).",,Claude (AI),2026-11-11
+dd-event-sharing-demo-10.7.0,verified,"Né môi trường sandbox (dòng 42), gom hostname, user, home, IP và DNS (dòng 45-60) rồi gửi tới Discord webhook (dòng 62-87).",,Claude (AI),2026-11-11
+dd-neo4j-apoc-1.0.1,exclude,,"hành vi nằm ngoài đoạn trích; chỉ chạy nền main.js, file đó không được hiển thị",Claude (AI),2026-11-11
+dd-ap-components-react-3.9.9,verified,"Gom hostname, user, home, DNS và package.json (dòng 7-17) rồi POST tới pipedream (dòng 21-40).",,Claude (AI),2026-11-11
+dd-datanerd-1.0.17,verified,"Hook preinstall mở reverse shell bash tới địa chỉ ngrok, có vòng eval lệnh và gửi kết quả tới pipedream.",,Claude (AI),2026-11-11
+dd-com.unity.editor.tasks-10.0.1,exclude,,"hành vi nằm ngoài đoạn trích; lệnh node -e bị cắt, chỉ thấy khai báo module",Claude (AI),2026-11-11
+dd-bootstrap-dev-scratch-1.0.4,verified,"Đọc /etc/passwd, gom hostname, user, home, DNS (dòng 9-28) rồi POST tới máy chủ ngrok (dòng 34-56).",,Claude (AI),2026-11-11
+dd-react-appfabric-shell-0.6.1,verified,"Gom hostname, user, home, DNS và package.json (dòng 8-18) rồi POST tới máy chủ oastify (dòng 24-46).",,Claude (AI),2026-11-11
+dd-cloudplatform-single-spa-dataplatform-trino-100.100.100,exclude,,"hành vi nằm ngoài đoạn trích; một dòng mã bị làm rối và bị cắt, không đọc được hành vi",Claude (AI),2026-11-11
+dd-unescaped-1.0.0,verified,"Gom hostname, thư mục cài và package.json (dòng 7-15) rồi POST tới tên miền lạ (dòng 21-39).",,Claude (AI),2026-11-11

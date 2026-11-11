@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+dd-snap-design-system-marketing-9.9.9,verified,"Preinstall đọc /etc/hostname, thư mục cài và tên người dùng rồi gửi POST bằng curl tới máy chủ oastify bên ngoài (dòng 7).",,Claude (AI),2026-11-11
+dd-devops-challenge-99.99.990,verified,index.js lấy tên người dùng bằng whoami và rò rỉ qua truy vấn DNS tới tên miền oastify (dòng 1-2).,,Claude (AI),2026-11-11
+dd-web-experience-app-99.99.2,verified,"Preinstall/postinstall gửi tên người dùng, hostname và thư mục hiện tại qua tham số URL tới máy chủ lạ bằng curl (dòng 8).",,Claude (AI),2026-11-11
+dd-atlas-user-monitor-8.5.6,verified,"index.js mở kết nối TCP tới một IP lạ rồi nối shell hệ thống vào socket, tạo reverse shell (dòng 4-37).",,Claude (AI),2026-11-11
+dd-mpesa-backoffice-ekyc-frontend-2.17.16-EKYC,verified,"index.js ghi file vào /tmp, thu thập thư mục home, hostname, user, DNS và nội dung /etc/passwd rồi POST tới oastify (dòng 8-57).",,Claude (AI),2026-11-11
+dd-tiny-model-update-1.18.0,exclude,,"hành vi nằm ngoài đoạn trích: 150 dòng đầu chỉ ẩn cửa sổ, diệt tiến trình node và xóa thư mục; phần lấy token nằm ở bin/extract-tokens.js không được hiển thị",Claude (AI),2026-11-11
+dd-team-event-services-1.2.9213,verified,"postinstall.js chạy lệnh hệ thống, đọc .bashrc, .env, /etc/passwd, toàn bộ biến môi trường rồi đóng gói JSON để POST tới máy chủ lạ (dòng 23-150).",,Claude (AI),2026-11-11
+dd-ddddddd1d-1.0.54,verified,Preinstall dò cấu hình dịch vụ systemd/init.d có UiPath và gửi kết quả qua curl tới oastify (dòng 7).,,Claude (AI),2026-11-11
+dd-web3js-wallet-2.0.28,exclude,,"hành vi nằm ngoài đoạn trích: hook prepare chỉ chạy npm run build, script build không được hiển thị",Claude (AI),2026-11-11
+dd-cwlib-core-30.0.22,verified,index.js mở reverse shell bash tới IP lạ cổng 1337 và chạy các lệnh trinh sát hệ thống (dòng 3-21).,,Claude (AI),2026-11-11
+dd-builderius-sense-ai-1.3.2,exclude,,Chỉ thấy giải mã AES file .bin rồi biên dịch bằng bytenode; mã thật bị mã hóa nên không xác định được hành vi độc,Claude (AI),2026-11-11
+dd-uuu8lgd-1.0.20,exclude,,"hành vi nằm ngoài đoạn trích: dòng 8 bị cắt, chỉ thấy đọc các token UiPath trong biến môi trường và URL oastify, chưa thấy lệnh gửi",Claude (AI),2026-11-11
+dd-chalk-tempalte-1.0.15,verified,"postinstall.js khai báo máy chủ C2 /collect, dò ví tiền mã hóa, cấu hình VPN và đọc nội dung cấu hình Docker để thu thập (dòng 11-150).",,Claude (AI),2026-11-11
+dd-admin0911-1.0.46,verified,"index.js đọc cmdline, environ, bộ nhớ của tiến trình khác và dò cổng nội bộ, mã hóa base64 rồi gửi qua curl tới oastify (dòng 4-36).",,Claude (AI),2026-11-11
+dd-ebay.cookies-1.0.0,verified,"index.js thu thập thư mục home, hostname, user, DNS và gửi POST tới máy chủ oastify (dòng 9-47).",,Claude (AI),2026-11-11
+dd-file-dep-a-1.2.0,verified,"index.js thu thập thư mục home, hostname, user, DNS và gửi POST tới máy chủ oast.fun (dòng 8-46).",,Claude (AI),2026-11-11
+dd-react-is-17-6.5.8,verified,"index.js lấy IP trong/ngoài, user, hostname, DNS rồi gửi qua webhook Discord (dòng 9-87).",,Claude (AI),2026-11-11
+dd-elf-stats-snowdusted-marshmallow-228-99.99.99,verified,exploit.js liệt kê và đọc file trong thư mục hệ thống khác rồi POST nội dung tới webhook.site (dòng 6-47).,,Claude (AI),2026-11-11
+dd-vuepress-plugin-lego-analytics-1.0.1,revise,,"suspicious: preinstall chỉ ping một tên miền Burp để báo đã cài, không thấy thu thập hay gửi dữ liệu",Claude (AI),2026-11-11
+dd-ikarem-telemetry-100.1.6,verified,"telemetry.sh lấy hostname, hệ điều hành, tên người dùng và gửi qua URL tới máy chủ ngoài bằng curl (dòng 5-13).",,Claude (AI),2026-11-11
+dd-onboarding-lemonde-9.9.9,verified,Preinstall gửi nội dung /etc/passwd bằng curl tới tên miền oastify có gắn hostname (dòng 8).,,Claude (AI),2026-11-11
+dd-sea-bound-siren-9999.0.4,verified,"preinstall.js đọc .npmrc, htpasswd, file cấu hình, biến môi trường token, quét cổng nội bộ rồi POST tất cả tới webhook.site (dòng 11-149).",,Claude (AI),2026-11-11
+dd-bitcoin-main-lib-7.1.6,exclude,,"hành vi nằm ngoài đoạn trích: postinstall chỉ chạy nền bip40-launcher.cjs, file này không được hiển thị",Claude (AI),2026-11-11
+dd-adyenaddon-1.0.0,verified,Preinstall chạy hostname và whoami rồi gửi kết quả qua HTTPS GET tới oastify (dòng 6).,,Claude (AI),2026-11-11
+dd-node-tailwind-magic-3.4.1,verified,"index.js gửi POST tới máy chủ vercel lạ rồi eval mã nhận về, tức tải và chạy mã từ xa (dòng 21-25).",,Claude (AI),2026-11-11
+dd-birdmania1-namecheap-mcp-1.1.0,exclude,,hành vi nằm ngoài đoạn trích: postinstall chỉ in hướng dẫn cấu hình ra màn hình,Claude (AI),2026-11-11
+dd-goldenfront-core-99.99.101,verified,"index.js thu thập home, hostname, user, toàn bộ biến môi trường và DNS rồi POST tới oast.fun (dòng 8-47).",,Claude (AI),2026-11-11
+dd-pootle-9.9.9,verified,"Preinstall gửi hostname, user, thư mục và id bằng curl tới máy chủ oast.live (dòng 8).",,Claude (AI),2026-11-11
+dd-girirajravichandran-corp-build-utils-poc-99.9.32,verified,"preinstall.js tải script PowerShell từ GitHub và chạy, đồng thời đọc token GitHub từ env, .npmrc, .zshrc rồi gửi qua curl tới oastify (dòng 8-76).",,Claude (AI),2026-11-11
+dd-zqdl55512-22.2.2,verified,Preinstall gửi hostname và tên người dùng bằng curl tới máy chủ ngoài (dòng 8).,,Claude (AI),2026-11-11
+dd-tensor-nft-js-1.0.2,verified,postinstall.js dùng PowerShell ẩn tải file bat từ catbox vào TEMP rồi chạy bằng cmd (dòng 4-16).,,Claude (AI),2026-11-11
+dd-web-bzz-1.10.3,exclude,,"File một dòng bị làm rối nặng, đoạn trích bị cắt nên không xác định được hành vi",Claude (AI),2026-11-11
+dd-actions-languageservices-2.0.9,exclude,,Không đọc được đoạn trích: show.py lỗi xuất kết quả với dòng này nên không xác định được hành vi,Claude (AI),2026-11-11
+dd-libxmljs2qwerty-0.30.6,revise,,"suspicious: đọc /etc/passwd và in ra console, không thấy gửi ra ngoài",Claude (AI),2026-11-11
+dd-libxmlrussia2-0.30.2,verified,exploit.js đọc file flag và liệt kê thư mục ứng dụng rồi gửi qua HTTPS GET tới pipedream (dòng 5-75).,,Claude (AI),2026-11-11
+dd-aviatrixdev-flight-suit-1.1.25050,verified,"index.js gom env, tiến trình, .git-credentials, .npmrc, .pypirc, cấu hình Docker vào file tạm rồi POST bằng curl ra ngoài (dòng 2-3).",,Claude (AI),2026-11-11
+dd-swap-subgraph-2.0.0,verified,index.js tự tách tiến trình nền rồi mở reverse shell /bin/sh tới IP lạ cổng 4444 (dòng 4-52).,,Claude (AI),2026-11-11
+dd-okxweb3-99.99.99,verified,index.js lấy tên người dùng bằng whoami và rò rỉ qua truy vấn DNS tới oastify (dòng 1-2).,,Claude (AI),2026-11-11
+dd-owncloud-activity-99.0.10,verified,"index.js đọc hostname, /etc/passwd, /etc/shadow, env, netstat, mã hóa base64 rồi gửi tới oastify (dòng 4-20).",,Claude (AI),2026-11-11
+dd-ccb-app-ui-service-7.7.8,verified,"index.js thu thập home, hostname, user, DNS và POST tới máy chủ oastify (dòng 8-46).",,Claude (AI),2026-11-11

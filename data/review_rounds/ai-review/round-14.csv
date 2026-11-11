@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+dd-resources.data.gov-1.1.0,verified,"Preinstall gom thư mục home, hostname, user, DNS cùng nội dung /etc/passwd và /etc/hosts (dòng 9-19) rồi POST tới máy chủ oastify bên ngoài (dòng 31-54).",,Claude (AI),2026-11-11
+dd-sporta-technology-d11-web-components.timeline-0.0.26,verified,Lệnh preinstall dùng wget hoặc curl gửi hostname và thư mục hiện tại tới một địa chỉ IP lạ (dòng 11).,,Claude (AI),2026-11-11
+dd-checkout-app-1.5.1,verified,"Preinstall gom home, hostname, user, DNS và package.json (dòng 8-18) rồi POST tới máy chủ oastify (dòng 24-46).",,Claude (AI),2026-11-11
+dd-eslint-config-i18n-scan-11.0.16,verified,"Lấy user, hostname, thư mục hiện tại (dòng 21-32), mã hóa hex, chia mảnh và rò rỉ qua truy vấn DNS tới tên miền lạ (dòng 35-54).",,Claude (AI),2026-11-11
+dd-dev-api-client-33.12.10,verified,"Gom hostname, user, cwd và toàn bộ biến môi trường (dòng 5-12) rồi POST tới webhook.site (dòng 14-28).",,Claude (AI),2026-11-11
+dd-eslint-plugin-panel-ops-55.3.55,verified,"Lấy IP công khai, MAC, tên máy, user, cwd (dòng 5-41), mã hóa hex và rò rỉ qua truy vấn DNS tới tên miền oast.fun (dòng 43-49).",,Claude (AI),2026-11-11
+dd-mcp-server-fixthis-0.2.0,exclude,,"Mã bị làm rối trên một dòng và bị cắt, không thấy được hành vi cụ thể; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-react-bindify-decorators-8.10.10,exclude,,Hook gọi npm run decorator nhưng nội dung script decorator không có trong đoạn trích; hành vi nằm ngoài đoạn trích,Claude (AI),2026-11-11
+dd-yaml-manifest-utils-mynarratorai-5.0.0,verified,"Tìm file flag, chạy lệnh thu thập hệ thống và lấy biến môi trường (dòng 9-38), gửi ra IP lạ bằng curl, mở reverse shell tới IP đó (dòng 81-94) và ghi file ra ngoài gói (dòng 97-98).",,Claude (AI),2026-11-11
+dd-cx-logger-library-99.0.0,exclude,,"Mã bị làm rối và bị cắt, không thấy nguồn hay đích; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-colorpicker-ui-1.2.6,exclude,,"150 dòng đầu chỉ thấy thu thập thông tin máy, token k8s và khóa cloud từ metadata; bước gửi tới webhook không có trong đoạn trích; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-api-nodejs-template-1.1.1,revise,"Hook preinstall chỉ là một URL oastify, không phải lệnh chạy được.","Đề xuất suspicious: không thấy thu thập hay gửi dữ liệu, lệnh không thực thi được",Claude (AI),2026-11-11
+dd-admin10001-1.0.216,verified,Lệnh preinstall lấy instance-id và thông tin xác thực từ dịch vụ metadata cloud rồi gửi bằng curl tới máy chủ oastify (dòng 8).,,Claude (AI),2026-11-11
+dd-transcript-viewer-ui-demo-9.9.9,verified,"Gom hostname, user, cwd (dòng 4) rồi POST tới webhook.site (dòng 5-9).",,Claude (AI),2026-11-11
+dd-s21games-game-engine-1.15.18,verified,Lệnh preinstall mở reverse shell bằng mkfifo và nc tới IP lạ cổng 8085 (dòng 7).,,Claude (AI),2026-11-11
+dd-toptal-react-bikes-11.11.11,verified,Lệnh preinstall gửi nội dung /etc/passwd bằng curl tới tên miền oastify có gắn hostname (dòng 11).,,Claude (AI),2026-11-11
+dd-testcarrot-supply2-1.0.1,revise,"Tải script từ 127.0.0.1, cấp quyền chạy và thực thi (dòng 7-37).","Đề xuất suspicious: có mẫu tải và chạy mã nhưng nguồn là localhost, kiểu PoC, không thấy máy chủ ngoài",Claude (AI),2026-11-11
+dd-eipsend-1.0.0,verified,"Lệnh preinstall chạy whoami, uname, id và gửi kết quả bằng curl tới máy chủ oastify (dòng 7).",,Claude (AI),2026-11-11
+dd-global-copilot-menu-1.0.0,revise,Gửi tên và phiên bản gói cùng thời điểm cài tới webhook.site (dòng 5-24).,"Đề xuất suspicious: chỉ báo cài đặt, không gửi thông tin máy hay bí mật",Claude (AI),2026-11-11
+dd-zzr-react-custom-widget-1.0.1,revise,Script chỉ in banner tên tác giả ra màn hình (dòng 1-13).,Đề xuất benign: không có hành vi nhạy cảm nào,Claude (AI),2026-11-11
+dd-tiny-model-update-1.16.0,exclude,,"Đoạn trích chỉ thấy ẩn cửa sổ, diệt tiến trình node và xóa thư mục; hook postinstall extract-tokens.js không được hiển thị; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-cko-ui-toolkit-99.99.9,verified,"Lệnh preinstall gắn user, hostname và tên thư mục vào tên miền rồi gọi curl/nslookup để rò rỉ qua DNS (dòng 7).",,Claude (AI),2026-11-11
+dd-otc-echo-8.1.7,verified,"Gom IP nội bộ, IP ngoài, home, user, hostname, DNS (dòng 9-60) rồi gửi tới webhook Discord (dòng 62-87).",,Claude (AI),2026-11-11
+dd-h1shiny-ismobile-0.0.1,exclude,,"File chỉ require ./list, nội dung file đó không có trong đoạn trích; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-trusted-firmware-a-100.1.1337,verified,"Lệnh preinstall gửi user, hostname, /etc/os-release, /etc/passwd, /etc/hosts bằng curl tới webhook.site (dòng 7).",,Claude (AI),2026-11-11
+dd-poclabs-exo-phanto-1.0.13,verified,"Gom IP, tổ chức, hostname, cwd (dòng 48-60), mã hóa base64, chia mảnh và rò rỉ qua DNS tới tên miền lạ (dòng 77-107).",,Claude (AI),2026-11-11
+dd-nilepkg6-1.0.0,verified,"Gom hostname, hệ điều hành, mạng, biến môi trường (đã che một phần), uname (dòng 55-77) rồi POST tới máy chủ oast.fun (dòng 79-106).",,Claude (AI),2026-11-11
+dd-node-multispinner-0.2.1,exclude,,"Đoạn trích là bộ chạy test tự viết, require các file trong thư mục test không được hiển thị; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-mona-service-99.11.18,verified,"Gom MAC (base64), home, hostname, user (dòng 9-35) rồi gửi qua HTTP GET tới ba máy chủ OAST (dòng 37-69).",,Claude (AI),2026-11-11
+dd-tournament-service-200.4.3,verified,Chạy nc -e /bin/bash để mở reverse shell tới IP 192.168.70.136 cổng 4444 (dòng 5-12).,,Claude (AI),2026-11-11
+dd-testcatplzignore-1.0.1,verified,"Mã hóa hex hostname, hệ điều hành, user, cwd và rò rỉ qua truy vấn DNS tới tên miền lạ (dòng 10-49).",,Claude (AI),2026-11-11
+dd-googlesitekit-assets-9.9.9,verified,Lệnh preinstall dùng node gửi hostname qua HTTPS GET tới máy chủ oastify (dòng 7).,,Claude (AI),2026-11-11
+dd-microsoft.applicationinsights.persistencechannel-99.99.99,verified,Chạy whoami rồi đưa tên user vào truy vấn DNS tới tên miền oastify (dòng 2).,,Claude (AI),2026-11-11
+dd-spacelift-webhook-receiver-1.0.0,verified,Lệnh preinstall chạy whoami và POST kết quả bằng curl tới máy chủ oastify (dòng 9).,,Claude (AI),2026-11-11
+dd-react-dom-19-1.0.0,verified,Ghép user và hostname vào tên miền oast.fun rồi tra DNS để rò rỉ (dòng 5-13).,,Claude (AI),2026-11-11
+dd-admin10001-1.0.314,verified,"Lệnh preinstall đọc khóa SSH riêng của root, chia mảnh hex và gửi qua HTTP GET tới máy chủ oastify (dòng 7).",,Claude (AI),2026-11-11
+dd-coral-wraith-1.0.6,verified,"Đọc .npmrc, tìm flag, lấy biến môi trường bí mật và khóa AWS từ metadata để đọc Secrets Manager (dòng 45-58), rồi gửi qua HTTP PUT tới IP lạ (dòng 5, 28-70).",,Claude (AI),2026-11-11
+dd-orion-ui-9.1.2,verified,"Gom tên gói, home, hostname, user, DNS, thông tin hệ điều hành rồi POST tới máy chủ oast.fun (dòng 2-33).","Mã thiếu require querystring nên có thể lỗi khi chạy, nhưng ý định rò rỉ rõ ràng",Claude (AI),2026-11-11
+dd-mailconfirmer-3.3.47,verified,"Ghi script PowerShell vào TEMP tải file từ GitHub, giải mã XOR thành exe và chạy ẩn (dòng 9-55), sau đó xóa dấu vết khỏi package.json và thư mục gói (dòng 57-150).",,Claude (AI),2026-11-11
+dd-plugin-senna-9.3.130,verified,"Gom hostname, user, biến môi trường AWS, file ~/.aws/credentials và /etc/shadow (dòng 35-63) rồi gửi tới webhook Discord (dòng 7-31, 65).",,Claude (AI),2026-11-11
