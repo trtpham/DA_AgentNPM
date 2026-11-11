@@ -12,6 +12,7 @@ import { argsText, explainStep, thinkingStep } from "./explain.mjs";
 import { buildTruck, currentParcel, parcelZone, tally, truckPhase } from "./truck.mjs";
 import { composeScenario, SCENARIOS, SOURCES } from "./scenarios.mjs";
 import { ruleLadder, ruleSentence } from "./rules.mjs";
+import { initPrefs } from "../ui.mjs";
 
 const $ = (id) => document.getElementById(id);
 const PHASE = { reception: 0, code: 1, intel: 1, lab: 1, evidence: 2, decision: 3 };
@@ -893,3 +894,6 @@ start().catch((error) => { $("caption-who").textContent = `Không tải được
 // The "what this project does" box stays closed once the viewer has read it.
 try { if (localStorage.getItem("viewer.about") === "0") $("about").open = false; } catch { /* no storage */ }
 $("about").addEventListener("toggle", () => { try { localStorage.setItem("viewer.about", $("about").open ? "1" : "0"); } catch { /* no storage */ } });
+
+initPrefs(document.querySelector(".masthead"), [["Space", "Phát / tạm dừng"], ["← →", "Sự kiện trước / tiếp"],
+  ["1 2 3", "Chọn model đang theo dõi (chế độ Đua 3 model)"]]);

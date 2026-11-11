@@ -3,6 +3,7 @@
 import {explainStep} from '/office/explain.mjs';
 import {roomFor} from '/office/events.mjs';
 import {ruleLadder, ruleSentence, TERMS} from '/office/rules.mjs';
+import {initPrefs} from '/ui.mjs';
 
 const LABELS = {benign: 'Lành tính', suspicious: 'Đáng ngờ', malicious: 'Độc hại'};
 const ACTIONS = {approve: 'Cho phép', review: 'Chuyển kiểm tra thủ công', deny: 'Từ chối'};
@@ -33,7 +34,7 @@ const WHO = {model: 'Mô hình AI', tool: 'Công cụ', rules: 'Luật / kiểm 
 const $ = (id) => document.getElementById(id);
 const state = {
   run: null, pkg: null, events: [], cursor: -1, timer: null, poll: null, live: false,
-  phases: [], runs: [], packages: [], packageFilter: 'all', eventFilter: 'all', issueFilter: null, truth: {},
+  phases: [], runs: [], packages: [], packageFilter: 'all', reviewed: new Set(), eventFilter: 'all', issueFilter: null, truth: {},
 };
 
 function el(tag, className, text) {
@@ -414,6 +415,7 @@ function selectPackage(pkg) {
     button.setAttribute('aria-current', String(button.dataset.pkg === pkg));
   }
   $('package-name').textContent = pkg;
+  $('reviewed-toggle').checked = state.reviewed.has(reviewKey(pkg));
   history.replaceState(null, '', `#${linkFor(pkg)}`);
   $('office-link').href = `/office#mode=single&${linkFor(pkg)}`;
   render();
@@ -496,11 +498,34 @@ function renderPhaseTrack() {
   });
 }
 
+// "Đã xem xong" marks: one set per browser, keyed by run and package.
+function reviewKey(pkg) { return `${state.run}|${pkg}`; }
+
+function setReviewed(on) {
+  if (!state.pkg) return;
+  if (on) state.reviewed.add(reviewKey(state.pkg)); else state.reviewed.delete(reviewKey(state.pkg));
+  remember('reviewed', JSON.stringify([...state.reviewed].slice(-2000)));
+  $('reviewed-toggle').checked = on;
+  const pkg = state.pkg;
+  loadPackages(false, null).then(() => {
+    for (const button of document.querySelectorAll('.package')) button.setAttribute('aria-current', String(button.dataset.pkg === pkg));
+  });
+}
+
+function setPresenting(on) {
+  document.body.classList.toggle('present', on);
+  $('present').setAttribute('aria-pressed', String(on));
+  $('present').textContent = on ? 'Thoát trình chiếu' : 'Trình chiếu';
+  if (on && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+  if (!on && document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+}
+
 function renderIssueFilters() {
   const counts = {};
   for (const item of state.packages) for (const issue of issuesOf(item)) counts[issue] = (counts[issue] || 0) + 1;
   if (state.issueFilter && !counts[state.issueFilter]) state.issueFilter = null;
-  const chips = ISSUE_FILTERS.map(([value, text]) => {
+  counts.unreviewed = state.packages.filter((item) => !state.reviewed.has(reviewKey(item.package))).length;
+  const chips = [...ISSUE_FILTERS, ['unreviewed', 'Chưa xem']].map(([value, text]) => {
     const button = chip('issue', value, text, counts[value] || 0, state.issueFilter === value, (picked) => {
       state.issueFilter = state.issueFilter === picked ? null : picked;
       renderIssueFilters();
@@ -522,7 +547,8 @@ function applyPackageFilter() {
     if (!pkg) continue;
     const visible = (!text || pkg.toLowerCase().includes(text)) &&
       (state.packageFilter === 'all' || row.dataset.tag === state.packageFilter) &&
-      (!state.issueFilter || (row.dataset.issues || '').split(' ').includes(state.issueFilter));
+      (!state.issueFilter || (state.issueFilter === 'unreviewed' ? !state.reviewed.has(reviewKey(pkg))
+        : (row.dataset.issues || '').split(' ').includes(state.issueFilter)));
     row.hidden = !visible;
     if (visible) shown += 1;
   }
@@ -555,8 +581,10 @@ async function loadPackages(selectFirst, wanted) {
     const issues = issuesOf(item);
     button.append(el('span', `dot ${tag}`), el('strong', null, item.package),
       el('small', null, `${item.label ? (LABELS[item.label] ?? item.label) : 'Chưa có nhãn'} · ${STATUS[item.status] ?? item.status} · ${item.steps ?? '?'} bước · ${item.model ?? '?'}`));
-    if (issues.length) {
+    const seen = state.reviewed.has(reviewKey(item.package));
+    if (issues.length || seen) {
       const flags = el('span', 'flags');
+      if (seen) flags.append(el('span', 'flag seen', '✓ đã xem'));
       for (const issue of issues) flags.append(el('span', `flag${issue === 'disagree' ? '' : ' bad'}`, ISSUE_FLAGS[issue]));
       button.append(flags);
     }
@@ -696,11 +724,14 @@ function onKey(event) {
   const keys = {
     ArrowLeft: () => jump(state.cursor - 1), ArrowRight: () => jump(state.cursor + 1),
     Home: () => jump(0), End: () => jump(state.events.length - 1),
+    p: () => setPresenting(!document.body.classList.contains('present')),
+    m: () => setReviewed(!state.reviewed.has(reviewKey(state.pkg))),
     ' ': () => { if (state.timer) stopReplay(); else if (state.events.length) startReplay(); },
   };
-  if (!keys[event.key] || !state.events.length) return;
+  const action = keys[event.key.length === 1 ? event.key.toLowerCase() : event.key];
+  if (!action || !state.events.length) return;
   event.preventDefault();
-  keys[event.key]();
+  action();
 }
 
 async function init() {
@@ -716,6 +747,12 @@ async function init() {
   showAll.addEventListener('change', applyShowAll);
   applyShowAll();
 
+  initPrefs(document.querySelector('.masthead'), [['← →', 'Bước trước / bước tiếp'], ['Space', 'Phát / tạm dừng'],
+    ['Home End', 'Về bước đầu / bước cuối'], ['P', 'Bật / tắt trình chiếu'], ['M', 'Đánh dấu gói đang xem là đã xem xong']]);
+  try { state.reviewed = new Set(JSON.parse(remember('reviewed') || '[]')); } catch { state.reviewed = new Set(); }
+  $('reviewed-toggle').addEventListener('change', (event) => setReviewed(event.target.checked));
+  $('present').addEventListener('click', () => setPresenting(!document.body.classList.contains('present')));
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) setPresenting(false); });
   $('terms-list').replaceChildren(...Object.entries(TERMS).flatMap(([term, text]) => [el('dt', null, term), el('dd', null, text)]));
   const about = $('about');
   if (remember('about') === '0') about.open = false;

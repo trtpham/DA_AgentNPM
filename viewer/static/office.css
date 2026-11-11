@@ -205,3 +205,10 @@
 .office-ladder li.fired{color:var(--amber);background:var(--surface-3);font-weight:700}
 .office-ladder li.unchecked{opacity:.55}
 .rule-sentence{color:var(--ink);font-weight:600}
+
+/* Labels drawn over the 3D view stay dark in both themes: the scene itself is always a dusk scene. */
+.office-view{--bg:#09111d;--surface:#111e2d;--surface-2:#172638;--surface-3:#1d2f44;--ink:#f4f8f5;--muted:#b8cbd0;--faint:#7f97a3;--line:#2c4255;--line-strong:#395165;--mint:#61e8c2;--amber:#ffd08a;--red:#ff8e83;color:var(--ink)}
+:root[data-theme="light"] .source-design,:root[data-theme="light"] .source-real-design{color:var(--ink)}
+:root[data-theme="light"] .lane-decision[data-action="deny"]{color:var(--red)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .source-design,:root:not([data-theme="dark"]) .source-real-design{color:var(--ink)}
+  :root:not([data-theme="dark"]) .lane-decision[data-action="deny"]{color:var(--red)}}

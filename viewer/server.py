@@ -16,6 +16,7 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/index.html": ("index.html", "text/html; charset=utf-8"),
           "/app.js": ("app.js", "text/javascript; charset=utf-8"),
           "/style.css": ("style.css", "text/css; charset=utf-8"),
+          "/ui.mjs": ("ui.mjs", "text/javascript; charset=utf-8"),
           # 3D office (KE_HOACH_VAN_PHONG_3D.md): read-only view of the same traces; Three.js is vendored.
           "/office": ("office.html", "text/html; charset=utf-8"),
           "/office.html": ("office.html", "text/html; charset=utf-8"),
