@@ -32,3 +32,8 @@ Ngày 11/11/2026, theo yêu cầu của PO, Claude đọc bằng chứng của 2
 
 - Theo Gate B0 11/11: 42 dòng `revise` được đổi nhãn nháp sang nhãn AI đề xuất (nhãn cũ/mới, lý do: `../relabel-27.csv`), rồi kiểm lại ở lượt 27 bằng bằng chứng lập lại. Hai agent đọc song song.
 - Kết quả: 38 `verified`, 4 `exclude`. Rà lại (main): 3 dòng vẫn bị đề xuất đổi nhãn lần hai (`amrahulmail-ctf-lab-evil`, `ddddddd1d`, `test-thegenetic-module-2.2.6`) → `exclude`, không sửa nhãn lần hai.
+
+## Cắt về 500 trước khi đóng băng (11/11/2026)
+
+- Theo Gate B0 11/11 (PO: "Cắt về 500"): 20 dòng `verified` ghi trong `../trim-v1.csv` (13 lành, 7 độc). Mỗi lần cắt một dòng ở cụm lớn nhất cùng nhãn; giữ cả 30 `suspicious`.
+- Phiếu kiểm và nhãn không bị sửa. `data_report`/`freeze_labels` đọc các dòng này là `trimmed`. Còn 500 dòng: 235 lành, 235 độc, 30 suspicious; cụm lớn nhất 9.

@@ -18,6 +18,7 @@ from data.scripts.dedupe_labels import CAP, DEFAULT_HASHES, DEFAULT_TABLES, dedu
 from experiments.dataset import load_labels
 
 ROUNDS_DIR = Path("data/review_rounds")
+TRIM_FILE = "trim-v1.csv"  # verified rows the PO cut before freezing v1 (id,label,cluster,reason)
 TARGETS = {"total": 400, "benign": 180, "malicious": 180, "clusters": 40}
 
 
@@ -47,6 +48,14 @@ def reviews(rounds_dir: Path = ROUNDS_DIR, include_ai: bool = False) -> dict[str
                                 "observed_behavior": row["ai_observed_behavior"].strip(),
                                 "review_kind": "ai", "reviewer": row["reviewer"].strip(),
                                 "reviewed_at": row["reviewed_at"].strip()}
+    # Gate B0 2026-11-11: PO cut the verified set to 500. A trimmed row keeps its review record
+    # but no longer counts as `verified`, so data_report and freeze_labels both leave it out.
+    trim = rounds_dir / TRIM_FILE
+    if trim.is_file():
+        with trim.open(encoding="utf-8-sig", newline="") as stream:
+            for row in csv.DictReader(stream):
+                if found.get(row["id"], {}).get("decision") == "verified":
+                    found[row["id"]] = {**found[row["id"]], "decision": "trimmed"}
     return found
 
 

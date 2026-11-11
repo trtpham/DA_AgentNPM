@@ -1,0 +1,21 @@
+id,label,cluster,reason
+cand-lgeiger-napi-prebuild-starter-0.3.1,benign,@sderrow,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 12 dòng
+cand-keyring-js-1.1.0,benign,@sderrow,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 11 dòng
+cand-js-ak-watchdog-1.5.0,benign,@sderrow,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 10 dòng
+benign-swc-core-1.7.42,benign,swc-family,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 10 dòng
+cand-inkdrop-keyboard-layout-3.0.2,benign,@sderrow,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 9 dòng
+benign-swc-core-1.7.40,benign,swc-family,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 9 dòng
+cand-ingescape-4.7.0,benign,@sderrow,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 8 dòng
+benign-swc-core-1.7.39,benign,swc-family,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 8 dòng
+cand-idb-connector-1.3.1,benign,@sderrow,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 7 dòng
+benign-swc-core-1.7.36,benign,swc-family,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 7 dòng
+cand-fuse-napi-2.3.1,benign,@sderrow,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 6 dòng
+benign-swc-core-1.7.35,benign,swc-family,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 6 dòng
+cand-farcaster-rocksdb-5.5.0,benign,@sderrow,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 5 dòng
+malicious-sabaoa-tg-api-1.0.0,malicious,mut-4831,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 12 dòng
+malicious-emilgroup-task-sdk-node-1.0.3,malicious,npm-token-worm-2026-03,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 12 dòng
+malicious-react-icon-pkg-1.5.2,malicious,mut-4831,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 11 dòng
+malicious-emilgroup-task-sdk-1.0.3,malicious,npm-token-worm-2026-03,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 11 dòng
+malicious-icon-react-fork-1.0.0,malicious,mut-4831,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 10 dòng
+malicious-emilgroup-process-manager-sdk-1.4.2,malicious,npm-token-worm-2026-03,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 10 dòng
+malicious-custom-tg-bot-plan-1.0.1,malicious,mut-4831,cắt về 500 (PO 11/11): cụm lớn nhất cùng nhãn; cụm có 9 dòng

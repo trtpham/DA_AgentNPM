@@ -62,3 +62,18 @@ def test_later_ai_round_replaces_earlier_ai_decision(tmp_path):
             writer.writeheader()
             writer.writerow({"id": "x", "ai_decision": decision, "reviewer": "Claude (AI)"})
     assert reviews(tmp_path, include_ai=True)["x"]["decision"] == "verified"
+
+
+def test_trimmed_rows_stop_counting_as_verified(tmp_path):
+    from data.scripts.data_report import TRIM_FILE, reviews
+    with (tmp_path / "round-1.csv").open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, ["id", "decision", "observed_behavior", "reviewer", "reviewed_at"])
+        writer.writeheader()
+        writer.writerows([{"id": "a", "decision": "verified"}, {"id": "b", "decision": "verified"},
+                          {"id": "c", "decision": "exclude"}])
+    (tmp_path / TRIM_FILE).write_text("id,label,cluster,reason\na,benign,k,x\nc,benign,k,x\n", encoding="utf-8")
+    found = reviews(tmp_path)
+    assert found["a"]["decision"] == "trimmed" and found["a"]["review_kind"] == "human"
+    assert found["b"]["decision"] == "verified" and found["c"]["decision"] == "exclude"
+    result = report([row("a", "benign", "k"), row("b", "benign", "k")], {k: v["decision"] for k, v in found.items()})
+    assert result["verified"]["total"] == 1 and result["review_status"]["trimmed"] == 1
