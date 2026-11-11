@@ -1,0 +1,43 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+cand-zolbooo-dummy-postinstall-0.0.3,verified,postinstall.js lấy INIT_CWD rồi ghi file pwned vào thư mục dự án ngoài thư mục gói,"PoC ghi file ngoài thư mục gói, không gây hại rõ: suspicious đúng",Claude (AI),2026-11-11
+cand-postinstall-env-access-1.0.5,verified,"postinstall.js đọc toàn bộ process.env rồi in ra stderr, không gửi đi đâu","Đổ env ra log, không gửi: suspicious đúng",Claude (AI),2026-11-11
+cand-inosx-agent-memory-0.4.0,verified,postinstall.mjs chép rule vào .cursor/rules và ghi .vscode/tasks.json chạy npx khi mở thư mục,Ghi cấu hình công cụ AI/IDE tự chạy lệnh: suspicious đúng,Claude (AI),2026-11-11
+cand-npm-directories-test-0.1.4,verified,index.js đọc toàn bộ process.env và cwd rồi ghi ra file output.txt trên đĩa,"Đổ env ra đĩa, không gửi: suspicious đúng",Claude (AI),2026-11-11
+cand-csv-handler-totally-safe-1.4.0,verified,"postinstall.js đọc file hosts hệ thống rồi in nội dung ra console, không gửi",Đọc file hệ thống không gửi (demo): suspicious đúng,Claude (AI),2026-11-11
+cand-test-postinstall-2.0.0,verified,index.js tạo và ghi file test.json chứa số ngẫu nhiên vào thư mục home người dùng,"Ghi ra home, không gây hại rõ: suspicious đúng",Claude (AI),2026-11-11
+cand-respecpow-1.0.0,verified,"postinstall.js ghi hook npx vào ~/.codebuddy và ~/.claude settings.json, tự chạy mỗi phiên AI",Ghi cấu hình AI toàn cục tự chạy lệnh: suspicious đúng,Claude (AI),2026-11-11
+cand-amrahulmail-ctf-lab-evil-1.2.0,exclude,,"Rà lại (main): nhãn đã đổi một lần mà vẫn bị đề xuất đổi tiếp; bỏ, không sửa lần hai. Đề xuất suspicious: PoC CTF gửi khóa AWS giả cứng + hostname đến example.com (dòng 20-48); không đọc secret thật",Claude (AI),2026-11-11
+cand-simplysm-claude-13.0.29,verified,"postinstall.mjs chép tệp vào .claude dự án, thêm statusLine và MCP npx vào .mcp.json",Ghi cấu hình AI dự án tự chạy lệnh: suspicious đúng,Claude (AI),2026-11-11
+cand-hello-postinstall-0.0.5,verified,postinstall.js đọc 16 ký tự file tạm rồi mở trình duyệt gửi đến telemetry vercel.app,Beacon dữ liệu tối thiểu ra host ngoài: suspicious đúng,Claude (AI),2026-11-11
+cand-digininja-postinstall-1.0.8,verified,"setup.js đọc env MY_SECRET_API_KEY, mã hóa base64 rồi gửi header đến requestcatcher.com",Gửi secret từ env ra host ngoài: malicious đúng,Claude (AI),2026-11-11
+cand-datarails-ai-dr-cli-1.6.158,exclude,,"Hành vi chính (ghi skill/MCP vào home) nằm trong dist/cli.js, không thấy trong đoạn trích",Claude (AI),2026-11-11
+dd-testing-package-bose-5.1.0,verified,"preinstall.js băm hostname/platform rồi POST cùng khóa cứng đến tunnel lhr.life, chặn cài","Gửi dấu vân tay băm tối thiểu, không đánh cắp rõ: suspicious đúng",Claude (AI),2026-11-11
+dd-test-thegenetic-module-2.2.9,verified,"Lệnh preinstall dùng curl gửi hostname máy đến localhost:8081/collect, chỉ trong máy","Gửi hostname tới localhost, PoC: suspicious đúng",Claude (AI),2026-11-11
+dd-cryptomus-aurora-kit-9.0.3,verified,"Ba hook cài đặt chạy ping đến tên miền OAST oast.fun, không kèm dữ liệu",Beacon OAST không dữ liệu: suspicious đúng,Claude (AI),2026-11-11
+dd-vuepress-plugin-lego-analytics-1.0.1,verified,"Lệnh preinstall chạy ping đến tên miền Burp attack.live, không kèm dữ liệu máy",Beacon Burp không dữ liệu: suspicious đúng,Claude (AI),2026-11-11
+dd-libxmljs2qwerty-0.30.6,verified,"index.js đọc toàn bộ /etc/passwd rồi in ra console, không gửi đi",Đọc file hệ thống không gửi: suspicious đúng,Claude (AI),2026-11-11
+dd-xo-angular-ui-utils-1.0.6,verified,index.js gửi POST chuỗi ping cố định qua HTTPS đến máy chủ OAST oastify.com,Beacon OAST dữ liệu tối thiểu: suspicious đúng,Claude (AI),2026-11-11
+dd-earthengine-api-9.0.1,verified,"Lệnh preinstall dùng curl gọi GET đến webhook.site, không kèm dữ liệu máy",Beacon webhook không dữ liệu: suspicious đúng,Claude (AI),2026-11-11
+dd-mydctest-1.1.0,verified,"Lệnh preinstall dùng curl gọi đến tên miền OAST oast.fun, không kèm dữ liệu",Beacon OAST không dữ liệu: suspicious đúng,Claude (AI),2026-11-11
+dd-elf-stats-silvered-toolkit-914-1.0.1,verified,"hack.js chỉ in chữ hello ra console, không có hành vi nhạy cảm nào",Chỉ console.log: benign đúng,Claude (AI),2026-11-11
+dd-testing-package-xdsfdsfsc-1.0.12,verified,preinstall.js lấy apiKey trong package.json và mã băm hostname rồi gửi POST đến máy chủ cấu hình để đòi thanh toán,"Gửi mã băm máy, không gửi secret của người dùng; chặn cài đòi trả tiền, đúng suspicious",Claude (AI),2026-11-11
+dd-hydra-consent-sdk-99.99.1,verified,Lệnh preinstall chạy ping năm lần đến tên miền oast.online để báo hiệu gói đã được cài,"Beacon OAST không kèm dữ liệu, đúng suspicious",Claude (AI),2026-11-11
+dd-api-nodejs-template-1.1.1,verified,"Lệnh preinstall chỉ là URL oastify.com/poc.txt, ý đồ thử nghiệm OAST, không gửi dữ liệu máy","PoC OAST, lệnh thực tế không chạy được; không có hại rõ, đúng suspicious",Claude (AI),2026-11-11
+dd-testcarrot-supply2-1.0.1,verified,"poc_script.js tải poc.sh từ 127.0.0.1, ghi vào thư mục cài, cấp quyền chạy rồi thực thi bằng sh","PoC loader chỉ trỏ localhost, không có máy chủ ngoài; đúng suspicious",Claude (AI),2026-11-11
+dd-global-copilot-menu-1.0.0,verified,notify.js đọc tên và phiên bản gói từ biến npm rồi POST đến webhook.site khi cài,"Beacon webhook dữ liệu tối thiểu, đúng suspicious",Claude (AI),2026-11-11
+dd-zzr-react-custom-widget-1.0.1,verified,"index.js chỉ in banner quảng bá tác giả ra console khi postinstall, không đọc hay gửi gì","Chỉ console.log, đúng benign",Claude (AI),2026-11-11
+dd-ccs-platform-js-7.7.7,verified,"Lệnh preinstall chỉ echo một câu thông báo ra terminal, không đọc file, không gọi mạng","Chỉ echo, đúng benign",Claude (AI),2026-11-11
+dd-account-feapp-commons-1.0.1,verified,index.js gửi POST JSON tĩnh báo dependency confusion PoC đến máy chủ định danh UUID qua HTTP,"Ping PoC không có dữ liệu nhạy cảm, đúng suspicious",Claude (AI),2026-11-11
+cand-nono-postinstall-test-1.0.2,verified,postinstall.js ghi file hello vào thư mục tmp và thư mục home của người dùng ngoài thư mục gói,"Ghi ngoài thư mục gói, không có hại rõ, đúng suspicious",Claude (AI),2026-11-11
+cand-miurba-ui-shell-99.99.99,verified,"phone-home.js thu hostname, username, cwd, tên biến môi trường rồi gửi qua DNS và HTTPS đến oastify.com","Gửi dữ liệu máy ra máy chủ ngoài, đúng malicious theo định nghĩa",Claude (AI),2026-11-11
+dd-internal-plugin-telemetry-backend-1.0.3,verified,index.js gửi một yêu cầu GET không kèm dữ liệu đến webhook.site để báo hiệu đã cài,"Beacon webhook không dữ liệu, đúng suspicious",Claude (AI),2026-11-11
+dd-elf-stats-sleighing-toy-790-1.0.0,verified,"Lệnh preinstall đọc file hệ thống /opt/santa-list rồi ghi nội dung ra /tmp, không gửi đi đâu","Đọc file hệ thống, ghi ngoài gói, không gửi; đúng suspicious",Claude (AI),2026-11-11
+dd-ddddddd1d-1.0.31,exclude,,"Rà lại (main): nhãn đã đổi một lần mà vẫn bị đề xuất đổi tiếp; bỏ, không sửa lần hai. Đề xuất malicious: tạo /cmd ghi vào /etc/bashrc lệnh whoami|curl đến oastify /backdoor, là chuẩn bị backdoor/persistence",Claude (AI),2026-11-11
+dd-flight-suit-1.1.25053,verified,"index.js chỉ in cảnh báo cấu hình registry riêng ra console, không đọc hay gửi dữ liệu","Chỉ console.log, đúng benign",Claude (AI),2026-11-11
+dd-eqder-bird-4.0.0,verified,Lệnh install chạy curl GET đến webhook.site không kèm dữ liệu để báo hiệu gói đã cài,"Beacon webhook không dữ liệu, đúng suspicious",Claude (AI),2026-11-11
+dd-akdump-0.2.1,verified,"scripts/postinstall.js chỉ hiển thị hoạt ảnh tiến trình bằng chalk, ora ra terminal, không gọi mạng","Chỉ in ra stdout, đúng benign",Claude (AI),2026-11-11
+dd-super-useful-utils-2.0.5,verified,"install.js chỉ chứa một dòng chữ không phải mã, node báo lỗi cú pháp, không làm gì","Không có hành vi nhạy cảm, đúng benign",Claude (AI),2026-11-11
+dd-test-thegenetic-module-2.2.6,exclude,,"Rà lại (main): nhãn đã đổi một lần mà vẫn bị đề xuất đổi tiếp; bỏ, không sửa lần hai. Đề xuất suspicious: PoC mô phỏng trộm, đọc cwd và tên biến môi trường rồi in ra log, không gửi",Claude (AI),2026-11-11
+dd-nf-metatron-0.0.1,verified,notify.js lấy tên gói từ biến npm cùng thời gian rồi POST đến webhook.site khi preinstall,"Beacon webhook dữ liệu tối thiểu, đúng suspicious; dòng bị cắt nhưng đã thấy đủ dữ liệu gửi",Claude (AI),2026-11-11
+dd-lordmega-baileys-0.3.34,verified,"engine-requirements.js đọc phiên bản Node, báo lỗi và dừng cài nếu nhỏ hơn 20, không gọi mạng","Chỉ kiểm tra phiên bản, đúng benign",Claude (AI),2026-11-11
+dd-rb3ca-domains-11.11.11,verified,"Lệnh preinstall chỉ echo một câu thông báo PoC ra terminal, không đọc file, không gọi mạng","Chỉ echo, đúng benign",Claude (AI),2026-11-11

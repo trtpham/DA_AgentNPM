@@ -27,3 +27,8 @@ Ngày 11/11/2026, theo yêu cầu của PO, Claude đọc bằng chứng của 2
 - Lượt 21: 24 `verified`, 9 `revise`, 7 `exclude` (Rà lại (main): `lowerx-package` → `exclude`).
 - Lượt 22–26: 113 `verified`, 0 `revise`, 56 `exclude`. Năm agent đọc song song theo cùng tiêu chí như trên.
 - Rà lại (main), đổi `verified` → `exclude` vì chưa đủ bằng chứng: 4 gói họ `node-pty-prebuilt-multiarch` và `baja-lite-xlsx` (chưa xem postinstall), `libsamplerate` (chưa thấy `binding-options.js`), `@aleworm/usb2` (tải binary darwin-x64 cố định cho mọi nền tảng), `jsmeow` (tự mô tả là công cụ hack game).
+
+## Lượt 27: sửa nhãn 42 dòng `revise` rồi kiểm lại (11/11/2026)
+
+- Theo Gate B0 11/11: 42 dòng `revise` được đổi nhãn nháp sang nhãn AI đề xuất (nhãn cũ/mới, lý do: `../relabel-27.csv`), rồi kiểm lại ở lượt 27 bằng bằng chứng lập lại. Hai agent đọc song song.
+- Kết quả: 38 `verified`, 4 `exclude`. Rà lại (main): 3 dòng vẫn bị đề xuất đổi nhãn lần hai (`amrahulmail-ctf-lab-evil`, `ddddddd1d`, `test-thegenetic-module-2.2.6`) → `exclude`, không sửa nhãn lần hai.

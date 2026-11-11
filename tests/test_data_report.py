@@ -51,3 +51,14 @@ def test_ai_review_counts_separately_and_only_when_asked(tmp_path):
     found = reviews(tmp_path, include_ai=True)
     assert found["a"]["decision"] == "exclude" and found["a"]["review_kind"] == "human"
     assert found["b"]["decision"] == "verified" and found["b"]["review_kind"] == "ai"
+
+
+def test_later_ai_round_replaces_earlier_ai_decision(tmp_path):
+    from data.scripts.data_report import reviews
+    (tmp_path / "ai-review").mkdir()
+    for number, decision in ((5, "revise"), (27, "verified")):
+        with (tmp_path / "ai-review" / f"round-{number}.csv").open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.DictWriter(stream, ["id", "ai_decision", "ai_observed_behavior", "ai_note", "reviewer", "reviewed_at"])
+            writer.writeheader()
+            writer.writerow({"id": "x", "ai_decision": decision, "reviewer": "Claude (AI)"})
+    assert reviews(tmp_path, include_ai=True)["x"]["decision"] == "verified"

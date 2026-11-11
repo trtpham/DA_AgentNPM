@@ -40,8 +40,9 @@ def reviews(rounds_dir: Path = ROUNDS_DIR, include_ai: bool = False) -> dict[str
                             "reviewed_at": row.get("reviewed_at", "").strip()}
     if include_ai:
         for row in _sheets(rounds_dir / "ai-review"):
-            if found.get(row["id"], {}).get("decision"):
-                continue  # a person already decided this row
+            earlier = found.get(row["id"], {})
+            if earlier.get("review_kind") == "human" and earlier.get("decision"):
+                continue  # a person already decided this row; a later AI round replaces an earlier one
             found[row["id"]] = {"decision": row["ai_decision"].strip(),
                                 "observed_behavior": row["ai_observed_behavior"].strip(),
                                 "review_kind": "ai", "reviewer": row["reviewer"].strip(),

@@ -1,0 +1,43 @@
+id,ai_check,ai_signals,ai_note
+cand-zolbooo-dummy-postinstall-0.0.3,cần xem,"write-outside-package (dòng 1, 7); read-env (dòng 4, 8); read-secret-file (dòng 4)",không thấy dấu hiệu rủi ro
+cand-postinstall-env-access-1.0.5,cần xem,"read-env (dòng 1, 2); read-secret-file (dòng 2)",không thấy dấu hiệu rủi ro
+cand-inosx-agent-memory-0.4.0,cần xem,"binary-download (dòng 9, 115, 131); download-code (dòng 9, 115, 131); read-env (dòng 17, 19, 20, 21…); read-secret-file (dòng 17, 19, 20, 21…); write-outside-package (dòng 88, 94, 110); execute-process (dòng 115, 131)",không thấy dấu hiệu rủi ro
+cand-npm-directories-test-0.1.4,cần xem,"read-env (dòng 5, 7, 8, 9…); read-secret-file (dòng 8); write-outside-package (dòng 14)",không thấy dấu hiệu rủi ro
+cand-csv-handler-totally-safe-1.4.0,khớp,"write-outside-package (dòng 8, 12); host_info (dòng 10); read-env (dòng 11, 14, 21); read-secret-file (dòng 11)",có dấu hiệu rủi ro
+cand-test-postinstall-2.0.0,cần xem,"write-outside-package (dòng 1, 3); read-env (dòng 3)",không thấy dấu hiệu rủi ro
+cand-respecpow-1.0.0,cần xem,"read-env (dòng 1); write-outside-package (dòng 12, 14, 16, 22…); execute-process (dòng 49, 56, 63, 70…); binary-download (dòng 49, 56, 63, 70…); download-code (dòng 49, 56, 63, 70…)",không thấy dấu hiệu rủi ro
+cand-amrahulmail-ctf-lab-evil-1.2.0,khớp,"network (dòng 7, 43, 45, 46…); network-request (dòng 7, 33, 36, 43…); binary-download (dòng 7, 33, 36, 43…); download-code (dòng 7, 33, 36, 43…); read-secret-file (dòng 7, 9, 10, 19); execute-process (dòng 16, 35)",đoạn trích có dấu hiệu độc cụ thể
+cand-simplysm-claude-13.0.29,cần xem,"network-request (dòng 15); binary-download (dòng 15, 148); download-code (dòng 15, 148); read-env (dòng 18, 135, 146); read-secret-file (dòng 18); write-outside-package (dòng 92, 96, 110, 143)",không thấy dấu hiệu rủi ro
+cand-hello-postinstall-0.0.5,khớp,"execute-process (dòng 1, 146, 149); write-outside-package (dòng 3, 4, 88, 108); read-env (dòng 49, 64, 68, 70…); read-secret-file (dòng 64, 68, 69, 70…); secret_path (dòng 68, 69); network-request (dòng 76, 78)",có dấu hiệu rủi ro
+cand-digininja-postinstall-1.0.8,cần xem,"read-env (dòng 1, 20); read-secret-file (dòng 1); network-request (dòng 3, 7); binary-download (dòng 3, 7); download-code (dòng 3, 7); network (dòng 7)",có lệnh/gọi mạng nhưng chưa thấy chuỗi độc rõ
+cand-datarails-ai-dr-cli-1.6.158,khớp,"binary-download (dòng 3, 69, 71, 72…); download-code (dòng 3, 69, 71); write-outside-package (dòng 37, 46, 58, 62…); execute-process (dòng 44, 59, 77); exec_call (dòng 59, 77); read-env (dòng 63, 80)",có dấu hiệu rủi ro
+dd-testing-package-bose-5.1.0,khớp,"network-request (dòng 7, 10, 30); binary-download (dòng 7, 10, 30, 57); download-code (dòng 7, 10, 30, 57); read-env (dòng 15, 22, 29, 30…); read-secret-file (dòng 15); decode-data (dòng 23)",có dấu hiệu rủi ro
+dd-test-thegenetic-module-2.2.9,cần xem,execute-process (dòng 7); network-request (dòng 7); binary-download (dòng 7); download-code (dòng 7),không thấy dấu hiệu rủi ro
+dd-cryptomus-aurora-kit-9.0.3,cần xem,execute-process (dòng 12),không thấy dấu hiệu rủi ro
+dd-vuepress-plugin-lego-analytics-1.0.1,cần xem,execute-process (dòng 7),không thấy dấu hiệu rủi ro
+dd-libxmljs2qwerty-0.30.6,cần xem,"write-outside-package (dòng 4, 7, 12)",không thấy dấu hiệu rủi ro
+dd-xo-angular-ui-utils-1.0.6,khớp,"network (dòng 21); network-request (dòng 21); binary-download (dòng 21); download-code (dòng 21); write-outside-package (dòng 23, 32)",có dấu hiệu rủi ro
+dd-earthengine-api-9.0.1,cần xem,execute-process (dòng 8); network-request (dòng 8); binary-download (dòng 8); download-code (dòng 8),không thấy dấu hiệu rủi ro
+dd-mydctest-1.1.0,cần xem,execute-process (dòng 8); network-request (dòng 8); binary-download (dòng 8); download-code (dòng 8),không thấy dấu hiệu rủi ro
+dd-elf-stats-silvered-toolkit-914-1.0.1,khớp,không có,"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+dd-testing-package-xdsfdsfsc-1.0.12,khớp,"dynamic-eval (dòng 5); read-env (dòng 13, 25, 26, 48…); decode-data (dòng 14, 52, 53, 54…); network (dòng 26); network-request (dòng 26); binary-download (dòng 26, 82)",có dấu hiệu rủi ro
+dd-hydra-consent-sdk-99.99.1,cần xem,execute-process (dòng 7),không thấy dấu hiệu rủi ro
+dd-api-nodejs-template-1.1.1,cần xem,execute-process (dòng 8); network-request (dòng 8); binary-download (dòng 8); download-code (dòng 8),không thấy dấu hiệu rủi ro
+dd-testcarrot-supply2-1.0.1,khớp,"execute-process (dòng 3, 7, 8, 23…); network-request (dòng 7, 12); binary-download (dòng 7, 8, 10, 11…); download-code (dòng 7, 8, 10, 11…); write-outside-package (dòng 11); network (dòng 12)",có dấu hiệu rủi ro
+dd-global-copilot-menu-1.0.0,khớp,"network-request (dòng 5, 15); binary-download (dòng 5, 15); download-code (dòng 5, 15); read-env (dòng 8, 9); read-secret-file (dòng 8, 9); network (dòng 15)",có dấu hiệu rủi ro
+dd-zzr-react-custom-widget-1.0.1,khớp,không có,"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+dd-ccs-platform-js-7.7.7,khớp,execute-process (dòng 7),"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+dd-account-feapp-commons-1.0.1,khớp,network (dòng 12); network-request (dòng 12); binary-download (dòng 12); download-code (dòng 12); write-outside-package (dòng 18),có dấu hiệu rủi ro
+cand-nono-postinstall-test-1.0.2,cần xem,"write-outside-package (dòng 7, 8, 9, 12…)",không thấy dấu hiệu rủi ro
+cand-miurba-ui-shell-99.99.99,khớp,"execute-process (dòng 8); read-env (dòng 9, 34, 35, 36…); host_info (dòng 28, 29); read-secret-file (dòng 34, 36); env_dump (dòng 36); network (dòng 43, 47)",đoạn trích có dấu hiệu độc cụ thể
+dd-internal-plugin-telemetry-backend-1.0.3,khớp,network (dòng 9); network-request (dòng 9); binary-download (dòng 9); download-code (dòng 9); read-env (dòng 10),có dấu hiệu rủi ro
+dd-elf-stats-sleighing-toy-790-1.0.0,cần xem,execute-process (dòng 9); write-outside-package (dòng 9),không thấy dấu hiệu rủi ro
+dd-ddddddd1d-1.0.31,khớp,host_info (dòng 7); execute-process (dòng 7); network-request (dòng 7); binary-download (dòng 7); download-code (dòng 7); write-outside-package (dòng 7),có dấu hiệu rủi ro
+dd-flight-suit-1.1.25053,khớp,không có,"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+dd-eqder-bird-4.0.0,cần xem,execute-process (dòng 7); network-request (dòng 7); binary-download (dòng 7); download-code (dòng 7),không thấy dấu hiệu rủi ro
+dd-akdump-0.2.1,khớp,"read-env (dòng 1, 28, 40); write-outside-package (dòng 40)","không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+dd-super-useful-utils-2.0.5,khớp,không có,"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+dd-test-thegenetic-module-2.2.6,nghi ngờ,env_dump (dòng 6); read-env (dòng 6); read-secret-file (dòng 6),đoạn trích có dấu hiệu cụ thể không hợp với nhãn lành
+dd-nf-metatron-0.0.1,khớp,network (dòng 1); read-env (dòng 1); network-request (dòng 1); binary-download (dòng 1); download-code (dòng 1); read-secret-file (dòng 1),có dấu hiệu rủi ro
+dd-lordmega-baileys-0.3.34,khớp,read-env (dòng 9),"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+dd-rb3ca-domains-11.11.11,khớp,execute-process (dòng 7),"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"

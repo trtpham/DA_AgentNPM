@@ -1,0 +1,43 @@
+id,round,old_label,new_label,reason
+cand-zolbooo-dummy-postinstall-0.0.3,5,benign,suspicious,"Ghi file ra ngoài thư mục gói vào gốc dự án với tên 'pwned', là PoC tấn công chứ không phục vụ chức năng nào; đề xuất suspicious."
+cand-postinstall-env-access-1.0.5,5,benign,suspicious,"Đổ toàn bộ biến môi trường (token, khóa CI) ra log và cố ý làm cài đặt thất bại; không gửi mạng nhưng không hợp lệ cho gói thường; đề xuất suspicious."
+cand-inosx-agent-memory-0.4.0,5,benign,suspicious,"Ghi ra ngoài gói các file cấu hình khiến lệnh tự chạy mỗi lần mở dự án và (theo dòng 5) bật task.allowAutomaticTasks, là cơ chế tự khởi động và cài chỉ dẫn cho AI agent; phần còn lại dòng 151-204 chưa xem; đề xuất suspicious."
+cand-npm-directories-test-0.1.4,5,benign,suspicious,Lưu toàn bộ biến môi trường (có thể chứa token) xuống đĩa không phục vụ chức năng nào; không gửi mạng nhưng làm lộ secret; đề xuất suspicious.
+cand-csv-handler-totally-safe-1.4.0,6,benign,suspicious,"Đề xuất suspicious: đọc file hệ thống ngoài gói, không liên quan mục đích 'csv handler'; là gói minh họa, không thấy gửi ra mạng nhưng hành vi không khớp mục đích."
+cand-test-postinstall-2.0.0,6,benign,suspicious,"Đề xuất suspicious: ghi file vào thư mục home ngoài gói/dự án, không có mục đích hợp lệ (gói thử nghiệm)."
+cand-respecpow-1.0.0,7,benign,suspicious,"suspicious: tự cài cơ chế tồn tại trong cấu hình toàn cục của công cụ AI, mỗi phiên/lệnh gọi công cụ đều tải và chạy npx --yes từ registry mà người dùng không đồng ý; trích đoạn chỉ 150/215 dòng."
+cand-amrahulmail-ctf-lab-evil-1.2.0,8,benign,malicious,"Đề xuất malicious: mô phỏng exfil, gửi dữ liệu máy (hostname) ra máy chủ ngoài một cách lén lút khi cài; chú thích 'chỉ là CTF/khóa giả' là lời tự nhận của gói, không làm hành vi thành hợp lệ."
+cand-simplysm-claude-13.0.29,8,benign,suspicious,"Đề xuất suspicious: ghi ra ngoài gói vào cấu hình trợ lý AI của dự án, cài lệnh sẽ tự chạy về sau (statusLine, MCP npx @latest); đây là ghi cấu hình khởi chạy bền vững, không phải hành vi cài đặt thông thường."
+cand-hello-postinstall-0.0.5,8,benign,suspicious,Đề xuất suspicious: gửi nội dung tệp cục bộ tới máy chủ bên thứ ba và tự mở trình duyệt khi cài; trích đoạn cũng dừng ở dòng 150/163.
+cand-digininja-postinstall-1.0.8,8,benign,malicious,Đề xuất malicious: đánh cắp biến môi trường chứa khóa API và gửi tới máy chủ bên thứ ba.
+cand-datarails-ai-dr-cli-1.6.158,8,benign,suspicious,"Đề xuất suspicious: tự ghi vào thư mục home và cấu hình trợ lý AI (skills, GEMINI.md, MCP) khi cài, kể cả ghi đè việc người dùng đã gỡ; mã thật nằm trong dist/cli.js không có trong trích đoạn."
+dd-testing-package-bose-5.1.0,10,malicious,suspicious,"suspicious: chỉ gửi giá trị băm của hostname/platform, giống cổng thu phí thử nghiệm, không thấy đánh cắp dữ liệu hay chạy mã từ xa"
+dd-test-thegenetic-module-2.2.9,10,malicious,suspicious,"suspicious: đích là localhost, không có máy chủ bên ngoài nhận dữ liệu"
+dd-cryptomus-aurora-kit-9.0.3,10,malicious,suspicious,"suspicious: chỉ là beacon báo cài đặt, không thu thập hay gửi dữ liệu"
+dd-vuepress-plugin-lego-analytics-1.0.1,11,malicious,suspicious,"suspicious: preinstall chỉ ping một tên miền Burp để báo đã cài, không thấy thu thập hay gửi dữ liệu"
+dd-libxmljs2qwerty-0.30.6,11,malicious,suspicious,"suspicious: đọc /etc/passwd và in ra console, không thấy gửi ra ngoài"
+dd-xo-angular-ui-utils-1.0.6,12,malicious,suspicious,"suspicious: chỉ gửi chuỗi cố định 'ping' tới máy chủ oastify (dòng 4-33), không thu thập dữ liệu máy; là beacon thăm dò dependency confusion"
+dd-earthengine-api-9.0.1,12,malicious,suspicious,"suspicious: preinstall chỉ gọi curl GET tới webhook.site không kèm dữ liệu máy (dòng 8), là beacon thăm dò"
+dd-mydctest-1.1.0,12,malicious,suspicious,"suspicious: preinstall chỉ curl tới máy chủ oast.fun không kèm dữ liệu (dòng 8), là beacon thăm dò"
+dd-elf-stats-silvered-toolkit-914-1.0.1,13,malicious,benign,"hack.js chỉ in chữ hello, không có hành vi độc; đề xuất nhãn benign"
+dd-testing-package-xdsfdsfsc-1.0.12,13,malicious,suspicious,"Script gửi projectId/apiKey lấy từ package.json và mã băm hostname tới host cấu hình, chặn cài đặt đòi thanh toán (dòng 17-97); không đánh cắp dữ liệu nhạy cảm rõ ràng; đề xuất nhãn suspicious"
+dd-hydra-consent-sdk-99.99.1,13,malicious,suspicious,"Hook chỉ ping domain OAST, tạo truy vấn DNS báo hiệu nhưng không gửi dữ liệu máy; đề xuất nhãn suspicious"
+dd-api-nodejs-template-1.1.1,14,malicious,suspicious,"Đề xuất suspicious: không thấy thu thập hay gửi dữ liệu, lệnh không thực thi được"
+dd-testcarrot-supply2-1.0.1,14,malicious,suspicious,"Đề xuất suspicious: có mẫu tải và chạy mã nhưng nguồn là localhost, kiểu PoC, không thấy máy chủ ngoài"
+dd-global-copilot-menu-1.0.0,14,malicious,suspicious,"Đề xuất suspicious: chỉ báo cài đặt, không gửi thông tin máy hay bí mật"
+dd-zzr-react-custom-widget-1.0.1,14,malicious,benign,Đề xuất benign: không có hành vi nhạy cảm nào
+dd-ccs-platform-js-7.7.7,15,malicious,benign,"Hook chỉ in một câu thông báo, không thu thập hay gửi dữ liệu; đề xuất nhãn benign"
+dd-account-feapp-commons-1.0.1,15,malicious,suspicious,"Chỉ gửi ping báo đã cài, không thu thập dữ liệu, host không phân giải được; đề xuất nhãn suspicious"
+cand-nono-postinstall-test-1.0.2,16,benign,suspicious,"Rà lại (main): suspicious — ghi file vào thư mục home lúc cài, nhất quán với cand-test-postinstall-2.0.0 ở lượt 6. "
+cand-miurba-ui-shell-99.99.99,18,benign,malicious,"Nên là malicious: gói chiếm tên kiểu dependency confusion, gửi thông tin máy (host, user, cwd, tên biến môi trường) ra máy chủ thu thập bên thứ ba lúc cài."
+dd-internal-plugin-telemetry-backend-1.0.3,20,malicious,suspicious,Chỉ là beacon không chứa dữ liệu máy; đề xuất nhãn suspicious.
+dd-elf-stats-sleighing-toy-790-1.0.0,20,malicious,suspicious,"Chỉ đọc file và ghi cục bộ, không rò rỉ ra ngoài; đề xuất nhãn suspicious."
+dd-ddddddd1d-1.0.31,21,malicious,suspicious,"Đề xuất suspicious: chỉ tạo file /cmd, không thấy chạy nó lúc cài; giống PoC thoát container."
+dd-flight-suit-1.1.25053,21,malicious,benign,"Đề xuất benign: gói giữ chỗ, chỉ console.log."
+dd-eqder-bird-4.0.0,21,malicious,suspicious,"Đề xuất suspicious: chỉ là beacon dò, không gửi dữ liệu máy."
+dd-akdump-0.2.1,21,malicious,benign,"Đề xuất benign: không đọc dữ liệu nhạy cảm, không gọi mạng."
+dd-super-useful-utils-2.0.5,21,malicious,benign,Đề xuất benign: file không làm gì (chỉ ghi chú PoC).
+dd-test-thegenetic-module-2.2.6,21,malicious,benign,"Đề xuất benign: mô phỏng đánh cắp, không có đích mạng."
+dd-nf-metatron-0.0.1,21,malicious,suspicious,Đề xuất suspicious: beacon không kèm dữ liệu máy; dòng bị cắt.
+dd-lordmega-baileys-0.3.34,21,malicious,benign,Đề xuất benign: kiểm tra phiên bản bình thường.
+dd-rb3ca-domains-11.11.11,21,malicious,benign,"Đề xuất benign: chỉ echo, không có hành vi nguy hiểm."
