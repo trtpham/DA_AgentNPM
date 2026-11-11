@@ -171,6 +171,7 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=40)
     parser.add_argument("--group", choices=("A", "B"), default="A", help="B = light group B only")
     parser.add_argument("--datadog", action="store_true", help="propose Datadog samples (data/datadog) instead")
+    parser.add_argument("--triage", type=Path, default=TRIAGE, help="triage summary of a candidate set")
     args = parser.parse_args()
     if args.round < 5:
         parser.error("rounds 1-4 are the fixed week 2 rounds")
@@ -178,7 +179,7 @@ def main() -> None:
     if sheet.exists():
         parser.error(f"{sheet} exists; a sheet is never overwritten")
     added = (propose_datadog(DATADOG_DIR, LABELS, PROPOSALS, args.limit) if args.datadog
-             else propose(TRIAGE, LABELS, PROPOSALS, args.limit, group=args.group))
+             else propose(args.triage, LABELS, PROPOSALS, args.limit, group=args.group))
     if not added:
         raise SystemExit("no new candidate to propose")
     count = build_sheet(PROPOSALS, args.round, sheet, [row["id"] for row in added])

@@ -1,0 +1,10 @@
+id,ai_check,ai_signals,ai_note
+cand-bun-1.4.4,cần xem,"execute-process (dòng 1, 20, 23); network-request (dòng 1, 63, 81); binary-download (dòng 1, 63, 81); download-code (dòng 1, 63, 81); read-env (dòng 48, 69, 86, 142); read-secret-file (dòng 48, 142)",có lệnh/gọi mạng: xem có giải thích được bằng mục đích gói không
+cand-winstore-startup-0.4.1,cần xem,"execute-process (dòng 7, 9, 11, 13); exec_call (dòng 13); binary-download (dòng 13)",có lệnh/gọi mạng: xem có giải thích được bằng mục đích gói không
+cand-react-native-status-edge-0.3.3,khớp,không có,"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+cand-spalla-rn-sdk-2.1.5,cần xem,"read-env (dòng 1, 21, 32, 40…); execute-process (dòng 7, 49, 63, 64); dynamic-eval (dòng 14); exec_call (dòng 63); binary-download (dòng 64)",có lệnh/gọi mạng: xem có giải thích được bằng mục đích gói không
+cand-caeneus-native-0.1.3,cần xem,"read-env (dòng 1, 11, 18, 24…); execute-process (dòng 5, 48, 49, 88); binary-download (dòng 24, 49); read-secret-file (dòng 33, 35, 37, 66…); exec_call (dòng 49)",có lệnh/gọi mạng: xem có giải thích được bằng mục đích gói không
+cand-hello-publishing-native-pre-gyp-1.0.4,khớp,execute-process (dòng 8),"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+cand-rtinternal-java-0.18.0-rtinternal-jdk11-r4,khớp,execute-process (dòng 61),"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+cand-fibers-node-v8-3.1.5,khớp,execute-process (dòng 6); write-outside-package (dòng 9),"không thấy lệnh, gọi mạng hay đường dẫn secret trong đoạn trích"
+cand-fibers-5.0.3,cần xem,"read-env (dòng 1); execute-process (dòng 2, 41, 62, 63…); dynamic-eval (dòng 13, 41, 66, 82…); binary-download (dòng 28, 41, 43, 46…); exec_call (dòng 41, 62); network-request (dòng 60, 73)",có lệnh/gọi mạng: xem có giải thích được bằng mục đích gói không

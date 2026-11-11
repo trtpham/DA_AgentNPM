@@ -25,7 +25,10 @@ from experiments.dataset import FIELDS, load_labels
 
 CAP = 12
 DEFAULT_TABLES = (Path("data/labels.csv"), Path("data/proposals.csv"))
-DEFAULT_HASHES = (Path("data/review_450/triage_450.csv"),)
+# Every candidate set's triage summary (review_450 first), so duplicates across sets are found.
+DEFAULT_HASHES = (Path("data/review_450/triage_450.csv"),
+                  *sorted(path for path in Path("data").glob("review_*/triage_*.csv")
+                          if path.as_posix() != "data/review_450/triage_450.csv"))
 
 
 def load_hashes(paths: list[Path]) -> dict[tuple[str, str], dict]:

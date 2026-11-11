@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+cand-kerberos-7.0.0,verified,"chạy prebuild-install tải binary dựng sẵn theo nền tảng, lỗi thì node-gyp rebuild trong thư mục gói","công cụ build native chuẩn, phù hợp addon kerberos",Claude (AI),2026-11-11
+cand-homebridge-node-pty-prebuilt-multiarch-0.15.0,exclude,,Rà lại (main): chưa xem postinstall.,Claude (AI),2026-11-11
+cand-sderrow-fast-blocked-at-0.1.0,verified,node-gyp-build nạp binary có sẵn trong gói hoặc biên dịch addon bằng node-gyp trong thư mục gói,build addon native chuẩn,Claude (AI),2026-11-11
+cand-node-snap7-1.0.9,verified,"chạy prebuild-install tải binary dựng sẵn theo nền tảng, lỗi thì node-gyp rebuild trong thư mục gói",build addon native chuẩn,Claude (AI),2026-11-11
+cand-trufflesuite-bigint-buffer-1.1.10,verified,"node-gyp-build nạp binary có sẵn trong gói hoặc biên dịch addon bằng node-gyp trong thư mục gói, lỗi thì in thông báo dùng bản JS","build addon native chuẩn, có fallback vô hại",Claude (AI),2026-11-11
+cand-ast-grep-lang-python-0.0.6,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-mountutils-2.0.8,verified,node-gyp-build nạp binary có sẵn trong gói hoặc biên dịch addon bằng node-gyp trong thư mục gói,build addon native chuẩn,Claude (AI),2026-11-11
+cand-ast-grep-lang-bash-0.0.8,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-ast-grep-lang-go-0.0.6,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-ast-grep-lang-rust-0.0.7,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-ast-grep-lang-ruby-0.0.7,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-ast-grep-lang-php-0.0.7,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-ast-grep-lang-c-0.0.6,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-ast-grep-lang-elixir-0.0.7,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-discordjs-opus-0.11.0,verified,"node-pre-gyp tải binary dựng sẵn theo nền tảng, lỗi thì biên dịch bằng node-gyp",build addon native chuẩn cho codec opus,Claude (AI),2026-11-11
+cand-ast-grep-lang-scala-0.0.7,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-ast-grep-lang-cpp-0.0.6,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-ast-grep-lang-dart-0.0.7,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-node-pipewire-1.1.0,exclude,,nhánh dự phòng npm run build-native chưa thấy nội dung; không đánh giá đủ,Claude (AI),2026-11-11
+cand-ast-grep-lang-java-0.0.7,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-usb-detection-4.14.2,verified,"chạy prebuild-install tải binary dựng sẵn theo nền tảng, lỗi thì node-gyp rebuild trong thư mục gói",build addon native chuẩn,Claude (AI),2026-11-11
+cand-thiagoelg-node-printer-0.6.2,verified,"chạy prebuild-install tải binary dựng sẵn theo nền tảng, lỗi thì node-gyp rebuild trong thư mục gói",build addon native chuẩn,Claude (AI),2026-11-11
+cand-react-native-spotlight-search-2.2.0,exclude,,"postinstall gọi yarn build:plugin, nội dung script chưa thấy",Claude (AI),2026-11-11
+cand-zstd-napi-0.0.13,verified,"chạy prebuild-install tải binary dựng sẵn theo nền tảng, lỗi thì node-gyp rebuild trong thư mục gói",build addon native chuẩn,Claude (AI),2026-11-11
+cand-paymoapp-electron-shutdown-handler-1.2.0,verified,"install là node -e """" rỗng, không làm gì (chặn node-gyp mặc định)","lệnh rỗng, không có hành vi",Claude (AI),2026-11-11
+cand-node-hid-3.4.0,verified,"pkg-prebuilds-verify kiểm tra binary dựng sẵn trong gói, lỗi thì node-gyp rebuild",build addon native chuẩn,Claude (AI),2026-11-11
+cand-timokunze-node-printer-0.6.37,verified,"node-gyp rebuild trong thư mục gói, lỗi thì prebuild-install tải binary dựng sẵn",build addon native chuẩn,Claude (AI),2026-11-11
+cand-opencv4nodejs-prebuilt-install-4.1.209,verified,"prebuild-install tải binary opencv dựng sẵn theo nền tảng, lỗi thì bỏ qua",đúng mục đích gói prebuilt,Claude (AI),2026-11-11
+cand-winlinux-krb-session-key-1.1.0,verified,node-gyp-build nạp binary có sẵn trong gói hoặc biên dịch addon bằng node-gyp trong thư mục gói,build addon native chuẩn,Claude (AI),2026-11-11
+cand-firestitch-app-tools-18.2.10,exclude,,"xóa rồi chép assets ra thư mục ../../../../../ (ngoài gói, có thể ngoài dự án); assets và libs/env chưa xem, không chắc hợp lệ",Claude (AI),2026-11-11
+cand-logosdb-1.2.0,verified,"chạy prebuild-install tải binary dựng sẵn theo nền tảng, lỗi thì node-gyp rebuild trong thư mục gói",build addon native chuẩn,Claude (AI),2026-11-11
+cand-grandchef-node-printer-0.8.0,verified,"chạy prebuild-install tải binary dựng sẵn theo nền tảng, lỗi thì node-gyp rebuild trong thư mục gói",build addon native chuẩn,Claude (AI),2026-11-11
+cand-native-hdr-histogram-1.0.0,verified,node-gyp-build nạp binary có sẵn trong gói hoặc biên dịch addon bằng node-gyp trong thư mục gói,build addon native chuẩn,Claude (AI),2026-11-11
+cand-ast-grep-tree-sitter-dart-0.0.5,exclude,,postinstall chỉ gọi @ast-grep/setup-lang (gói khác); công việc chính không nằm trong đoạn trích,Claude (AI),2026-11-11
+cand-tree-sitter-gdscript-6.1.0,verified,node-gyp-build nạp binary có sẵn trong gói hoặc biên dịch addon bằng node-gyp trong thư mục gói,build parser tree-sitter native chuẩn,Claude (AI),2026-11-11
+cand-archwayhq-keyring-go-0.2.1,exclude,,install tham chiếu ./build.sh chưa xem nội dung,Claude (AI),2026-11-11
+cand-langchain-alpaca-0.3.2,exclude,,"postinstall gọi npm run buildSubmodule, nội dung script chưa thấy",Claude (AI),2026-11-11
+cand-winapi-2.10.12,verified,node-gyp-build nạp binary có sẵn trong gói hoặc biên dịch addon bằng node-gyp trong thư mục gói,build addon native chuẩn,Claude (AI),2026-11-11
+cand-farcaster-rocksdb-5.5.0,verified,node-gyp-build nạp binary có sẵn trong gói hoặc biên dịch addon bằng node-gyp trong thư mục gói,build addon native rocksdb chuẩn,Claude (AI),2026-11-11
+cand-lastapp-node-printer-0.8.0,verified,"chạy prebuild-install tải binary dựng sẵn theo nền tảng, lỗi thì node-gyp rebuild trong thư mục gói",build addon native chuẩn,Claude (AI),2026-11-11

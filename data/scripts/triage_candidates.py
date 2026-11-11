@@ -266,8 +266,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Sort public candidates into review groups (never labels)")
     parser.add_argument("--batch", type=int, help="run only this batch (1-based)")
     parser.add_argument("--large", action="store_true", help="re-triage only rows that hit the size limits")
+    parser.add_argument("--set", default="450", help="candidate set; reads/writes data/review_<set>/")
     parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    base = ROOT / "data" / f"review_{args.set}"
+    metadata, out_dir, summary = (base / f"metadata_review_{args.set}.csv", base / "triage",
+                                  base / f"triage_{args.set}.csv")
     if args.inside:
         sys.path.insert(0, "/app")
         if args.large:
@@ -280,17 +284,18 @@ def main() -> None:
                 print(json.dumps(inspect(json.loads(line), Path("/tmp/work")), ensure_ascii=False), flush=True)
         return
     if args.large:
-        print(json.dumps({"large_rows": run_large()}), flush=True)
-        print(json.dumps(summarize(), ensure_ascii=False))
+        print(json.dumps({"large_rows": run_large(out_dir)}), flush=True)
+        print(json.dumps(summarize(out_dir, summary), ensure_ascii=False))
         return
-    rows = candidates()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows = candidates(metadata)
     batches = [rows[start:start + BATCH_SIZE] for start in range(0, len(rows), BATCH_SIZE)]
     for number, batch in enumerate(batches, 1):
         if args.batch and number != args.batch:
             continue
-        written = run_batch(number, batch)
+        written = run_batch(number, batch, out_dir)
         print(json.dumps({"batch": number, "status": "done" if written else "skipped"}), flush=True)
-    print(json.dumps(summarize(), ensure_ascii=False))
+    print(json.dumps(summarize(out_dir, summary), ensure_ascii=False))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+cand-vscode-deviceid-0.1.6,verified,Trên Windows chạy node-gyp-build trong thư mục gói để dựng/chọn addon native,"child_process chỉ gọi node-gyp-build, cwd là thư mục gói",Claude (AI),2026-11-11
+cand-node-pty-prebuilt-multiarch-0.10.1-pre.5,exclude,,Rà lại (main): chưa xem postinstall.,Claude (AI),2026-11-11
+cand-frida-17.26.2,verified,"Nếu chưa có binding thì chạy prebuild-install, thất bại thì make để biên dịch","Tải prebuild/biên dịch addon, hợp mục đích gói",Claude (AI),2026-11-11
+cand-node-webcodecs-1.3.0,verified,"Nạp thử prebuild hoặc gói static, không có thì npx cmake-js compile trong thư mục gói",Env chỉ là cờ chọn cách build; build native hợp lệ,Claude (AI),2026-11-11
+cand-node-pty-prebuilt-0.7.6,verified,Chạy node-gyp rebuild trong thư mục gói để biên dịch addon pty,Fallback biên dịch native chuẩn,Claude (AI),2026-11-11
+cand-raknet-native-1.2.3,verified,Thiếu mã nguồn thì kéo submodule/clone repo fb-raknet của tác giả rồi cmake-js compile,"Clone từ GitHub của chính tác giả để build, hợp mục đích",Claude (AI),2026-11-11
+cand-fontnik-0.7.7,exclude,,Không có prebuild thì chạy npm run rebuild; nội dung script rebuild không có trong trích đoạn,Claude (AI),2026-11-11
+cand-clickterm-react-native-sdk-1.5.0,exclude,,"Việc chính nằm ở fetch-xcframework.sh, không có trong trích đoạn",Claude (AI),2026-11-11
+cand-julusian-jpeg-turbo-3.1.0,verified,Biên dịch từ nguồn bằng cmake-js cục bộ hoặc tải cmake-js qua npm exec/pnpm dlx,"Chỉ fallback khi thiếu prebuild, cwd thư mục gói",Claude (AI),2026-11-11
+cand-node-pty-prebuilt-multiarch-cp-0.10.1-pre.48,exclude,,Rà lại (main): chưa xem postinstall.,Claude (AI),2026-11-11
+cand-react-native-bdk-sdk-0.8.0,exclude,,main() nằm sau dòng 150; phần tải/giải nén thấy được trỏ GitHub releases của dự án,Claude (AI),2026-11-11
+cand-react-native-payjoin-0.7.0,exclude,,main() nằm sau dòng 150; phần tải/giải nén thấy được trỏ GitHub releases của dự án,Claude (AI),2026-11-11
+cand-pipertts-1.3.0,verified,"Có prebuild espeak bridge thì bỏ qua, không thì node-gyp rebuild, lỗi chỉ cảnh báo",Biên dịch addon tùy chọn trong thư mục gói,Claude (AI),2026-11-11
+cand-baja-lite-xlsx-2.1.0,exclude,,Rà lại (main): chưa xem postinstall.,Claude (AI),2026-11-11
+cand-gjsify-node-gi-0.64.28,exclude,,"Luồng chính gọi runNodeGyp nằm sau dòng 150, chưa thấy đủ",Claude (AI),2026-11-11
+cand-react-native-acoustic-connect-beta-19.1.26,exclude,,"Chỉ gọi 3 script khác (reviewConnectConfig, xmlparser, gradleParser) không có trong trích đoạn",Claude (AI),2026-11-11
+cand-faressoft-node-pty-prebuilt-0.9.0,verified,Chạy node-gyp rebuild trong thư mục gói khi prebuild-install thất bại,Fallback biên dịch native chuẩn,Claude (AI),2026-11-11
+cand-ethosagent-cli-0.9.0,verified,In banner chào mừng và hướng dẫn ra stderr khi cài tương tác,"Chỉ đọc package.json của gói và in chữ, không mạng",Claude (AI),2026-11-11
+cand-igoosham-mmap-cache-0.1.0-alpha.2,verified,"Nạp thử prebuild trong tiến trình con, không dùng được thì node-gyp rebuild","Build native trong thư mục gói, hợp mục đích",Claude (AI),2026-11-11
+cand-secondts-bark-react-native-0.27.0,exclude,,Luồng chính nằm sau dòng 150 (file 328 dòng),Claude (AI),2026-11-11
+cand-react-native-ssl-manager-2.2.0,exclude,,Phần sửa build.gradle của dự án chủ nằm sau dòng 150 và trong postinstall-lib,Claude (AI),2026-11-11
+cand-kaleidorg-swap-sdk-react-native-0.14.1,verified,"Tải archive native từ GitHub releases kaleidoswap/swap-sdk, kiểm SHA-256, giải nén vào gói","Nguồn là repo dự án, có kiểm checksum theo manifest",Claude (AI),2026-11-11
+cand-ionic-node-pty-prebuilt-0.9.1,verified,Chạy node-gyp rebuild trong thư mục gói khi prebuild-install thất bại,Fallback biên dịch native chuẩn,Claude (AI),2026-11-11
+cand-neottia-repository-store-0.3.4,verified,"Tải prebuild từ GitHub releases, kiểm kích thước và chữ ký Sigstore, lỗi thì build từ nguồn",Tải binary của dự án có xác minh chữ ký,Claude (AI),2026-11-11
+cand-jsmeow-1.0.9,exclude,,Rà lại (main): gói tự mô tả là công cụ hack game; không dùng làm mẫu lành.,Claude (AI),2026-11-11
+cand-react-native-shine-0.10.5,verified,In thông báo nhắc cài peer dependencies và link GitHub,"Chỉ in chữ, không có hành vi nhạy cảm",Claude (AI),2026-11-11
+cand-chatcc-agent-0.8.50,exclude,,"Việc chính ở ./native/build-file-atomic, không có trong trích đoạn",Claude (AI),2026-11-11
+cand-iota-wallet-2.0.3-rc.47,verified,"Tải prebuild napi bằng prebuild-install rồi tsc, thất bại thì npm run rebuild",Lệnh install chuẩn cho binding native,Claude (AI),2026-11-11
+cand-ohos-ports-homebridge-node-pty-prebuilt-multiarch-0.14.1-beta.0,exclude,,Rà lại (main): chưa xem postinstall.,Claude (AI),2026-11-11
+cand-react-native-acoustic-connect-19.1.8,exclude,,"Chỉ gọi 3 script khác (reviewConnectConfig, xmlparser, gradleParser) không có trong trích đoạn",Claude (AI),2026-11-11
+cand-akostiv-iohook-0.1.10,verified,"Tải prebuild iohook từ GitHub releases WilixLead/iohook qua tmp, giải nén vào builds/ của gói","Bản fork tải binary từ repo iohook gốc, hợp mục đích",Claude (AI),2026-11-11
+cand-copy-of-node-pty-prebuilt-0.8.1,verified,Chạy node-gyp rebuild trong thư mục gói khi prebuild-install thất bại,Fallback biên dịch native chuẩn,Claude (AI),2026-11-11
+cand-hookdeck-vercel-0.3.1,exclude,,Ghi vào package.json dự án chủ và chép middleware.ts vào dự án; nội dung middleware chưa xem,Claude (AI),2026-11-11
+cand-jerry-zeromq-4.6.1,verified,Chạy prebuild-install (thêm arch ARM nếu cần) để tải binary zeromq,"Tải prebuild chuẩn, fallback node-gyp",Claude (AI),2026-11-11
+cand-notchip-expo-panoramic-stitcher-0.7.0,exclude,,Phần tải/kiểm checksum chính nằm sau dòng 150,Claude (AI),2026-11-11
+cand-glome-deasync-1.0.10,verified,"Tải prebuild từ GitHub releases của repo trong package.json, giải nén vào gói, lỗi thì node-gyp","Nguồn là repo dự án, fallback biên dịch",Claude (AI),2026-11-11
+cand-aleworm-usb2-1.7.11,exclude,,"Rà lại (main): tải binary darwin-x64 cố định cho mọi nền tảng, chưa giải thích được.",Claude (AI),2026-11-11
+cand-puppeteer-25.17.0,exclude,,"Việc tải trình duyệt nằm ở puppeteer/internal/node/install.js, không có trong trích đoạn",Claude (AI),2026-11-11
+cand-multi-spec-parser-0.5.0,exclude,,"Không có prebuild thì chạy native/build.mjs, nội dung không có trong trích đoạn",Claude (AI),2026-11-11
+cand-debstep-1.1.1,verified,Chạy node-gyp-build để chọn prebuild hoặc biên dịch addon native,Lệnh install chuẩn cho addon,Claude (AI),2026-11-11

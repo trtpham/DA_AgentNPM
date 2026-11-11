@@ -20,3 +20,10 @@ Ngày 11/11/2026, theo yêu cầu của PO, Claude đọc bằng chứng của 2
 - Kết quả: 57 `verified`, 4 `revise`, 79 `exclude`. Nháp lành nhóm B có tỉ lệ `exclude` cao vì phần tải/chạy nằm sau dòng 150 hoặc ở file khác.
 - Rà lại (main): `cand-nono-postinstall-test` → `revise` (ghi file vào home); `dd-strapi-plugin-guardarian-ext` → `exclude` (chưa thấy lời gọi lúc cài).
 - Ba dòng ở lượt 20 không đọc được đầu ra (`show.py`) nên để `exclude`.
+
+## Bộ ứng viên thứ hai b2 và lượt 21–26 (11/11/2026)
+
+- Theo Gate B0 11/11 (bộ ứng viên lành thứ hai): thu thêm 300 gói có install hook (`data/review_b2/`, chỉ metadata), phân loại tĩnh trong container dùng một lần (A 193, B 79, C 28). Soạn 189 nháp lành (lượt 22–24 nhóm A, 25–26 nhóm B) và 40 nháp độc Datadog (lượt 21).
+- Lượt 21: 24 `verified`, 9 `revise`, 7 `exclude` (Rà lại (main): `lowerx-package` → `exclude`).
+- Lượt 22–26: 113 `verified`, 0 `revise`, 56 `exclude`. Năm agent đọc song song theo cùng tiêu chí như trên.
+- Rà lại (main), đổi `verified` → `exclude` vì chưa đủ bằng chứng: 4 gói họ `node-pty-prebuilt-multiarch` và `baja-lite-xlsx` (chưa xem postinstall), `libsamplerate` (chưa thấy `binding-options.js`), `@aleworm/usb2` (tải binary darwin-x64 cố định cho mọi nền tảng), `jsmeow` (tự mô tả là công cụ hack game).

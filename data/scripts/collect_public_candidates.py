@@ -67,14 +67,33 @@ def manifest(candidate):
             "observed_at": datetime.now(timezone.utc).date().isoformat()}
 
 
+def set_paths(name: str) -> Path:
+    """data/review_<name>/public_candidates_<name>.csv (the first set is "450")."""
+    return OUTPUT.parents[1] / f"review_{name}" / f"public_candidates_{name}.csv"
+
+
+def already_seen(data_dir: Path) -> set[str]:
+    """Package names of every earlier candidate set, so a new set never repeats them."""
+    seen = set()
+    for path in data_dir.glob("review_*/public_candidates_*.csv"):
+        with path.open(newline="", encoding="utf-8") as stream:
+            seen |= {row["package"] for row in csv.DictReader(stream)}
+    return seen
+
+
 def main():
-    argparse.ArgumentParser(description=f"Collect {TARGET} npm manifests with install hooks (metadata only; "
-                            f"refuses to replace {OUTPUT.name})").parse_args()
-    if OUTPUT.exists():
-        raise SystemExit(f"Refusing to replace {OUTPUT}")
-    rows, seen = [], set()
+    parser = argparse.ArgumentParser(description=f"Collect npm manifests with install hooks (metadata only; "
+                                     f"refuses to replace an existing set)")
+    parser.add_argument("--set", default="450", help="set name; files go to data/review_<set>/")
+    parser.add_argument("--target", type=int, default=TARGET)
+    parser.add_argument("--terms", nargs="+", default=list(TERMS), help="npm search terms")
+    args = parser.parse_args()
+    output, target, terms = set_paths(args.set), args.target, tuple(args.terms)
+    if output.exists():
+        raise SystemExit(f"Refusing to replace {output}")
+    rows, seen = [], already_seen(output.parents[1])
     with ThreadPoolExecutor(max_workers=8) as pool:
-        for term in TERMS:
+        for term in terms:
             for offset in range(0, 3000, 250):
                 path = "/-/v1/search?" + urlencode(
                     {"text": term, "size": 250, "from": offset})
@@ -89,22 +108,23 @@ def main():
                     candidates.append((package, version, term))
                 for start in range(0, len(candidates), 50):
                     for row in pool.map(manifest, candidates[start:start + 50]):
-                        if row is not None and len(rows) < TARGET:
+                        if row is not None and len(rows) < target:
                             rows.append(row)
-                    print(f"{term} offset={offset}: {len(rows)}/{TARGET}", flush=True)
-                    if len(rows) == TARGET:
+                    print(f"{term} offset={offset}: {len(rows)}/{target}", flush=True)
+                    if len(rows) == target:
                         break
-                if len(rows) == TARGET or not results:
+                if len(rows) == target or not results:
                     break
-            if len(rows) == TARGET:
+            if len(rows) == target:
                 break
-    if len(rows) != TARGET or len({row["package"] for row in rows}) != TARGET:
+    if len(rows) != target or len({row["package"] for row in rows}) != target:
         raise SystemExit(f"Collected {len(rows)} unique packages; no CSV written")
-    with OUTPUT.open("x", newline="", encoding="utf-8") as file:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("x", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=rows[0])
         writer.writeheader()
         writer.writerows(rows)
-    print(f"Wrote {TARGET} metadata candidates to {OUTPUT}")
+    print(f"Wrote {target} metadata candidates to {output}")
 
 
 if __name__ == "__main__":

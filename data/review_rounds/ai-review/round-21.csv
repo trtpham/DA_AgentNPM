@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+dd-ap-components-react-3.15.9,verified,"preinstall gom tên máy, user, thư mục home, DNS (dòng 7-17) rồi POST tới máy chủ pipedream (dòng 22, 31-40).",,Claude (AI),2026-11-11
+dd-ansem-wasm-10.0.1,exclude,"Gom hostname, user, IP (giải mã base64 rồi eval, dòng 128-132) và đọc ~/.gitconfig (dòng 133-140).","Đoạn gửi dữ liệu đi nằm sau dòng 150, không thấy trong trích đoạn.",Claude (AI),2026-11-11
+dd-pionex-internal-19.4.9,verified,preinstall đọc /etc/passwd và /etc/shadow rồi POST bằng curl tới hai máy chủ oast.fun (dòng 8).,,Claude (AI),2026-11-11
+dd-ddddddd1d-1.0.31,revise,"preinstall ghi script /cmd ở thư mục gốc, script này sẽ chèn lệnh gửi whoami tới oastify vào /etc/bashrc (dòng 7).","Đề xuất suspicious: chỉ tạo file /cmd, không thấy chạy nó lúc cài; giống PoC thoát container.",Claude (AI),2026-11-11
+dd-partner-tracker-99.0.0,verified,"preinstall chạy whoami, id, uname, đọc resolv.conf, thông tin mạng và biến môi trường (dòng 18-50) rồi gửi qua DNS và HTTPS tới oast.fun (dòng 53-84).",,Claude (AI),2026-11-11
+dd-jupyterhub-admin-react-1.0.0,verified,"preinstall gom hostname, user, home, DNS (dòng 9-19) rồi POST tới oastify (dòng 26, 36-47).",,Claude (AI),2026-11-11
+dd-elf-stats-jolly-snowglobe-266-99.9.82,verified,"preinstall đọc /opt/santa-list.txt (dòng 10), mã hóa hex rồi rò rỉ qua truy vấn DNS tới dnshook.site (dòng 18-23).",,Claude (AI),2026-11-11
+dd-cro-pricing-1.0.1,verified,"preinstall lấy hostname, IP nội bộ và IP công khai (dòng 8-20) rồi gửi tới Slack webhook (dòng 25-28).",,Claude (AI),2026-11-11
+dd-ostk-otel-autoconfig-2.4.4,verified,"Cả ba hook dùng wget gửi user, thư mục và hostname tới máy chủ lạ z.wbx.lt (dòng 11).",,Claude (AI),2026-11-11
+dd-redis-cookie-js-3.1.1,exclude,,postinstall chỉ gọi onInstall từ ../index.js; hành vi nằm ở file khác.,Claude (AI),2026-11-11
+dd-flight-suit-1.1.25053,revise,"index.js chỉ in cảnh báo cấu hình registry riêng, không đọc hay gửi gì.","Đề xuất benign: gói giữ chỗ, chỉ console.log.",Claude (AI),2026-11-11
+dd-eqder-bird-4.0.0,revise,install gọi curl tới webhook.site mà không kèm dữ liệu máy (dòng 7).,"Đề xuất suspicious: chỉ là beacon dò, không gửi dữ liệu máy.",Claude (AI),2026-11-11
+dd-akdump-0.2.1,revise,postinstall chỉ chạy hoạt ảnh tiến trình trên terminal.,"Đề xuất benign: không đọc dữ liệu nhạy cảm, không gọi mạng.",Claude (AI),2026-11-11
+dd-super-useful-utils-2.0.5,revise,"install.js chỉ chứa một dòng chữ, không có mã thực thi.",Đề xuất benign: file không làm gì (chỉ ghi chú PoC).,Claude (AI),2026-11-11
+dd-aledade-org-1.0.0,verified,preinstall gửi nội dung /etc/passwd bằng curl tới tên miền oastify kèm hostname (dòng 8).,,Claude (AI),2026-11-11
+dd-elf-stats-peppermint-fir-730-1.0.0,verified,"postinstall đọc /opt/santa_list.txt (dòng 43) rồi POST kèm hostname tới webhook.site (dòng 6-7, 12-38).",,Claude (AI),2026-11-11
+dd-mc-donate-donateweb-40.0.0,verified,"preinstall gửi hostname, whoami, pwd, id bằng curl tới oast.site (dòng 8).",,Claude (AI),2026-11-11
+dd-test-thegenetic-module-2.2.6,revise,"preinstall chỉ in thư mục và danh sách tên biến môi trường ra màn hình, không gửi đi.","Đề xuất benign: mô phỏng đánh cắp, không có đích mạng.",Claude (AI),2026-11-11
+dd-elysium-checkout-2.2.5,exclude,"Gom thông tin máy, toàn bộ env, file .env và metadata AWS (dòng 13-110).","Đoạn gửi payload đi nằm sau dòng 150, không thấy trong trích đoạn.",Claude (AI),2026-11-11
+dd-quality-cli-6.5.8,verified,"preinstall gom user, hostname, IP trong và ngoài, DNS (dòng 44-60) rồi POST tới Discord webhook (dòng 62-87).",,Claude (AI),2026-11-11
+dd-atlas-websocket-17.9.11,verified,"postinstall đọc /etc/passwd, khóa SSH, .env, auth.log rồi POST tới IP lạ (dòng 10-52) và mở reverse shell tới IP đó (dòng 56-58).",,Claude (AI),2026-11-11
+dd-yandex-lego-5.0.0,verified,"preinstall gom hostname, user, home, DNS (dòng 8-18) rồi POST tới oast.fun (dòng 25, 35-46).",,Claude (AI),2026-11-11
+dd-nf-metatron-0.0.1,revise,"preinstall gửi tên gói, phiên bản, thời gian tới webhook.site (dòng 1).",Đề xuất suspicious: beacon không kèm dữ liệu máy; dòng bị cắt.,Claude (AI),2026-11-11
+dd-user-switching-1.9.1,verified,"preinstall gom hostname, user, đọc /etc/passwd và /etc/hosts (dòng 9-20) rồi POST tới oastify (dòng 32, 43-54).",,Claude (AI),2026-11-11
+dd-v0-core-999.999.999,verified,preinstall dùng node -e gửi hostname tới webhook.site (dòng 7).,,Claude (AI),2026-11-11
+dd-lowerx-package-1.0.6,exclude,"preinstall mã hóa đè /tmp/secret.txt (dòng 12-32) rồi gửi pwd, whoami, danh sách file tới webhook.site (dòng 40-52).","Rà lại (main): mã dùng cú pháp ESM, không thấy package.json khai báo type module nên chưa chắc chạy lúc cài. ",Claude (AI),2026-11-11
+dd-evocataur-99.3.5,verified,"preinstall gom hostname, user, home, MAC (dòng 9-35) rồi gửi qua HTTP GET tới ba máy chủ OAST (dòng 37-69).",,Claude (AI),2026-11-11
+dd-libxmljs2woter-0.30.5,verified,"postinstall tìm và đọc file flag, liệt kê thư mục hiện tại (dòng 15-114) rồi gửi tới webhook.site (dòng 9-11).",,Claude (AI),2026-11-11
+dd-log-pino-2.1.3,exclude,,postinstall chỉ chạy npm run license; hành vi nằm ở script khác.,Claude (AI),2026-11-11
+dd-lordmega-baileys-0.3.34,revise,preinstall chỉ kiểm tra phiên bản Node và thoát nếu thấp hơn 20.,Đề xuất benign: kiểm tra phiên bản bình thường.,Claude (AI),2026-11-11
+dd-faulthandler-0.11.1,verified,"postinstall gom hostname, user, toàn bộ env, thông tin mạng (dòng 4-14) rồi POST tới webhook.site (dòng 16-37).",,Claude (AI),2026-11-11
+dd-forge-jsx-1.0.33,exclude,,"File được trích chỉ là bước build; postinstall còn chạy các script khác (bootstrap, agent) không có trong trích đoạn.",Claude (AI),2026-11-11
+dd-on-direct-click-99.9.0,verified,"preinstall lấy IP công khai, user, hostname (dòng 53-79) rồi gửi qua bot Telegram (dòng 22-50, 81).",,Claude (AI),2026-11-11
+dd-teshf-1339.0.0,verified,"preinstall dùng curl gửi user, thư mục và hostname tới oast.fun (dòng 7).",,Claude (AI),2026-11-11
+dd-rb3ca-domains-11.11.11,revise,preinstall chỉ in một câu ra màn hình.,"Đề xuất benign: chỉ echo, không có hành vi nguy hiểm.",Claude (AI),2026-11-11
+dd-admin10001-1.0.215,verified,preinstall lấy instance-id và khóa RAM từ metadata đám mây rồi gửi bằng curl tới oastify (dòng 8).,,Claude (AI),2026-11-11
+dd-dep-b-99.1.0,verified,"preinstall gom hostname, user, whoami, uname, toàn bộ env (dòng 10-53) rồi POST tới oastify (dòng 59-81).",,Claude (AI),2026-11-11
+dd-baidu-tims-1.0.6,verified,preinstall lấy dữ liệu từ dịch vụ nội bộ 10.x rồi chuyển tiếp ra máy chủ ngoài bằng curl (dòng 2).,,Claude (AI),2026-11-11
+dd-blank-pkg-16.0.0,verified,"preinstall gửi toàn bộ env, /root/.npmrc, user, hostname bằng curl tới oast.fun (dòng 8).",,Claude (AI),2026-11-11
+dd-gunpowder-ghost-219.0.0,exclude,Hook gom hostname và biến môi trường chứa flag/secret (dòng 8).,"Dòng hook bị cắt, không thấy dữ liệu được gửi đi đâu.",Claude (AI),2026-11-11

@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+cand-hermespilot-link-1.3.9,verified,"Kiểm tra phiên bản Node >=20, đọc biến locale để in cảnh báo song ngữ rồi thoát","Env chỉ là LANG/LC_* để chọn ngôn ngữ; không mạng, không ghi file",Claude (AI),2026-11-11
+cand-woovi-node-printer-1.0.1,verified,Chạy prebuild hoặc node-gyp rebuild để dựng addon máy in native,Build native chuẩn,Claude (AI),2026-11-11
+cand-lzo-decompress-1.0.11,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-paymoapp-active-window-2.2.0,verified,"Chạy node -e rỗng, không làm gì","Lệnh rỗng, vô hại",Claude (AI),2026-11-11
+cand-ohos-ports-trufflesuite-bigint-buffer-1.1.10-beta.0,verified,"node-gyp-build dựng addon, lỗi thì in thông báo dùng bản JS","Build native chuẩn, có fallback vô hại",Claude (AI),2026-11-11
+cand-heapdump-prebuild-0.0.6,verified,"prebuild-install tải binary dựng sẵn từ GitHub releases của dự án, lỗi thì node-gyp rebuild",Mẫu prebuild-install/node-gyp chuẩn cho addon native,Claude (AI),2026-11-11
+cand-idb-connector-1.3.1,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-stdmx-opencv4nodejs-prebuilt-install-4.5.5,verified,"prebuild-install tải binary dựng sẵn của dự án, lỗi thì bỏ qua",Mẫu prebuild-install chuẩn,Claude (AI),2026-11-11
+cand-zerob13-nativekit-0.6.3,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-ohos-ports-usb-2.18.0-beta.2,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-electron-prebuilds-preview-thiagoelg-node-printer-0.6.2-prebuild.12,verified,prebuild-install tải binary addon máy in dựng sẵn từ releases của dự án,Mẫu prebuild-install chuẩn,Claude (AI),2026-11-11
+cand-hexo-theme-amber-0.0.1-rc.6,verified,Tạo thư mục theme trong cwd và symlink theme/amber trỏ về thư mục gói,"Chỉ tạo symlink theme Hexo, không mạng, không đọc secret",Claude (AI),2026-11-11
+cand-driftlog-tree-sitter-dart-1.0.4,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-codeplaydata-dbc2dbf-1.1.0,verified,"prebuild-install tải binary dựng sẵn từ GitHub releases của dự án, lỗi thì node-gyp rebuild",Mẫu prebuild-install/node-gyp chuẩn cho addon native,Claude (AI),2026-11-11
+cand-luckykiet-node-printer-1.0.3,verified,"prebuild-install tải binary dựng sẵn từ GitHub releases của dự án, lỗi thì node-gyp rebuild",Mẫu prebuild-install/node-gyp chuẩn cho addon native,Claude (AI),2026-11-11
+cand-pedidos10-node-printer-0.6.35,verified,"prebuild-install tải binary dựng sẵn từ GitHub releases của dự án, lỗi thì node-gyp rebuild",Mẫu prebuild-install/node-gyp chuẩn cho addon native,Claude (AI),2026-11-11
+cand-cquant-0.1.5,verified,"prebuild-install tải binary dựng sẵn từ GitHub releases của dự án, lỗi thì node-gyp rebuild",Mẫu prebuild-install/node-gyp chuẩn cho addon native,Claude (AI),2026-11-11
+cand-ingescape-4.7.0,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-lgeiger-napi-prebuild-starter-0.3.1,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-homaiohq-napi-quickfix-0.3.1,verified,"node-gyp-build nạp bản dựng sẵn, lỗi thì biên dịch bằng cmake-js",Build native chuẩn,Claude (AI),2026-11-11
+cand-font-ls-0.6.8,verified,"prebuild-install tải binary dựng sẵn từ GitHub releases của dự án, lỗi thì node-gyp rebuild",Mẫu prebuild-install/node-gyp chuẩn cho addon native,Claude (AI),2026-11-11
+cand-tbalegas-node-printer-1.0.2,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-libsamplerate-2.1.1,exclude,,Rà lại (main): chưa thấy binding-options.js.,Claude (AI),2026-11-11
+cand-eusoumarlon-mp-node-printer-1.0.0,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-cue-sdk-4.0.84,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-keyring-js-1.1.0,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-tachyon-ipc-core-0.5.1,verified,Biên dịch addon native bằng cmake-js trong thư mục gói,"Build native chuẩn, không mạng lạ",Claude (AI),2026-11-11
+cand-inkdrop-keyboard-layout-3.0.2,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-eryn-0.3.2,exclude,,"Việc chính nằm trong build-check.js, trích đoạn không có",Claude (AI),2026-11-11
+cand-tring-chat-0.1.15,exclude,,Chỉ là loader; việc chính ở dist/fix-spawn-helper.mjs không có trong trích đoạn,Claude (AI),2026-11-11
+cand-ubuntu-prebuild-container-1.2.5,exclude,,"Lệnh mkcontainer từ phụ thuộc, không thấy mã để đánh giá",Claude (AI),2026-11-11
+cand-mgarnier11-my-canvas-1.0.3,verified,"node-pre-gyp tải binary dựng sẵn theo cấu hình binary của gói, lỗi thì biên dịch cục bộ",Mẫu node-pre-gyp chuẩn cho addon native,Claude (AI),2026-11-11
+cand-kickstartcrew-expo-financekit-0.2.4,verified,postinstall chỉ echo hướng dẫn chạy setup:ios,Chỉ in thông báo,Claude (AI),2026-11-11
+cand-supolka-isolated-vm-7.1.0,verified,"node-gyp-build nạp bản dựng sẵn, lỗi thì node-gyp rebuild",Build native chuẩn,Claude (AI),2026-11-11
+cand-dev-vlens-react-native-vlens-1.1.2,exclude,,"Phần ghi file vá gradle các gói khác nằm sau dòng 150, trích đoạn chưa thấy",Claude (AI),2026-11-11
+cand-codeporter-robotjs-0.6.0,verified,"node-pre-gyp tải binary dựng sẵn theo cấu hình binary của gói, lỗi thì biên dịch cục bộ",Mẫu node-pre-gyp chuẩn cho addon native,Claude (AI),2026-11-11
+cand-node-snap7-micro-client-0.1.0,verified,"prebuild-install tải binary dựng sẵn từ GitHub releases của dự án, lỗi thì node-gyp rebuild",Mẫu prebuild-install/node-gyp chuẩn cho addon native,Claude (AI),2026-11-11
+cand-vsfragments-node-0.0.42,verified,Gọi node-gyp-build: nạp bản dựng sẵn trong gói hoặc biên dịch addon C++ cục bộ,"Build native chuẩn, không mạng lạ, không ghi ngoài gói",Claude (AI),2026-11-11
+cand-mintplex-labs-tab-complete-1.0.4,verified,"Chạy node -e rỗng, không làm gì","Lệnh rỗng, vô hại",Claude (AI),2026-11-11
+cand-react-native-nitro-palette-2.0.0,verified,"postinstall chạy bun build, lỗi thì exit 0","Lệnh build cục bộ, không mạng lạ",Claude (AI),2026-11-11

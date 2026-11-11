@@ -52,27 +52,31 @@ def review_row(row: dict[str, str], fetch=get_json) -> dict[str, str]:
 
 
 def main() -> None:
-    argparse.ArgumentParser(description="Recheck npm metadata of the 450 candidates (refuses to replace "
-                            f"{OUTPUT.name})").parse_args()
-    with SOURCE.open(newline="", encoding="utf-8") as stream:
+    parser = argparse.ArgumentParser(description="Recheck npm metadata of a candidate set (refuses to replace "
+                                     "an existing review)")
+    parser.add_argument("--set", default="450", help="set name; reads/writes data/review_<set>/")
+    args = parser.parse_args()
+    source = SOURCE.parents[1] / f"review_{args.set}" / f"public_candidates_{args.set}.csv"
+    output = SOURCE.parents[1] / f"review_{args.set}" / f"metadata_review_{args.set}.csv"
+    with source.open(newline="", encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
         if tuple(reader.fieldnames or ()) != FIELDS:
             raise ValueError("invalid candidate columns")
         rows = list(reader)
     if any(None in row or None in row.values() for row in rows):
         raise ValueError("invalid candidate row")
-    if len(rows) != 450 or len({(row["package"], row["version"]) for row in rows}) != 450:
-        raise ValueError("expected 450 unique package versions")
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
+    if (args.set == "450" and len(rows) != 450) or len({(row["package"], row["version"]) for row in rows}) != len(rows):
+        raise ValueError("expected unique package versions (450 in the first set)")
+    if output.exists():
+        raise FileExistsError(output)
     today = datetime.now(timezone(timedelta(hours=7))).date().isoformat()
     with ThreadPoolExecutor(max_workers=8) as pool:
         reviewed = list(pool.map(review_row, rows))
-    with OUTPUT.open("x", newline="", encoding="utf-8") as stream:
+    with output.open("x", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, FIELDS + EXTRA)
         writer.writeheader()
         writer.writerows(dict(row, reviewed_at=today) for row in reviewed)
-    print(f"Reviewed metadata for {len(reviewed)} candidates; no labels assigned: {OUTPUT}")
+    print(f"Reviewed metadata for {len(reviewed)} candidates; no labels assigned: {output}")
 
 
 if __name__ == "__main__":
