@@ -32,3 +32,22 @@ def test_decisions_take_the_latest_round(tmp_path):
             writer.writeheader()
             writer.writerow({**{field: "" for field in COPIED + REVIEW}, "id": "x", "decision": decision})
     assert decisions(tmp_path) == {"x": "verified"}
+
+
+def test_ai_review_counts_separately_and_only_when_asked(tmp_path):
+    import csv
+    from data.scripts.data_report import reviews
+    (tmp_path / "ai-review").mkdir()
+    with (tmp_path / "round-1.csv").open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, ["id", "decision", "observed_behavior", "reviewer", "reviewed_at"])
+        writer.writeheader()
+        writer.writerows([{"id": "a", "decision": "exclude"}, {"id": "b", "decision": ""}])
+    with (tmp_path / "ai-review" / "round-1.csv").open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, ["id", "ai_decision", "ai_observed_behavior", "ai_note", "reviewer", "reviewed_at"])
+        writer.writeheader()
+        writer.writerows([{"id": "a", "ai_decision": "verified", "reviewer": "Claude (AI)"},
+                          {"id": "b", "ai_decision": "verified", "reviewer": "Claude (AI)"}])
+    assert reviews(tmp_path)["b"]["decision"] == ""
+    found = reviews(tmp_path, include_ai=True)
+    assert found["a"]["decision"] == "exclude" and found["a"]["review_kind"] == "human"
+    assert found["b"]["decision"] == "verified" and found["b"]["review_kind"] == "ai"

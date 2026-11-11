@@ -18,20 +18,18 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 
-from data.scripts.data_report import ROUNDS_DIR
+from data.scripts.data_report import ROUNDS_DIR, reviews
 from data.scripts.dedupe_labels import CAP, DEFAULT_HASHES, DEFAULT_TABLES, dedupe, load_hashes
 from data.scripts.prepare_labels import prepare_labels
 from experiments.dataset import FIELDS, load_labels
 
 
-def reviewed(rounds_dir: Path = ROUNDS_DIR) -> dict[str, dict]:
-    """Latest sheet row per id across all rounds."""
-    found = {}
-    for path in sorted(rounds_dir.glob("round-*.csv"), key=lambda item: int(item.stem.split("-")[1])):
-        with path.open(encoding="utf-8-sig", newline="") as stream:
-            for row in csv.DictReader(stream):
-                found[row["id"]] = row
-    return found
+REVIEW_FIELDS = ("id", "review_kind", "reviewer", "reviewed_at")
+
+
+def reviewed(rounds_dir: Path = ROUNDS_DIR, include_ai: bool = False) -> dict[str, dict]:
+    """Latest review per id (human sheets first; Claude's ai-review only with include_ai)."""
+    return reviews(rounds_dir, include_ai)
 
 
 def freeze_rows(rows: list[dict], sheets: dict[str, dict]) -> list[dict]:
@@ -45,7 +43,8 @@ def freeze_rows(rows: list[dict], sheets: dict[str, dict]) -> list[dict]:
             observed = sheet.get("observed_behavior", "").strip()
             if not observed:
                 continue  # a verified draft must say, in the reviewer's words, what was seen
-            row["behavior_main"], row["technique"] = observed, "reviewed"
+            row["behavior_main"] = observed
+            row["technique"] = "reviewed-ai" if sheet.get("review_kind") == "ai" else "reviewed"
         kept.append(row)
     labels_per_cluster: dict[str, set] = {}
     for row in kept:
@@ -57,12 +56,14 @@ def freeze_rows(rows: list[dict], sheets: dict[str, dict]) -> list[dict]:
     return kept
 
 
-def freeze(output: Path, test_share: float = 0.6, rounds_dir: Path = ROUNDS_DIR, tables=None, hashes=None) -> dict:
+def freeze(output: Path, test_share: float = 0.6, rounds_dir: Path = ROUNDS_DIR, tables=None, hashes=None,
+           include_ai: bool = False) -> dict:
     if output.exists():
         raise FileExistsError(f"{output} exists; a frozen label set is never overwritten")
     tables = tables if tables is not None else [load_labels(path) for path in DEFAULT_TABLES if path.is_file()]
     rows = dedupe(tables, hashes if hashes is not None else load_hashes(list(DEFAULT_HASHES)), CAP)["rows"]
-    kept = freeze_rows(rows, reviewed(rounds_dir))
+    sheets = reviewed(rounds_dir, include_ai)
+    kept = freeze_rows(rows, sheets)
     if not kept:
         raise ValueError("no verified rows to freeze")
     with tempfile.TemporaryDirectory() as directory:
@@ -73,7 +74,16 @@ def freeze(output: Path, test_share: float = 0.6, rounds_dir: Path = ROUNDS_DIR,
             writer.writerows(kept)
         prepare_labels(staging, output, test_share)
     frozen = load_labels(output)
-    return {"rows": len(frozen), "labels": dict(sorted(Counter(row["label"] for row in frozen).items())),
+    # Who checked each frozen row: a person, or Claude (AI). Read with the labels whenever results are reported.
+    with output.with_name(output.stem + "-review.csv").open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, REVIEW_FIELDS)
+        writer.writeheader()
+        for row in frozen:
+            sheet = sheets.get(row["id"], {})
+            writer.writerow({"id": row["id"], "review_kind": sheet.get("review_kind", "human"),
+                             "reviewer": sheet.get("reviewer", ""), "reviewed_at": sheet.get("reviewed_at", "")})
+    kinds = Counter(sheets.get(row["id"], {}).get("review_kind", "human") for row in frozen)
+    return {"rows": len(frozen), "reviewed_by": dict(kinds), "labels": dict(sorted(Counter(row["label"] for row in frozen).items())),
             "splits": dict(sorted(Counter(row["split"] for row in frozen).items())),
             "clusters": len({row["cluster"] for row in frozen})}
 
@@ -83,8 +93,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Freeze labels v1 from verified rows")
     parser.add_argument("--output", type=Path, default=Path("data/labels-v1.csv"))
     parser.add_argument("--test-share", type=float, default=0.6)
+    parser.add_argument("--include-ai-review", action="store_true",
+                        help="also freeze rows Claude verified (data/review_rounds/ai-review); marked reviewed-ai")
     args = parser.parse_args()
-    print(json.dumps(freeze(args.output, args.test_share), ensure_ascii=False))
+    print(json.dumps(freeze(args.output, args.test_share, include_ai=args.include_ai_review), ensure_ascii=False))
 
 
 if __name__ == "__main__":

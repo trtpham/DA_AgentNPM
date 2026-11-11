@@ -21,18 +21,42 @@ ROUNDS_DIR = Path("data/review_rounds")
 TARGETS = {"total": 400, "benign": 180, "malicious": 180, "clusters": 40}
 
 
-def decisions(rounds_dir: Path = ROUNDS_DIR) -> dict[str, str]:
-    """Latest decision per id across all round sheets ('' when still pending)."""
-    found = {}
-    for path in sorted(rounds_dir.glob("round-*.csv"), key=lambda item: int(item.stem.split("-")[1])):
+def _sheets(directory: Path):
+    for path in sorted(directory.glob("round-*.csv"), key=lambda item: int(item.stem.split("-")[1])):
         with path.open(encoding="utf-8-sig", newline="") as stream:
-            for row in csv.DictReader(stream):
-                found[row["id"]] = row.get("decision", "").strip()
+            yield from csv.DictReader(stream)
+
+
+def reviews(rounds_dir: Path = ROUNDS_DIR, include_ai: bool = False) -> dict[str, dict]:
+    """Latest review per id: {decision, observed_behavior, review_kind, reviewer, reviewed_at}.
+
+    Human round sheets always win. With include_ai (Gate B0 2026-11-11), a row a person has not
+    decided takes the decision recorded in rounds_dir/ai-review/ (reviewer "Claude (AI)")."""
+    found = {}
+    for row in _sheets(rounds_dir):
+        found[row["id"]] = {"decision": row.get("decision", "").strip(),
+                            "observed_behavior": row.get("observed_behavior", "").strip(),
+                            "review_kind": "human", "reviewer": row.get("reviewer", "").strip(),
+                            "reviewed_at": row.get("reviewed_at", "").strip()}
+    if include_ai:
+        for row in _sheets(rounds_dir / "ai-review"):
+            if found.get(row["id"], {}).get("decision"):
+                continue  # a person already decided this row
+            found[row["id"]] = {"decision": row["ai_decision"].strip(),
+                                "observed_behavior": row["ai_observed_behavior"].strip(),
+                                "review_kind": "ai", "reviewer": row["reviewer"].strip(),
+                                "reviewed_at": row["reviewed_at"].strip()}
     return found
 
 
-def report(rows: list[dict], decided: dict[str, str], cap: int = CAP) -> dict:
+def decisions(rounds_dir: Path = ROUNDS_DIR, include_ai: bool = False) -> dict[str, str]:
+    """Latest decision per id across all round sheets ('' when still pending)."""
+    return {key: value["decision"] for key, value in reviews(rounds_dir, include_ai).items()}
+
+
+def report(rows: list[dict], decided: dict[str, str], cap: int = CAP, kinds: dict[str, str] | None = None) -> dict:
     verified = [row for row in rows if decided.get(row["id"]) == "verified"]
+    by_kind = Counter((kinds or {}).get(row["id"], "human") for row in verified)
     status = Counter(decided.get(row["id"]) or ("pending" if row["id"] in decided else "no sheet") for row in rows)
     clusters = Counter(row["cluster"] for row in verified)
     largest = max(clusters.values(), default=0)
@@ -44,7 +68,7 @@ def report(rows: list[dict], decided: dict[str, str], cap: int = CAP) -> dict:
     checks["cluster cap"] = largest <= cap
     return {"rows": len(rows), "review_status": dict(status), "verified": measured,
             "suspicious": labels["suspicious"], "splits": dict(splits), "largest_cluster": largest,
-            "checks": checks, "ready": all(checks.values())}
+            "checks": checks, "ready": all(checks.values()), "verified_by": dict(by_kind)}
 
 
 def markdown(result: dict) -> str:
@@ -55,6 +79,10 @@ def markdown(result: dict) -> str:
     status = ", ".join(f"{key} {value}" for key, value in sorted(result["review_status"].items()))
     lines += ["", f"Sau lọc trùng: {result['rows']} dòng ({status}); suspicious đã kiểm tra: {result['suspicious']}; "
               f"split đã kiểm tra: {result['splits'] or '-'}. Sẵn sàng đóng băng v1: **{'có' if result['ready'] else 'chưa'}**."]
+    by = result.get("verified_by") or {}
+    if by.get("ai"):
+        lines.append(f"Nguồn kiểm của dòng verified: người {by.get('human', 0)}, **AI (Claude) {by['ai']}** "
+                     "(không phải kiểm tra chéo; ghi rõ khi báo cáo).")
     return "\n".join(lines)
 
 
@@ -62,10 +90,14 @@ def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Vietnamese table
     parser = argparse.ArgumentParser(description="Compare the label set with the v1 targets")
     parser.add_argument("--cap", type=int, default=CAP)
+    parser.add_argument("--include-ai-review", action="store_true",
+                        help="count rows reviewed by Claude in data/review_rounds/ai-review/ (shown separately)")
     args = parser.parse_args()
     tables = [load_labels(path) for path in DEFAULT_TABLES if path.is_file()]
     rows = dedupe(tables, load_hashes(list(DEFAULT_HASHES)), args.cap)["rows"]
-    print(markdown(report(rows, decisions(), args.cap)))
+    found = reviews(include_ai=args.include_ai_review)
+    print(markdown(report(rows, {k: v["decision"] for k, v in found.items()}, args.cap,
+                          {k: v["review_kind"] for k, v in found.items()})))
 
 
 if __name__ == "__main__":
