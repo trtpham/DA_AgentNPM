@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+dd-sql-limit-enforcer-10.0.0,verified,"Thu thập hostname, tên user, hệ điều hành, thư mục hiện tại (dòng 8-16) rồi POST JSON tới webhook.site (dòng 19-36).",,Claude (AI),2026-11-11
+dd-google-build-slack-9.9.9,verified,"Hook preinstall lấy hostname, whoami và toàn bộ biến môi trường mã hóa base64 rồi POST tới máy chủ burpcollaborator (dòng 8).",,Claude (AI),2026-11-11
+dd-react-query-core-utils-4.4.9,exclude,,"Script chỉ in thông báo lên TTY và gợi ý người dùng chạy một lệnh npx khác; không thấy hành vi độc trong đoạn trích, payload (nếu có) nằm ở gói khác",Claude (AI),2026-11-11
+dd-xo-angular-ui-utils-1.0.6,revise,,"suspicious: chỉ gửi chuỗi cố định 'ping' tới máy chủ oastify (dòng 4-33), không thu thập dữ liệu máy; là beacon thăm dò dependency confusion",Claude (AI),2026-11-11
+dd-dinotech-auth-utils-10.0.6,verified,"Hook preinstall đọc file flag.txt, mã hóa base64 rồi gửi bằng curl tới IP lạ 165.22.53.166 (dòng 7).",,Claude (AI),2026-11-11
+dd-appkit-react-utils-2.0.3,verified,"Thu thập thư mục home, hostname, username, DNS server và package.json (dòng 7-17) rồi POST tới pipedream.net (dòng 21-40).",,Claude (AI),2026-11-11
+dd-tnactgfds-0.30.8,exclude,,"Hook bị cắt, không thấy đủ đích gửi; theo thứ tự toán tử thì nội dung flag tìm được không được pipe vào curl, chỉ chuỗi FLAG_NOT_FOUND được gửi; không chắc chắn",Claude (AI),2026-11-11
+dd-couplus-cli-1.0.6,exclude,,"Mã một dòng bị cắt: chỉ thấy đường dẫn Start Menu trên Windows và execSync, không thấy file gì được ghi/chạy; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-openclaw-droid-2.0.6,exclude,,postinstall gọi installBypass từ bionic-bypass.js không được hiển thị; file chính chỉ in hướng dẫn; hành vi nằm ngoài đoạn trích,Claude (AI),2026-11-11
+dd-aragearage-99.1.5,verified,"Giải mã chuỗi ẩn địa chỉ máy chủ (dòng 3-13), thu IP nội/ngoại, tổ chức, hostname, đường dẫn, thông tin OS (dòng 17-50) rồi gửi GET tới updatelap.org:4242 (dòng 52-56).",,Claude (AI),2026-11-11
+dd-payments-ui-99.9.10,exclude,,Hook bị cắt: thấy mở /bin/sh hoặc cmd.exe và nạp module net (dạng reverse shell) nhưng không thấy đích kết nối; hành vi nằm ngoài đoạn trích,Claude (AI),2026-11-11
+dd-service-config-endpoint-provider-145.17.6,verified,"Lấy định danh EC2 qua IMDS 169.254.169.254 (dòng 29-105) cùng hostname, username, domain, thư mục (dòng 108-122) rồi POST tới webhook.site (dòng 6-27, 125).",,Claude (AI),2026-11-11
+dd-earthengine-api-9.0.1,revise,,"suspicious: preinstall chỉ gọi curl GET tới webhook.site không kèm dữ liệu máy (dòng 8), là beacon thăm dò",Claude (AI),2026-11-11
+dd-node-calculator-0f50-9.9.9,verified,Hook postinstall lọc biến môi trường chứa 'flag' và gửi từng dòng qua query curl tới máy chủ oast.fun (dòng 7).,,Claude (AI),2026-11-11
+dd-all.en.js-1.0.10,verified,Hook preinstall gửi nội dung /etc/passwd bằng curl tới tên miền oastify có ghép hostname (dòng 8).,,Claude (AI),2026-11-11
+dd-trendwatch-30.2.1,verified,"Chạy hàng loạt lệnh lấy user, /etc/passwd, /etc/hosts, lịch sử đăng nhập, log, metadata AWS/Azure (dòng 21-60) rồi gửi qua webhook Discord (dòng 86-109).",,Claude (AI),2026-11-11
+dd-react-spa-shadcn-99.3.0,verified,"Chạy lệnh lấy IP công khai, whoami, hostname, git remote và toàn bộ env (dòng 8-12) rồi POST lên webhook Discord (dòng 5, 20-44).",,Claude (AI),2026-11-11
+dd-dynamic-form-components-8.0.1,exclude,,"Mã gửi hostname/user tới IP lạ có chống sandbox, nhưng chỉ được export thành hàm; hook 'node --require' không gọi hàm nên không thấy hành vi chạy lúc cài",Claude (AI),2026-11-11
+dd-react-dnd11-html5-backend-6.5.8,verified,"Thu IP nội/ngoại, hostname, username, thư mục home, DNS, package.json (dòng 9-60) rồi POST lên webhook Discord (dòng 62-87).",,Claude (AI),2026-11-11
+dd-cognito-authorizer-1.1.0,verified,"Thu hostname, username, thư mục home, DNS và đọc /etc/passwd, /etc/hosts (dòng 9-20) rồi POST tới máy chủ oastify (dòng 31-54).",,Claude (AI),2026-11-11
+dd-react-tchart-1.4.5,exclude,,"Hook chạy npm run test/transpile/skip, nội dung các script đó không được hiển thị; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-openkitjs-simple-sample-1.0.1,verified,Hook preinstall gửi hostname và whoami bằng curl tới máy chủ oast.fun (dòng 7).,,Claude (AI),2026-11-11
+dd-vinext-monorepo-99.11.9,verified,"Né sandbox (dòng 10-13), lấy email git, username, hostname, domain (dòng 17-32), mã hóa base64 rồi gửi qua GET tới oastify (dòng 34-48).",,Claude (AI),2026-11-11
+dd-mnlo-common-user-0.0.1,verified,"Thu username, hostname, IP nội và thư mục (dòng 14-37), mã hóa hex thành subdomain và rò rỉ qua truy vấn DNS tới gjq.io (dòng 5-12, 39-43).",,Claude (AI),2026-11-11
+dd-mydctest-1.1.0,revise,,"suspicious: preinstall chỉ curl tới máy chủ oast.fun không kèm dữ liệu (dòng 8), là beacon thăm dò",Claude (AI),2026-11-11
+dd-admin10001-1.0.305,verified,"Hook preinstall đọc một file JSON trong /root, chuyển hex rồi ghép vào subdomain gửi bằng curl tới máy chủ ngoài (dòng 7).",,Claude (AI),2026-11-11
+dd-redis-cookie-js-3.0.6,exclude,,postinstall chỉ gọi onInstall từ index.js không được hiển thị; hành vi nằm ngoài đoạn trích,Claude (AI),2026-11-11
+dd-easy-transify-7.2.3,verified,"Thu IP nội/ngoại, hostname, username, thư mục home, DNS, package.json (dòng 9-60) rồi POST lên webhook Discord (dòng 62-87).",,Claude (AI),2026-11-11
+dd-os-apps-ui-creative-manager-9.9.9,verified,"Chạy curl gửi whoami, pwd, danh sách node_modules và nội dung /etc/hosts tới máy chủ oastify (dòng 1-3).",,Claude (AI),2026-11-11
+dd-rsflows-pexml-99.9.33,verified,"Chạy shell đọc mã nguồn máy quét, kiểm tra container, liệt kê /tmp (dòng 4-17), mã hóa base64 rồi POST tới webhook.site (dòng 19-22).",,Claude (AI),2026-11-11
+dd-productprovisionserv-1.0.0,verified,"Thu hostname, OS, IP nội/công khai, username, thư mục (dòng 13-39) rồi gửi GET/POST tới IP lạ 23.22.251.177:8080, dự phòng WebSocket (dòng 42-117).",,Claude (AI),2026-11-11
+dd-navancorp-angular-web-components-1.0.9,verified,"Thu thông tin hệ thống, user, IP, vị trí và toàn bộ biến môi trường (dòng 45-92) rồi POST tới máy chủ lạ insomnia1102.online (dòng 94-121).",,Claude (AI),2026-11-11
+dd-fake-stealer-test-1.0.0,exclude,,"Manifest không khớp (claude-skills-library@1.0.0); đoạn trích chỉ thấy tải archive và giải nén exe, bước chạy exe nằm sau dòng 150; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-esoftplay-0.0.142-l,exclude,,"Hook chạy bin/build.js bằng bun, file này không được hiển thị; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-prettier-prod-9.0.1,verified,"Hook postinstall gửi danh sách thư mục gốc, /etc/hosts, /etc/passwd và hostname bằng curl POST tới máy chủ oastify (dòng 7).",,Claude (AI),2026-11-11
+dd-sellyourvault-12.6.7,verified,"Né môi trường cloud/sandbox (dòng 42-44), thu IP, hostname, username, home, DNS, package.json (dòng 45-60) rồi POST lên webhook Discord (dòng 62-87).",,Claude (AI),2026-11-11
+dd-admin10001-1.0.217,verified,"Hook preinstall đọc user-data/instance-id của cloud, mã hóa base64 rồi curl POST tới máy chủ oastify (dòng 8).",,Claude (AI),2026-11-11
+dd-pay-by-bank-dashboard-server-1.0.23,exclude,,"Các hàm lấy khóa AWS/K8s, rò rỉ tới oastify và reverse shell được định nghĩa, nhưng lời gọi exfiltrate/reverse shell và main() nằm sau dòng 150; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-experimental-utils-1.0.1,exclude,,"Mã một dòng bị làm rối và bị cắt, không xác định được hành vi; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-admin1001-3.0.3,verified,"Hook preinstall ghép kết quả 'ls -l' vào tên miền rồi curl tới máy chủ oastify, rò rỉ danh sách file (dòng 8).",,Claude (AI),2026-11-11

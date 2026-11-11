@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+dd-whaletail-1.0.0,verified,"Thu homedir, hostname, user, DNS, /etc/passwd và /etc/hosts (dòng 9-19) rồi POST HTTPS tới máy chủ OAST (dòng 31-54).",,Claude (AI),2026-11-11
+dd-42ailab-42plugin-0.3.9,exclude,,"Đoạn trích chỉ kiểm tra file nhị phân và ghi file đánh dấu, không thấy hành vi độc; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-tsign-uix-17.1.0,verified,"Thu homedir, hostname, user, DNS (dòng 8-18) rồi POST HTTPS tới máy chủ OAST (dòng 24-46).",,Claude (AI),2026-11-11
+dd-cms-catalogue-99.0.1,verified,"Chạy whoami/id/uname, lấy IP nội bộ và metadata đám mây (dòng 25-45) rồi gửi HTTP/HTTPS và DNS tới IP lạ (dòng 47-85).",,Claude (AI),2026-11-11
+dd-com.google.play.appupdate-2.0.0,verified,"Hook preinstall lấy whoami/hostname/id và gửi bằng curl tới IP lạ, kèm hostname trong tên miền (dòng 8).",,Claude (AI),2026-11-11
+dd-cantina-senior-frontend-interview-prompt-19.1.12,verified,"Lấy IP công khai, user, thư mục, hostname (dòng 6-24) rồi gửi qua query GET tới máy chủ thu thập (dòng 26-29).",,Claude (AI),2026-11-11
+dd-devnet-deploy-1.0.0,verified,Hook preinstall gửi whoami và pwd bằng curl tới IP lạ cổng 1338 (dòng 8).,,Claude (AI),2026-11-11
+dd-solana-spl-sdk-0.1.1,exclude,,"Mã bị làm rối, đoạn hiển thị bị cắt nên không thấy giải mã/thực thi; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-ddddddd1d-1.0.34,verified,"Hook preinstall dò overlay upperdir, nếu là root thì ghi script /cmd gửi danh sách tiến trình máy chủ tới OAST (thử thoát container) (dòng 7).",,Claude (AI),2026-11-11
+dd-google-fishbones-poc-1.0.0,verified,Dùng child_process chạy curl gửi hostname tới webhook.site khi postinstall (dòng 3-5).,,Claude (AI),2026-11-11
+dd-ccs-platform-js-7.7.7,revise,,"Hook chỉ in một câu thông báo, không thu thập hay gửi dữ liệu; đề xuất nhãn benign",Claude (AI),2026-11-11
+dd-24712-plv3-0.0.2,verified,"Đọc /proc/*/environ tìm Lambda Runtime API (dòng 47-58), chiếm sự kiện của tài khoản khác và gửi nội dung về ngrok (dòng 65-113).",,Claude (AI),2026-11-11
+dd-networkx-1.0.0,exclude,,"Hook chỉ chạy nền main.js, file đó không có trong đoạn trích; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-apple-app-store-server-library-poc-135.0.5,exclude,,"Hook bị cắt, chỉ thấy whoami và tìm thư mục @apple, không thấy đích gửi; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-yargs-js-1.0.1,exclude,,"Mã bị làm rối một dòng, đoạn hiển thị bị cắt nên không thấy hành vi; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-github-badge-bot-1.6.3,verified,"Gọi trích token Discord và phiên Telegram, gửi qua bot Telegram, cài Chrome Remote Desktop và tự cập nhật (dòng 14-148).",,Claude (AI),2026-11-11
+dd-peloton-creative-assets-5.0.1,verified,"Hook preinstall gửi whoami, pwd, hostname bằng wget tới webhook Discord (dòng 11).",,Claude (AI),2026-11-11
+dd-account-feapp-commons-1.0.1,revise,,"Chỉ gửi ping báo đã cài, không thu thập dữ liệu, host không phân giải được; đề xuất nhãn suspicious",Claude (AI),2026-11-11
+dd-plugin-meta-extractor-90.99.99,verified,"Thu user, hostname, IP công khai và biến môi trường chứa token/key (dòng 57-83), gửi qua DNS hex và HTTP tới OAST (dòng 68-85).",,Claude (AI),2026-11-11
+dd-business-promocode-apply-promocode-99.0.2,verified,Tải poc.js từ máy chủ lạ theo tên gói rồi eval ngay khi cài (dòng 14-17).,,Claude (AI),2026-11-11
+dd-testcatplzignore-1.0.3,verified,"Mã hóa hex hostname, OS, user, thư mục rồi rò rỉ qua truy vấn DNS tới tên miền ngoài (dòng 10-49).",,Claude (AI),2026-11-11
+dd-cw-isdk-35.0.0,verified,"Hook preinstall liệt kê thư mục cha, mã base64 rồi gửi bằng wget tới OAST (dòng 7).",,Claude (AI),2026-11-11
+dd-ach-spa-facephi-99.9.1,verified,"Mã hex IP nội bộ, hostname, homedir (dòng 40-62) và chèn làm subdomain gửi tới oastify (dòng 6-10).",,Claude (AI),2026-11-11
+dd-h1shiny-buildtools-0.0.1,verified,"Thu hostname, nền tảng, user (dòng 4-8) rồi POST tới ngrok (dòng 10-22).",,Claude (AI),2026-11-11
+dd-theia-killercoda-extension-1.0.5,exclude,,Thấy dò IMDS và metadata .npmrc/lịch sử lệnh nhưng đích là chỗ giữ 'URL' và phần gửi ở sau dòng 150; hành vi nằm ngoài đoạn trích,Claude (AI),2026-11-11
+dd-oss-feature-flags-7.7.8,verified,"Thu homedir, hostname, user, DNS (dòng 8-18) rồi POST HTTPS tới oastify (dòng 24-47).",,Claude (AI),2026-11-11
+dd-axois-utils-1.0.5,verified,"Đọc toàn bộ env, khóa SSH, file .env/.npmrc/.git-credentials, dò ví tiền mã hóa và trình duyệt (dòng 78-150) để gửi về C2 IP cổng 2222 (dòng 12-13).",,Claude (AI),2026-11-11
+dd-ai-protocol-3.0.0,verified,"Thu homedir, hostname, user, DNS (dòng 8-18) rồi POST HTTPS tới OAST (dòng 24-46).",,Claude (AI),2026-11-11
+dd-no6gg-1.0.8,verified,Hook preinstall/postinstall lấy danh sách tiến trình và gửi bằng curl tới oastify (dòng 7).,,Claude (AI),2026-11-11
+dd-tdesign-flutter-10.0.0,verified,"Hook preinstall gửi whoami, pwd, hostname bằng curl tới OAST (dòng 8).",,Claude (AI),2026-11-11
+dd-usaa-grp-payments-web-experience-bk-acknowledge-module-2.9.11,verified,"Thu homedir, hostname, user, DNS, IP công khai, FQDN (dòng 11-38) rồi POST tới oastify (dòng 41-53).",,Claude (AI),2026-11-11
+dd-storj-docs-1.1.0,verified,"Thu nền tảng, hostname, userInfo, giao diện mạng (dòng 9-16) rồi gửi qua query GET tới oastify (dòng 27-45).",,Claude (AI),2026-11-11
+dd-xsolla-pay2play-widget-8.2.5,verified,"Thu homedir, hostname, user, DNS (dòng 8-18) rồi POST HTTPS tới oastify (dòng 24-46).",,Claude (AI),2026-11-11
+dd-elf-stats-ginger-icicle-707-99.19.12,verified,Chạy curl đọc file /opt/santa-list.txt và POST nội dung tới webhook.site (dòng 4-9).,,Claude (AI),2026-11-11
+dd-eqder-bird-14.0.0,verified,Hook install gửi nội dung /etc/passwd trong header và whoami-hostname trong tên miền tới máy chủ ngoài (dòng 7).,,Claude (AI),2026-11-11
+dd-eslint-oldest-99.0.9,verified,Hook preinstall POST nội dung /etc/passwd tới oastify bằng curl (dòng 6).,,Claude (AI),2026-11-11
+dd-gestion-usuarios-2.0.0,verified,"Đọc /etc/passwd hoặc file hosts, cùng homedir, hostname, user (dòng 13-39) rồi POST tới webhook.cool (dòng 43-68).",,Claude (AI),2026-11-11
+dd-phantom-module-111.0.9,exclude,,Không có install hook chạy install.js và dòng trích dẫn vượt quá file; không xác nhận được trên đường cài đặt,Claude (AI),2026-11-11
+dd-tushar-br-editing-pack-1.0.253,exclude,,"Đoạn trích chỉ chép/xóa file từ staging_area vào thư mục dự án, không thấy gửi dữ liệu hay tải mã; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-sd-ccp-module-client-99.99.1,verified,"Hook preinstall/postinstall gửi whoami, hostname, thư mục bằng curl tới IP lạ (dòng 5).",,Claude (AI),2026-11-11

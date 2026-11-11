@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+dd-nimiq-validators-trustscore-1.0.0,verified,"Thu hostname, user, toàn bộ biến môi trường, danh sách thư mục /root /home và cổng đang mở (dòng 15-53) rồi POST tới máy chủ OAST bên ngoài (dòng 55-75).",,Claude (AI),2026-11-11
+dd-uipathisfun-1.0.11,verified,"Chạy ps aux, tự cài Docker bằng apt (dòng 32-50), gom hostname/user/quyền root (dòng 52-73) rồi gửi về máy chủ OAST (dòng 6-22, 77).",,Claude (AI),2026-11-11
+dd-espace-client-axafr-savings-types-1.0.0,verified,"Hook preinstall lấy whoami, thư mục hiện tại và hostname rồi gửi qua wget tới một địa chỉ IP lạ (dòng 7).",,Claude (AI),2026-11-11
+dd-wallet-security-checker-2.1.7,exclude,,"Hook gọi wallet-scanner.js và build-verifier.js, nội dung các file này không có trong đoạn trích; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-ikarem-telemetry-100.1.9,verified,"Script shell lấy hostname, tên hệ điều hành, user (dòng 5-8) rồi gửi qua curl tới máy chủ ngoài trong query string (dòng 21-26).",,Claude (AI),2026-11-11
+dd-tombac-icons-1.2.9,verified,"Mở kết nối TCP tới máy chủ proxy ngoài và nối stdin/stdout của /bin/sh vào socket, tạo reverse shell có tự kết nối lại (dòng 6-25).",,Claude (AI),2026-11-11
+dd-azure-monitor-workbook-templates-1.0.0,verified,"Gom thư mục home, hostname, user, DNS server và package.json (dòng 9-19) rồi POST tới máy chủ OAST (dòng 25-47).",,Claude (AI),2026-11-11
+dd-airbnb-dev-8.8.0,verified,"Thu hostname, OS, IP nội bộ, IP công khai, user và cwd (dòng 13-39) rồi gửi GET/POST tới IP lạ cổng 8080, dự phòng qua WebSocket (dòng 42-117).",,Claude (AI),2026-11-11
+dd-seller-admin-common-6.5.8,verified,"Thu IP nội bộ, IP công khai, hostname, user, home, DNS (dòng 9-60) rồi gửi qua Discord webhook (dòng 62-87).",,Claude (AI),2026-11-11
+dd-interaction-tracing-metrics-8.0.0,verified,"Thu hostname, OS, IP nội bộ và công khai, user (dòng 13-39) rồi gửi GET/POST tới IP lạ cổng 8080, dự phòng WebSocket (dòng 42-117).",,Claude (AI),2026-11-11
+dd-pay-by-bank-dashboard-server-1.0.26,verified,"Lấy credential AWS từ metadata 169.254.169.254, biến môi trường chứa token, file ~/.aws và token Kubernetes (dòng 14-101, gọi ở dòng 138-148), có hàm gửi qua DNS/curl tới OAST (dòng 102-116) và reverse shell (dòng 117-132).","Lệnh gọi hàm gửi dữ liệu nằm sau dòng 150, nhưng thân hàm gửi và thu thập đều thấy trong đoạn trích",Claude (AI),2026-11-11
+dd-remitly-blog-99999.0.0,verified,"Hook preinstall gửi whoami và hostname qua curl tới domain OAST, dự phòng bằng nslookup (dòng 9).",,Claude (AI),2026-11-11
+dd-openmct-e2e-10.0.1,exclude,,"Lệnh inline bị cắt: chỉ thấy tra DNS tới domain OAST và bắt đầu dựng JSON, phần gửi dữ liệu không hiện; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-axios-hehe-1.10.9,exclude,,"Hook prepare chỉ chạy husky install và npm run prepare:hooks, script đó không có trong đoạn trích; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-kubeflow-99.0.0,verified,"Hook preinstall/postinstall gửi hostname, whoami và đường dẫn hiện tại qua curl tới domain OAST (dòng 8).",,Claude (AI),2026-11-11
+dd-lspushpage-7.2.2,verified,"Gom hostname, user, home, cwd, một số biến môi trường và danh sách file (dòng 8-36) rồi gửi qua bot Telegram (dòng 38-46).",,Claude (AI),2026-11-11
+dd-elf-stats-silvered-toolkit-914-1.0.1,revise,,"hack.js chỉ in chữ hello, không có hành vi độc; đề xuất nhãn benign",Claude (AI),2026-11-11
+dd-shopify-app-extension-template-1.0.2,verified,"Hook preinstall gửi whoami, thư mục hiện tại và hostname qua wget tới domain OAST (dòng 7).",,Claude (AI),2026-11-11
+dd-testing-package-xdsfdsfsc-1.0.12,revise,,"Script gửi projectId/apiKey lấy từ package.json và mã băm hostname tới host cấu hình, chặn cài đặt đòi thanh toán (dòng 17-97); không đánh cắp dữ liệu nhạy cảm rõ ràng; đề xuất nhãn suspicious",Claude (AI),2026-11-11
+dd-admin0911-1.0.48,verified,"Dò dịch vụ SMTP và metrics nội bộ, đọc /proc/net/tcp, /proc/cmdline, /etc/issue (dòng 11-39) rồi mã base64 và gửi qua curl tới domain OAST (dòng 4-9).",,Claude (AI),2026-11-11
+dd-ect-472839-1.23.462,verified,"Duyệt các thư mục hệ thống như /root, /home, /etc để tìm chuỗi cờ trong nội dung file (dòng 18, 82-149) và có hàm POST kết quả tới webhook.site (dòng 12, 25-50).",Lệnh gọi hàm chính nằm sau dòng 150; thân hàm quét và gửi thấy đầy đủ,Claude (AI),2026-11-11
+dd-ifood-consumer-help-v2-4.15.1999,verified,"Gom home, hostname, user, DNS server và package.json (dòng 8-18) rồi POST tới domain OAST (dòng 24-46).",,Claude (AI),2026-11-11
+dd-reload-nucleus-views-on-compile-10.10.10,verified,"Đọc /etc/passwd cùng hostname, user, home, DNS (dòng 9-28) rồi POST tới domain OAST (dòng 34-56).",,Claude (AI),2026-11-11
+dd-libxmljs2woter-0.33.0,verified,"Đọc biến môi trường FLAG, các file flag hoặc vài dòng cuối /etc/passwd (dòng 7-59) rồi gửi trong query string tới webhook.site (dòng 61-82).",,Claude (AI),2026-11-11
+dd-vertex-core-99.0.0,verified,Hook postinstall gửi toàn bộ biến môi trường qua curl POST tới domain OAST (dòng 7).,,Claude (AI),2026-11-11
+dd-rank4222wun-1.0.30,verified,"Chạy lệnh thăm dò thoát container, đọc /etc/passwd và /proc/1/environ (dòng 21-42) rồi POST báo cáo tới domain OAST (dòng 47-60).",,Claude (AI),2026-11-11
+dd-clsx-js-1.0.5,verified,"Giải base64 ra URL jsonkeeper, tải nội dung từ đó (dòng 4-7) rồi đẩy vào tiến trình node chạy tách nền để thực thi (dòng 9-15).",,Claude (AI),2026-11-11
+dd-mongoose.js-1.0.0,exclude,,"install.js chỉ mở terminal chạy app.js, nội dung app.js không có trong đoạn trích; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-astrobot-9.9.9,verified,"Gom hostname, user, .git/config và package.json của dự án cha, liệt kê thư mục, đọc resolv.conf (dòng 18-43) rồi POST tới domain giải mã từ hex (dòng 12-13, 54-63).","Chuỗi domain là giá trị giữ chỗ nên có thể không gửi được, nhưng ý đồ thu thập và gửi rõ ràng",Claude (AI),2026-11-11
+dd-v0-utils-999.999.23004,verified,"Lọc biến môi trường có chữ chat/session/user/id, liệt kê file thư mục hiện tại (dòng 6-15) rồi gửi qua HTTPS GET tới domain OAST (dòng 18-25).",,Claude (AI),2026-11-11
+dd-cnx-ui-cnx-ui-core-20.0.12,verified,"Hook preinstall gom whoami, pwd, hostname, uname, /etc/passwd, /etc/hosts, mã base64 rồi gửi qua wget tới máy chủ ngoài (dòng 7).",,Claude (AI),2026-11-11
+dd-rank4222wun-1.0.55,verified,"Tự chạy lại ở nền (dòng 83-90), quét đệ quy home và toàn ổ đĩa tìm JWT, khóa AWS, chuỗi kết nối DB, token Slack (dòng 21-77, 93-94) rồi POST từng phát hiện tới domain OAST (dòng 30-41).",,Claude (AI),2026-11-11
+dd-atlas-websocket-28.9.11,verified,"Đọc /etc/passwd, /etc/hosts, /etc/hostname, /etc/crontab (dòng 10-42) rồi POST nội dung tới IP VPS lạ cổng 9090 (dòng 45-78).",,Claude (AI),2026-11-11
+dd-axois-utils-1.0.6,exclude,,"Thấy hàm thu SSH key, ví crypto, biến môi trường, file .env (dòng 16-150) nhưng phần gửi tới C2 và lệnh gọi nằm sau dòng 150; hành vi nằm ngoài đoạn trích",Claude (AI),2026-11-11
+dd-calypso-build-1004.0.0,verified,"Gom tên gói, hostname, nền tảng, đường dẫn cài và IP mạng (dòng 7-20) rồi POST tới IP lạ cổng 7891 (dòng 22-49).",,Claude (AI),2026-11-11
+dd-hydra-consent-sdk-99.99.1,revise,,"Hook chỉ ping domain OAST, tạo truy vấn DNS báo hiệu nhưng không gửi dữ liệu máy; đề xuất nhãn suspicious",Claude (AI),2026-11-11
+dd-fast-todo-app-9.9.9,verified,Hook preinstall gửi hostname máy qua HTTPS GET tới domain OAST (dòng 8).,,Claude (AI),2026-11-11
+dd-twilio-sdk-0.2.2,verified,"Gom hostname, FQDN, domain AD, logon server, thông tin CI/repo và đường dẫn cài (dòng 4-47) rồi gửi qua HTTP GET tới IP lạ cổng 3000 (dòng 32-49).",,Claude (AI),2026-11-11
+dd-apex-trading-1.0.1,verified,"Sau 45 giây, gom biến môi trường, .npmrc, khóa SSH, credential AWS, docker/kube config, .env và /proc/self/environ (dòng 8-58) rồi POST tới IP lạ cổng 9191 (dòng 60-77).",,Claude (AI),2026-11-11
+dd-igain-react-app-99.9.1,verified,"Mã hex hostname, home và IP nội bộ (dòng 40-59) rồi nhét vào subdomain của domain OAST để gửi request, tức rò rỉ qua DNS (dòng 6-11, 60-62).",,Claude (AI),2026-11-11
