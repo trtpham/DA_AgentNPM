@@ -13,3 +13,10 @@ Ngày 11/11/2026, theo yêu cầu của PO, Claude đọc bằng chứng của 2
 - Lượt 3 (Shai-Hulud 2.0): cả 18 dòng `exclude` vì đoạn trích chỉ thấy `setup_bun.js` chạy ngầm `bun_environment.js`; phần đánh cắp nằm ở file không được trích.
 - Rà lại (main): 4 gói `*-tg-api` ở lượt 4 đổi `exclude` → `verified` (chạy EXE từ ZIP có mật khẩu lúc cài).
 - Lượt 10, 11, 14 (120 dòng) làm tiếp sau khi hạn mức mở lại: 82 `verified`, 9 `revise`, 29 `exclude`. Một dòng không đọc được đầu ra (`dd-actions-languageservices-2.0.9`, lượt 11) được để `exclude`; hai dòng ở lượt 14 đọc được bằng cách chèn ký tự vào đầu ra trong bộ nhớ.
+
+## Bổ sung lượt 16, 17, 18, 20 (11/11/2026)
+
+- Soạn thêm 100 nháp lành (lượt 16: hết nhóm A; 17–18: hết nhóm B "nhẹ") và 40 nháp độc Datadog (lượt 20); bằng chứng lập trong container dùng một lần (`review_evidence`).
+- Kết quả: 57 `verified`, 4 `revise`, 79 `exclude`. Nháp lành nhóm B có tỉ lệ `exclude` cao vì phần tải/chạy nằm sau dòng 150 hoặc ở file khác.
+- Rà lại (main): `cand-nono-postinstall-test` → `revise` (ghi file vào home); `dd-strapi-plugin-guardarian-ext` → `exclude` (chưa thấy lời gọi lúc cài).
+- Ba dòng ở lượt 20 không đọc được đầu ra (`show.py`) nên để `exclude`.

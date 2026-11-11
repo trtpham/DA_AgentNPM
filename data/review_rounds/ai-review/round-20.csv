@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+dd-ts-form-helpers-1.0.5,verified,"setup.sh thu env, gitconfig, git-credentials, .netrc, token GitHub (dòng 15-57) gửi POST tới máy chủ ngoài (dòng 18-19, 44, 125), cài git wrapper chặn token (dòng 62-78) và hook pre-commit (dòng 109-113).",,Claude (AI),2026-11-11
+dd-content-silent-alarms-0.0.1,verified,"index.js gom hostname, username, homedir, DNS server (dòng 8-18) rồi POST tới máy chủ oast.fun (dòng 24-46) khi preinstall.",,Claude (AI),2026-11-11
+dd-com.unity.formats.fbx-1.0.0,exclude,,"Dòng 1 bị cắt: thấy gom hostname/whoami/env rồi base64, phần gửi đi nằm sau đoạn cắt.",Claude (AI),2026-11-11
+dd-upstartportal-99.99.1,exclude,,Đến dòng 150 chỉ thấy gom env bí mật và danh sách file nhạy cảm; đoạn gửi tới CALLBACK_HOST nằm sau dòng 150.,Claude (AI),2026-11-11
+dd-admin10001-1.0.307,exclude,,"Lệnh inline bị cắt: thấy đọc file trong thư mục người dùng, phần gửi https bị cắt mất.",Claude (AI),2026-11-11
+dd-cktool.core.internal-1000.0.1,verified,"index.js chạy whoami/hostname/IP công khai (dòng 4), mã hóa base64 rồi POST tới webhook.site (dòng 6-17).",,Claude (AI),2026-11-11
+dd-clearpool-table-99.99.99,exclude,,Lệnh inline bị cắt ngay tại curl: thấy gom whoami/hostname/pwd nhưng không thấy dữ liệu được gửi tới đâu.,Claude (AI),2026-11-11
+dd-pi-exa-mcp-99.9.9,verified,"index.js gom hostname, platform, username (dòng 4-10) rồi POST tới webhook.site (dòng 12-26) khi preinstall.",,Claude (AI),2026-11-11
+dd-usaa-grp-ent-conv-platform-usaa-1.1.19,verified,"index.js gom hostname, user, toàn bộ env, tiến trình, IP, metadata AWS (dòng 20-37) rồi gửi tới ngrok (dòng 46-67) và rò qua DNS oastify (dòng 71-82).",,Claude (AI),2026-11-11
+dd-post-comment-2.0.2,verified,Hook preinstall lấy hostname và whoami gửi bằng curl tới máy chủ oast.fun (dòng 8); cú pháp lỗi dấu gạch và nháy cong nhưng ý đồ rõ.,,Claude (AI),2026-11-11
+dd-challenger6-vm-pattern-library-99.0.0,verified,"postinstall.js lấy hostname, username (dòng 7-8) gửi qua HTTP GET (dòng 13-16) và DNS lookup (dòng 25-26) tới oastify.",,Claude (AI),2026-11-11
+dd-atticuss-sra-test-pkg-x4-3.2.2,exclude,,"init.js là một dòng bị làm rối và bị cắt, không thấy hành vi sau giải mã.",Claude (AI),2026-11-11
+dd-admin10001-1.0.324,verified,"Hook preinstall liệt kê file socket trong /var/run gửi POST tới oastify, dự phòng gửi tên USER qua DNS lookup (dòng 7).",,Claude (AI),2026-11-11
+dd-mshops-seo-ui-1.1.4,verified,Hook preinstall gửi hostname máy cài qua curl tới máy chủ ngoài bb.f4d3.io (dòng 8).,,Claude (AI),2026-11-11
+dd-baidu-src-test-0.0.4,verified,"Hook preinstall/install mã hóa base64 whoami, hostname, pwd rồi curl tới oastify (dòng 7).",,Claude (AI),2026-11-11
+dd-tss12111-1.0.2,verified,"Hook preinstall tìm file cấu hình mcp.json trong /home, /root, /etc, mã hóa base64 rồi POST tới oastify (dòng 7).",,Claude (AI),2026-11-11
+dd-xarc-webpack-cli-1.0.0,verified,"poc.js gom env token/CI, cấu hình mạng, git remote, package.json cha, cấu hình CI (dòng 18-83) rồi gửi DNS (dòng 86) và POST tới oast.pro (dòng 88-118).",,Claude (AI),2026-11-11
+dd-mpsemea-fspay-smartpay-logging-web-sdk-10.0.0,verified,"Hook preinstall gửi whoami, pwd, hostname qua wget tới IP công khai 161.97.146.137 (dòng 7).",,Claude (AI),2026-11-11
+dd-adobe-parcel-transformer-test-app-1.0.0,verified,"Hook preinstall POST whoami, hostname, ngày giờ, pwd tới webhook.site (dòng 7).",,Claude (AI),2026-11-11
+dd-os-apps-ui-curvelibrary-9.9.9,verified,"Hook preinstall gom hostname, whoami, id, danh sách thư mục, base64 rồi rò qua truy vấn DNS dig tới oastify (dòng 8).",,Claude (AI),2026-11-11
+dd-wisdomtreetest-1.0.1,verified,"Các hook preinstall/install/postinstall/prepare POST hostname, toàn bộ env và id tới oastify (dòng 62).",,Claude (AI),2026-11-11
+dd-matrix-shell-bench-2.0.0,verified,"index.js gom hostname, username, homedir, /etc/passwd, /etc/hosts (dòng 9-20) rồi POST tới oastify (dòng 31-54).",,Claude (AI),2026-11-11
+dd-speedshop-sdk-api-21.4.2,exclude,,set.js chỉ import ./src/clb.js; hành vi thật nằm ở file khác không có trong trích đoạn.,Claude (AI),2026-11-11
+dd-internal-plugin-telemetry-backend-1.0.3,revise,"index.js chỉ gửi một GET tới webhook.site (dòng 3-17), không kèm dữ liệu máy.",Chỉ là beacon không chứa dữ liệu máy; đề xuất nhãn suspicious.,Claude (AI),2026-11-11
+dd-admin10001-1.0.160,verified,Hook preinstall đọc hostname từ metadata Google Cloud rồi POST tới oastify (dòng 8).,,Claude (AI),2026-11-11
+dd-azure-documentdb-node-9.9.9,verified,Hook preinstall gửi nội dung /etc/passwd bằng curl tới tên miền oast.fun có gắn hostname (dòng 8).,,Claude (AI),2026-11-11
+dd-side-effects-package-2.9.9,verified,"index.js đọc /etc/passwd, gom hostname, username, homedir (dòng 9-27) rồi POST tới oastify (dòng 33-52).",,Claude (AI),2026-11-11
+dd-spire.officejs-externs-99.0.1,exclude,,không đọc được bằng chứng,Claude (AI),2026-11-11
+dd-toptal-picasso-calendar-4.2.5,exclude,,không đọc được bằng chứng,Claude (AI),2026-11-11
+dd-elf-stats-whimsical-satchel-586-1.0.0,verified,"index.js chạy curl gửi whoami, hostname trong đường dẫn và /etc/passwd, /etc/hosts, id qua User-Agent tới xmh.lex.fo (dòng 2-7).",,Claude (AI),2026-11-11
+dd-rostov-0.0.0-dev-202603280649,exclude,,"postinstall.mjs chỉ kiểm tra gói nhị phân theo nền tảng (dòng 50-118), không thấy hành vi độc; phần đáng ngờ nếu có nằm ở gói nhị phân hoặc wrapper khác.",Claude (AI),2026-11-11
+dd-liblynxtextra.so-6.0.0,exclude,,không đọc được bằng chứng,Claude (AI),2026-11-11
+dd-err-notification-1.0.14,exclude,,0x0.js chỉ export middleware gọi ./0x2.js; hành vi nằm ở file khác và không chắc được gọi khi cài.,Claude (AI),2026-11-11
+dd-strapi-plugin-guardarian-ext-3.6.8,exclude,"postinstall.js chạy lệnh dò container, thử SSH, quét mạng nội bộ, đọc metadata cloud, shadow và khóa SSH (dòng 31-150) rồi POST từng kết quả tới IP 144.31.107.231 (dòng 6-22).","Rà lại (main): lời gọi main() nằm sau dòng 150, chưa thấy chạy lúc cài (nhất quán với dd-pay-by-bank-dashboard-server ở lượt 12). ",Claude (AI),2026-11-11
+dd-elf-stats-sleighing-toy-790-1.0.0,revise,"Hook preinstall đọc /opt/santa-list và ghi ra /tmp (dòng 9), không gửi đi đâu.","Chỉ đọc file và ghi cục bộ, không rò rỉ ra ngoài; đề xuất nhãn suspicious.",Claude (AI),2026-11-11
+dd-ing-feat-mortgage-consent-starter-99.99.99,verified,"Script gom hostname, user, lịch sử shell, .gitconfig, .npmrc, mạng, cron, sudo (dòng 34-114) rồi POST tới oast.me (dòng 117-143).",,Claude (AI),2026-11-11
+dd-xpack-video-submission-1.0.2,exclude,,Đến dòng 150 chỉ thấy mở trình duyệt và giao diện terminal; phần quyết định nằm sau dòng 150 (file 569 dòng).,Claude (AI),2026-11-11
+dd-xeno.dll-1.0.2,exclude,,"index.js là một dòng bị làm rối và bị cắt, không thấy hành vi sau giải mã.",Claude (AI),2026-11-11
+dd-oci-plugin-compliance-1.9.9,verified,"preinstall.js gom username, hostname, đường dẫn, IP công khai (dòng 66-75), mã hóa hex rồi rò qua truy vấn DNS TXT tới dns-test.space (dòng 33-63, 76-77).",,Claude (AI),2026-11-11
+dd-dynatrace-test-automation-11.1.1,exclude,,Lệnh inline bị cắt: thấy chạy id và đọc resolv.conf nhưng không thấy dữ liệu được gửi đi.,Claude (AI),2026-11-11

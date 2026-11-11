@@ -1,0 +1,41 @@
+id,ai_decision,ai_observed_behavior,ai_note,reviewer,reviewed_at
+cand-rust-sandbox-rust-1-95-x86-64-linux-1.95.0,exclude,,"Không có nội dung gói (archive quá lớn), hooks rỗng; không xem được gì.",Claude (AI),2026-11-11
+cand-llama.rn-0.13.0-rc.8,exclude,"Tải tệp native từ trang releases của repo (dòng 29, 106-150).","Phần tải, ghi và lệnh spawnSync nằm sau dòng 150, không thấy được.",Claude (AI),2026-11-11
+cand-bitrise-bitkit-v2-0.3.500,exclude,Chạy chakra typegen bằng node trong thư mục gói (dòng 26-29).,"Dòng 41 nạp prune-color-tokens.cjs (file khác, không có trong trích đoạn); typegen có thể ghi vào gói @chakra-ui khác.",Claude (AI),2026-11-11
+cand-speckeep-1.2.0,exclude,"Tải binary từ GitHub releases của dự án (dòng 4-7, 74-102).","Luồng chính (tải, giải nén, ghi .bin) nằm sau dòng 150; SPECKEEP_VERSION từ env có thể đổi tag.",Claude (AI),2026-11-11
+cand-siteed-sherpa-onnx.rn-1.3.1,exclude,Tải prebuilt Sherpa ONNX (dòng 104-147).,URL lấy từ scripts/sherpa-prebuilt-contract (file khác); phần giải nén và execSync nằm sau dòng 150.,Claude (AI),2026-11-11
+cand-selfpentest-pentest-my-ci-1.1.1,verified,"Trong CI, in cảnh báo kèm tên (không có giá trị) các biến môi trường nhạy cảm ra console rồi thoát mã 112 (dòng 1-26); không gửi mạng, không ghi file.",,Claude (AI),2026-11-11
+cand-dhriti-0.1.5,verified,"Tải dhriti từ GitHub releases của chính repo (dòng 33-41, 75-76) vào thư mục tạm, giải nén bằng tar/PowerShell (dòng 86-115), chép binary vào thư mục gói và xóa thư mục tạm (dòng 131-137).",,Claude (AI),2026-11-11
+cand-zidane-gui-8.2.5,exclude,Bản cài toàn cục gọi installApp từ app-installer.mjs để tạo launcher hệ điều hành (dòng 33-50).,Phần quyết định nằm trong app-installer.mjs (file khác); có ghi launcher ra ngoài thư mục gói.,Claude (AI),2026-11-11
+cand-hellish-shell-3.2.0,verified,Tải binary hellish từ GitHub releases của repo dự án (dòng 25-27) ghi vào bin/ của gói và chmod (dòng 28-49).,,Claude (AI),2026-11-11
+cand-times-components-schema-0.7.5,exclude,Tải GraphQL schema từ api.thetimes.co.uk (dòng 15-20).,Logic nằm trong fetch-gql-schema (file khác) và ghi vào process.cwd(); hook còn chạy yarn fmt không xem được.,Claude (AI),2026-11-11
+cand-liwenkai-deepcode-0.4.15,exclude,"Tải binary deepcode từ GitHub releases của repo vào bin/ (dòng 109-146), dùng ldd kiểm musl (dòng 74).","Hàm downloadFile, verifyChecksum và lời gọi main nằm sau dòng 150.",Claude (AI),2026-11-11
+cand-zdavison-noticer-1.2.3,exclude,Lệnh show gọi run() từ ../lib.js (dòng 12-22).,Phần quyết định nằm trong lib.js (file khác); có tùy chọn tự thực thi lệnh từ notice.,Claude (AI),2026-11-11
+cand-blueking-bkms-cli-1.0.6,exclude,Tải lưu trữ bằng curl từ releaseUrl trong package.json (dòng 66-100).,Không thấy URL thật; phần sau dòng 150 gọi apply-endpoints.js ghi cấu hình cục bộ.,Claude (AI),2026-11-11
+cand-coderabbit-0.9.0,exclude,"Tải zip, kiểm sha256, giải nén binary vào thư mục gói (dòng 80-124).","Base URL lấy từ env.js và release từ package.js (file khác), không xác định được host.",Claude (AI),2026-11-11
+cand-cui-llama.rn-1.12.2,exclude,"Tải tệp native từ trang releases của repo (dòng 29, 106-150).","Phần tải, ghi và lệnh spawnSync nằm sau dòng 150, không thấy được.",Claude (AI),2026-11-11
+cand-gilbertwong1996-ado-0.7.0,exclude,Tải binary từ GitHub releases (dòng 53-97) và theo chú thích còn cài shell completion (dòng 14-19).,Chú thích nói sẽ ghi thêm dòng vào file cấu hình shell (zsh/powershell) nhưng mã thực hiện nằm sau dòng 150; nếu xác nhận thì nên là suspicious.,Claude (AI),2026-11-11
+cand-drawio-headless-0.4.2,exclude,"Tải binary từ GitHub releases của repo vào vendor/ (dòng 120-146), giải nén bằng tar/PowerShell (dòng 73-97).","Phần giải nén và chép binary nằm sau dòng 150, chưa xem hết.",Claude (AI),2026-11-11
+cand-pi-aia-browser-0.2.3,exclude,Chạy playwright install chromium (dòng 38-41).,Tải Chromium từ CDN của Playwright vào cache người dùng ngoài thư mục gói và xóa cờ PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD của người dùng; không thuộc tiêu chí verified.,Claude (AI),2026-11-11
+cand-tjcoder-cli-0.9.170,exclude,"Tải lưu trữ từ GitHub releases, giải nén bằng tar/unzip (dòng 68-140).",Repo có thể bị đổi qua CODER_CLI_REPO (dòng 17); luồng chính nằm sau dòng 150.,Claude (AI),2026-11-11
+cand-clasp-1.0.0,exclude,,Không có package.json và index.js trong archive; không xem được gì.,Claude (AI),2026-11-11
+cand-dirigiblelabs-dirigible-15.1.0,verified,"Tải JAR Eclipse Dirigible đúng phiên bản từ Maven Central (dòng 12, 30) ghi vào data/ trong gói kèm version.txt (dòng 37-42); không chạy JAR.",,Claude (AI),2026-11-11
+cand-haider-agent-0.0.972,exclude,"Tải lưu trữ từ GitHub releases của repo (dòng 17, 43-103).","Giải nén, ghi vendor/ và lệnh spawnSync nằm sau dòng 150.",Claude (AI),2026-11-11
+cand-everkm-publish-0.19.1,exclude,Tải zip từ CDN everkm hoặc GitHub (dòng 48-55) vào bin/ rồi giải nén (dòng 120-150).,Phần sau giải nén và lệnh child_process nằm sau dòng 150.,Claude (AI),2026-11-11
+cand-glimpseui-0.8.1,exclude,Kiểm tra công cụ build rồi chạy build.mjs (dòng 10-57).,Phần quyết định nằm trong build.mjs (file khác).,Claude (AI),2026-11-11
+cand-caurad-0.14.0,exclude,"Tải binary từ caura.ai (dòng 41), dùng tar (dòng 139-150).",Base URL đổi được qua env; luồng tải và cài nằm sau dòng 150.,Claude (AI),2026-11-11
+cand-codesafe-pi-1.5.0,verified,"Tải binary codesafe từ GitHub releases của repo dự án (dòng 29) vào bin/ của gói và chmod (dòng 30-36, 42-59).",,Claude (AI),2026-11-11
+cand-pi-repl-py-0.9.0,exclude,"Tạo venv trong ~/.pi/agent/pi-repl và pip install ipykernel, cloudpickle từ PyPI (dòng 9, 77-83).","Ghi ngoài thư mục gói vào home, tải mã Python từ PyPI và dùng python hệ thống; không thuộc tiêu chí verified.",Claude (AI),2026-11-11
+cand-node-adlt-0.65.2,exclude,Gọi module ./download với GITHUB_TOKEN để tải binary vào bin/ (dòng 76-84).,Phần tải nằm trong lib/download.js (file khác); token được truyền đi không xem được đích.,Claude (AI),2026-11-11
+cand-mediaio-cli-0.5.1,verified,"Tải tarball từ GitHub releases media-io/cli (dòng 26, 77), giải nén binary bằng tar vào vendor/ của gói, chmod và ghi install.json (dòng 81-100).",,Claude (AI),2026-11-11
+cand-andrian.yablonskyy-thub-client-1.1.27,exclude,Bản cài toàn cục tạo ~/.config/thub và client.json mặc định (dòng 77-96).,Dùng install-target.js (file khác) và hook còn chạy install-systemd-unit.js không xem được; ghi ngoài gói và cài dịch vụ hệ thống.,Claude (AI),2026-11-11
+cand-conanmontreal-crush-0.98.2-fork.51,exclude,Gọi install() từ lib.js (dòng 5-6).,Phần quyết định nằm trong lib.js (file khác).,Claude (AI),2026-11-11
+cand-inulute-cux-0.4.1,exclude,Tải binary từ GitHub releases (dòng 86-103).,Repo đổi được qua CUX_RELEASE_REPO; luồng tải chính nằm sau dòng 150.,Claude (AI),2026-11-11
+cand-damodi-scholarseed-0.2.4,exclude,Chạy bin/scholarseed.js (dòng 17).,Phần quyết định nằm trong scholarseed.js (file khác).,Claude (AI),2026-11-11
+cand-electerm-5.7.5,exclude,Lấy thông tin release từ homepage và tải binary (dòng 42-99).,Hàm tải ở ./utils (file khác) và luồng chính nằm sau dòng 150.,Claude (AI),2026-11-11
+cand-genspark-gencode-1.19.3-gencode.2,exclude,npm install gói nền tảng với --ignore-scripts vào thư mục tạm rồi chép binary (dòng 130-148).,copyBinary và luồng chính nằm sau dòng 150.,Claude (AI),2026-11-11
+cand-chyroc-nomad-0.2.1,exclude,"Tải tarball từ GitHub releases của repo, giải nén vào bin/prebuilt (dòng 85-129).","Đích installRoot() và hàm giải nén ở lib/paths.js, lib/extract.js (file khác); base URL đổi được qua env.",Claude (AI),2026-11-11
+cand-osvaldoandrade-tikti-cli-0.2.105,exclude,"Tải binary có kiểm sha256, gửi kèm GITHUB_TOKEN nếu có (dòng 46-144).",Luồng chính nằm sau dòng 150; header token được giữ khi theo redirect (dòng 67) cần xem thêm.,Claude (AI),2026-11-11
+cand-forgeax-engine-codec-0.3.11,exclude,Nếu thiếu WASM thì gọi ensureWasm từ ensure-wasm-lib.mjs với fetch-wasm.mjs (dòng 28-39).,Phần quyết định nằm trong file khác.,Claude (AI),2026-11-11
+cand-superinstance-starter-shell-0.1.3,exclude,Hook chạy pip install starter-shell từ PyPI (dòng 10).,Cài gói Python vào môi trường Python hệ thống/toàn cục.,Claude (AI),2026-11-11
+cand-orbit-tools-cli-0.31.0,exclude,Tải binary từ GitHub releases có kiểm chữ ký (dòng 79-150).,binaryRepo lấy từ package.json; luồng tải và chạy spawnSync nằm sau dòng 150.,Claude (AI),2026-11-11
