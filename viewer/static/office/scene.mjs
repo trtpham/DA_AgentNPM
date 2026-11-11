@@ -6,6 +6,7 @@ import { ROOMS } from "./events.mjs";
 import { at, box, mesh, personMesh, robotMesh } from "./people.mjs";
 import { createCampus } from "./outdoor.mjs";
 import { createLogistics, SITES } from "./logistics.mjs";
+import { createPost, skyDome, studioEnvironment } from "./fx.mjs";
 import { barrierGate, chair, coffeeBar, desk, monitor, plant, printer, rug, serverRack, shelf, sofa,
          textures, waterCooler, wallPoster, workstation } from "./props.mjs";
 
@@ -120,21 +121,29 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.08;
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#132233");
-  scene.fog = new THREE.Fog("#132233", 110, 260);
+  // Dusk-blue gradient sky; the fog takes the horizon colour so the campus edge melts into it.
+  const SKY = { top: "#0a1626", horizon: "#36506a", bottom: "#132233", sun: "#ffd9a8" };
+  const sunDirection = new THREE.Vector3(-26, 46, -18).normalize();
+  scene.background = new THREE.Color(SKY.bottom);
+  scene.fog = new THREE.Fog(SKY.horizon, 120, 300);
+  scene.add(skyDome(SKY, sunDirection));
+  scene.environment = studioEnvironment(renderer, SKY, sunDirection);
+  scene.environmentIntensity = 0.45;
+  const post = createPost(renderer);
   const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 600);
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.42; // never under the floor
   controls.enablePan = false;
 
-  scene.add(new THREE.HemisphereLight(0xe6f2ff, 0x101a26, 1.3));
+  scene.add(new THREE.HemisphereLight(0xe6f2ff, 0x101a26, 0.95)); // the environment map adds the rest of the fill
   const sun = new THREE.DirectionalLight(0xfff1dc, 2.2);
   sun.position.set(-26, 46, -18);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, { left: -48, right: 48, top: 34, bottom: -34, near: 1, far: 130 });
   sun.shadow.bias = -0.0005;
+  sun.shadow.normalBias = 0.025; // no acne on the curved capsule bodies
   scene.add(sun);
 
   // Campus around the building (lawn, roads, parking, plaza, trees, traffic), then the building itself.
@@ -164,7 +173,12 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   scene.add(at(waterCooler(), 32.2, 0, 1.6));
   for (const [x, z] of [[-4.5, -2.0], [16.5, 2.0], [-23, 2.0]]) scene.add(at(mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.5, 12), "#5c6b7a"), x, 0.25, z));
   // Entrance: glass doors in the west wall and the HQ sign above them.
-  for (const z of [-1.35, 1.35]) scene.add(at(box(0.1, 2.3, 2.5, "#9fd8ff", { opacity: 0.3, roughness: 0.05, shadow: false }), HALL.minX, 1.15, z));
+  const doors = [-1.35, 1.35].map((z) => {
+    const door = at(box(0.1, 2.3, 2.5, "#9fd8ff", { opacity: 0.3, roughness: 0.05, metalness: 0.4, shadow: false }), HALL.minX, 1.15, z);
+    door.userData.closed = z;
+    scene.add(door);
+    return door;
+  });
   for (const z of [-2.65, 2.65]) scene.add(at(box(0.4, 3, 0.4, "#2a3d52"), HALL.minX, 1.5, z));
   scene.add(at(box(0.4, 0.5, 5.7, "#2a3d52"), HALL.minX, 3.1, 0));
   scene.add(at(glowing(mesh(new THREE.PlaneGeometry(5.2, 1), "#ffffff", { map: textures.sign("NPM AGENT HQ", "#61e8c2"), shadow: false }), 0.9),
@@ -314,7 +328,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   const inbox = add("reviewer", new THREE.Group(), 0.9, 0.8, 0.5);
 
   // Pantry (open plan): coffee bar, lounge sofas, round tables with stools, a fridge.
-  add("pantry", coffeeBar(), 1.5, 0, 3.0, Math.PI);
+  const bar = add("pantry", coffeeBar(), 1.5, 0, 3.0, Math.PI);
   add("pantry", box(0.8, 1.8, 0.7, "#dde5ec", { metalness: 0.3 }), 4.4, 0.9, 3.3);
   add("pantry", sofa("#7a5c8f"), -3.3, 0, -1.6, 0.2);
   add("pantry", sofa("#7a5c8f"), -3.6, 0, 1.6, Math.PI - 0.2);
@@ -418,13 +432,75 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   cart.position.set(HALL.minX + 2.35, 0, HALL_Z + 1.9);
   scene.add(cart);
 
+  // --- ambient life: swaying plants, scrolling code, coffee steam, birds over the campus ------------
+  scene.updateMatrixWorld(true);
+  const crowns = [];
+  scene.traverse((item) => { if (item.userData.crown) crowns.push({ crown: item.userData.crown, phase: crowns.length * 1.7 }); });
+  for (const screen of screens) {
+    screen.material.map.wrapT = THREE.RepeatWrapping;
+    screen.material.map.needsUpdate = true;
+  }
+  const puff = (() => {
+    const canvasPuff = document.createElement("canvas");
+    canvasPuff.width = canvasPuff.height = 64;
+    const g = canvasPuff.getContext("2d");
+    const gradient = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, "rgba(255,255,255,1)");
+    gradient.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = gradient;
+    g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(canvasPuff);
+  })();
+  function steam(origin, count, spread, rise) {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+    geometry.setAttribute("color", new THREE.BufferAttribute(new Float32Array(count * 4).fill(1), 4));
+    const points = new THREE.Points(geometry, new THREE.PointsMaterial({ size: 0.32, map: puff, vertexColors: true, transparent: true,
+                                                                           depthWrite: false, color: "#dfe8f2" }));
+    points.frustumCulled = false;
+    scene.add(points);
+    return (time) => {
+      const position = geometry.attributes.position.array;
+      const color = geometry.attributes.color.array;
+      for (let index = 0; index < count; index += 1) {
+        const life = (time * 0.32 + index / count) % 1;
+        position[index * 3] = origin.x + Math.sin(life * 5 + index * 2.1) * spread * life;
+        position[index * 3 + 1] = origin.y + life * rise;
+        position[index * 3 + 2] = origin.z + Math.cos(life * 4 + index * 1.3) * spread * life;
+        color[index * 4 + 3] = Math.sin(life * Math.PI) * 0.45;
+      }
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
+    };
+  }
+  const steams = [steam(bar.localToWorld(new THREE.Vector3(-0.7, 1.62, -0.05)), 16, 0.14, 1.2)];
+  const birds = Array.from({ length: 7 }, (_, index) => {
+    const bird = new THREE.Group();
+    const wings = [-1, 1].map((side) => {
+      const wing = new THREE.Group();
+      wing.add(at(box(0.55, 0.03, 0.2, "#1d2733", { shadow: false }), side * 0.28, 0, 0));
+      bird.add(wing);
+      return wing;
+    });
+    bird.add(box(0.14, 0.08, 0.36, "#1d2733", { shadow: false }));
+    scene.add(bird);
+    return { bird, wings, slot: index };
+  });
+
   // Truck mode: registry, the user's machine, the truck, parcels and outcome zones (logistics.mjs).
   const logistics = createLogistics({ scene, overlay });
   const silent = () => { const element = document.createElement("span"); element.hidden = true; return element; };
   staff.dev = { ...logistics.developer, tag: silent(), action: null, actionAge: 0 };
   robots.assistant = { ...logistics.assistant, tag: silent(), lift: -0.33, action: null, actionAge: 0, slammed: false };
 
-  let animating = false; // idle motion only while a replay plays: a paused office leaves the GPU idle
+  let animating = false; // full idle motion while a replay plays
+  // "Cảnh sống động": ambient motion (plants, steam, birds, traffic...) also while paused, but drawn at
+  // most 30 times a second; switched off, a paused office leaves the GPU idle as before.
+  let ambient = true;
+  let ambientDirty = false;
+  let lastRender = 0;
+  // Opening shot: the camera swings in from high above the campus; any click or wheel skips it.
+  const intro = { on: false, age: 0, life: 2.8 };
   let idleTime = 0;
   let thinkingColors = [];
   let gateAction = null;
@@ -472,10 +548,12 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   const packetGeometry = new THREE.SphereGeometry(0.16, 14, 10);
   function sendPacket(from, to, color, onArrive, label) {
     const tint = new THREE.Color(color);
-    const orb = new THREE.Mesh(packetGeometry, new THREE.MeshBasicMaterial({ color: tint }));
-    orb.add(new THREE.PointLight(tint, 3, 3, 2));
+    // No PointLight per packet: adding or removing a light recompiles every material's shader (a hitch
+    // on each send). An HDR colour above the bloom threshold makes the orb glow instead.
+    const hot = tint.clone().multiplyScalar(post.enabled ? 3.2 : 1);
+    const orb = new THREE.Mesh(packetGeometry, new THREE.MeshBasicMaterial({ color: hot }));
     const trail = Array.from({ length: 6 }, (_, index) => {
-      const dot = new THREE.Mesh(packetGeometry, new THREE.MeshBasicMaterial({ color: tint, transparent: true, opacity: 0.5 - index * 0.07 }));
+      const dot = new THREE.Mesh(packetGeometry, new THREE.MeshBasicMaterial({ color: hot, transparent: true, opacity: 0.5 - index * 0.07 }));
       dot.scale.setScalar(0.75 - index * 0.1);
       dot.position.copy(from);
       scene.add(dot);
@@ -550,7 +628,9 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     label.textContent = `🧑 ${name}`;
     tag.append(stamp, bubble, label);
     overlayLayer.append(tag);
-    const worker = { ...body, thought, tag, bubble, stamp, lane, path: [], room: "reception", phase: 0 };
+    const worker = { ...body, thought, tag, bubble, stamp, lane, path: [], room: "reception", phase: 0,
+                     yaw: body.person.rotation.y, spawn: reducedMotion() ? 1 : 0 };
+    body.person.scale.setScalar(worker.spawn ? 1 : 0.001);
     workers.set(id, worker);
     dirty = true;
     return {
@@ -596,13 +676,19 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     workers.clear();
     laneCount = count;
     refreshRooms();
+    if (!reducedMotion()) {
+      const view = canvas.parentElement;
+      view.classList.remove("scene-change");
+      void view.offsetWidth; // restart the CSS animation
+      view.classList.add("scene-change");
+    }
   }
 
   function refreshRooms() {
     const occupied = new Set([...workers.values()].map((worker) => worker.room));
     for (const [id, room] of Object.entries(rooms)) {
       const on = occupied.has(id);
-      room.floor.material.color.copy(on ? room.base.clone().lerp(room.accent, 0.35) : room.base);
+      room.goal = on ? room.base.clone().lerp(room.accent, 0.35) : room.base;   // frame() fades towards it
       room.label.classList.toggle("active", on);
     }
     for (const screen of screens) screen.material.emissiveIntensity = occupied.has("code") ? 1 : 0.35;
@@ -713,6 +799,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
   function fit() {
     const { clientWidth: width, clientHeight: height } = canvas.parentElement;
     renderer.setSize(width, height, false);
+    post.setSize(width, height);
     camera.aspect = width / Math.max(height, 1);
     camera.updateProjectionMatrix();
     // Find the closest distance at which every corner of the building stays on screen (binary search).
@@ -801,25 +888,42 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       if (worker.path.length) {
         const target = worker.path[0];
         const step = reduced ? Infinity : 11 * delta * speed.value; // the hallway is ~60 m long
+        worker.person.position.y = 0;
         const offset = target.clone().sub(worker.person.position);
         if (offset.length() <= step) {
           worker.person.position.copy(target);
           worker.path.shift();
         } else {
           worker.person.position.add(offset.clone().setLength(step));
-          worker.person.rotation.y = Math.atan2(offset.x, offset.z);
+          worker.yaw = Math.atan2(offset.x, offset.z);
         }
         worker.phase += delta * 11 * speed.value;
+        worker.person.position.y = reduced ? 0 : Math.abs(Math.sin(worker.phase)) * 0.07; // a light step bounce
         dirty = true;
       } else if (worker.phase) {
         worker.phase = 0;
-        worker.person.rotation.y = worker.room === "hallway" ? 0 : (LAYOUT[worker.room][1] > 0 ? 0 : Math.PI);
+        worker.person.position.y = 0;
+        worker.yaw = worker.room === "hallway" ? 0 : (LAYOUT[worker.room][1] > 0 ? 0 : Math.PI);
+        dirty = true;
+      }
+      // Turn smoothly (shortest way round) instead of snapping to the new heading.
+      const turn = Math.atan2(Math.sin(worker.yaw - worker.person.rotation.y), Math.cos(worker.yaw - worker.person.rotation.y));
+      if (Math.abs(turn) > 0.002) {
+        worker.person.rotation.y += reduced ? turn : turn * Math.min(1, delta * 12);
+        dirty = true;
+      }
+      // Pop in when added: overshoot a little, then settle (easeOutBack).
+      if (worker.spawn < 1) {
+        worker.spawn = Math.min(1, worker.spawn + delta * 2.2);
+        const t = worker.spawn - 1;
+        worker.person.scale.setScalar(Math.max(0.001, 1 + 2.70158 * t ** 3 + 1.70158 * t ** 2));
         dirty = true;
       }
       walkCycle(worker, worker.phase, reduced || !worker.path.length ? 0 : 0.55);
     }
 
-    if (animating && !reduced) {
+    const live = (animating || ambient) && !reduced;
+    if (live) {
       idleTime += delta;
       for (const [room, robot] of Object.entries(robots)) {
         if (!robot.action) robot.head.rotation.y = Math.sin(idleTime * 0.9 + room.length) * 0.25;
@@ -846,14 +950,58 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       walkCycle(staff.janitor, idleTime * 7, 0.35);
       cart.position.set(x + (forward ? 0.85 : -0.85), 0, HALL_Z + 1.9);
       campus.update(delta);
-      // GPU racks: lights flicker in the colours of the models that are thinking right now.
+      // GPU racks: lights flicker in the colours of the models that are thinking right now,
+      // and twinkle slowly in the room colour while the GPU is idle.
       if (thinkingColors.length) {
         leds.forEach((led, index) => {
           const on = Math.sin(idleTime * (9 + (index % 7)) + index * 1.7) > 0.1;
           led.material.emissive.set(thinkingColors[index % thinkingColors.length]);
           led.material.emissiveIntensity = on ? 2.4 : 0.2;
         });
+      } else {
+        leds.forEach((led, index) => {
+          led.material.emissiveIntensity = Math.sin(idleTime * (1.3 + (index % 5) * 0.4) + index * 2.3) > 0.55 ? 1.8 : 0.35;
+        });
       }
+      // Robots hover a little; plants sway; code scrolls; steam rises; birds circle the campus.
+      for (const [room, robot] of Object.entries(robots)) {
+        if (!robot.action) robot.robot.position.y = robot.lift + Math.sin(idleTime * 2.1 + room.length) * 0.025;
+      }
+      for (const { crown, phase } of crowns) {
+        crown.rotation.z = Math.sin(idleTime * 1.1 + phase) * 0.05;
+        crown.rotation.x = Math.sin(idleTime * 0.8 + phase * 1.3) * 0.035;
+      }
+      const busy = [...workers.values()].some((worker) => worker.room === "code");
+      screens.forEach((screen, index) => { screen.material.map.offset.y = (idleTime * (busy ? 0.22 : 0.05) + index * 0.37) % 1; });
+      for (const update of steams) update(idleTime);
+      birds.forEach(({ bird, wings, slot }) => {
+        const angle = idleTime * 0.12 + slot * 0.16;
+        const radius = 34 + (slot % 3) * 1.6;
+        bird.position.set(2 + Math.cos(angle) * radius, 16 + Math.sin(idleTime * 0.7 + slot) * 0.8 + slot * 0.25, Math.sin(angle) * radius * 0.6);
+        bird.rotation.y = -angle;
+        const flap = Math.sin(idleTime * 9 + slot * 1.9) * 0.55;
+        wings[0].rotation.z = -flap;
+        wings[1].rotation.z = flap;
+      });
+      if (animating) dirty = true; else ambientDirty = true;
+    }
+
+    // Entrance doors slide open when someone walks up to them.
+    const near = [staff.janitor.person.position, ...[...workers.values()].map((worker) => worker.person.position)]
+      .some((position) => Math.abs(position.x - HALL.minX) < 3.2 && Math.abs(position.z - HALL_Z) < 3);
+    for (const door of doors) {
+      const goal = door.userData.closed * (near ? 1.9 : 1);
+      if (Math.abs(door.position.z - goal) > 0.003) {
+        door.position.z += (goal - door.position.z) * (reduced ? 1 : Math.min(1, delta * 5));
+        dirty = true;
+      }
+    }
+
+    // Room floors fade to their highlight colour instead of switching at once.
+    for (const room of Object.values(rooms)) {
+      const color = room.floor.material.color;
+      if (!room.goal || (Math.abs(color.r - room.goal.r) + Math.abs(color.g - room.goal.g) + Math.abs(color.b - room.goal.b)) < 0.002) continue;
+      color.lerp(room.goal, reduced ? 1 : Math.min(1, delta * 4));
       dirty = true;
     }
 
@@ -914,7 +1062,7 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     const gateColor = gateAction ? ACTION_COLORS[gateAction] : "#ffd08a";
     gate.userData.lamp.material.emissive.set(gateColor);
     gate.userData.lamp.material.color.set(gateColor);
-    gate.userData.lamp.material.emissiveIntensity = gateAction === "review" && animating ? 0.6 + Math.abs(Math.sin(idleTime * 6)) * 2 : gateAction ? 2.2 : 0.4;
+    gate.userData.lamp.material.emissiveIntensity = gateAction === "review" && live ? 0.6 + Math.abs(Math.sin(idleTime * 6)) * 2 : gateAction ? 2.2 : 0.4;
 
     if (!reduced && [...workers.values()].some((worker) => worker.room === "intel")) {
       globe.rotation.y += delta * 0.8;
@@ -935,12 +1083,25 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       dirty = true;
     }
     if (logistics.update(delta, Math.max(1, speed.value))) dirty = true;
-    if (followWorkers()) dirty = true;
+    if (intro.on) {
+      intro.age += delta;
+      const t = Math.min(1, intro.age / intro.life);
+      const k = 1 - t * t * t * (t * (t * 6 - 15) + 10); // smootherstep, 1 -> 0
+      const direction = VIEW_DIRECTION.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), k * 0.85);
+      direction.y += k * 0.9;
+      camera.position.copy(controls.target).addScaledVector(direction.normalize(), fitDistance * (1 + k * 1.1));
+      camera.lookAt(controls.target);
+      if (t >= 1) intro.on = false;
+      dirty = true;
+    } else if (followWorkers()) dirty = true;
     if (controls.update(delta)) dirty = true;
-    if (dirty && !document.hidden) {
+    const now = performance.now();
+    if ((dirty || (ambientDirty && now - lastRender >= 1000 / 30 - 2)) && !document.hidden) {
+      lastRender = now;
+      ambientDirty = false;
       const rest = camera.position.clone();
       if (shake) camera.position.add(new THREE.Vector3((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake, 0));
-      renderer.render(scene, camera);
+      post.render(scene, camera);
       camera.position.copy(rest);
       // Label detail by zoom: far shows room names only, mid adds robots, near adds staff and captions.
       const ratio = camera.position.distanceTo(controls.target) / fitDistance;
@@ -965,7 +1126,6 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
       stats.frames += 1;
       dirty = false;
     }
-    const now = performance.now();
     if (now - stats.since >= 1000) {
       stats.fps = Math.round(stats.frames * 1000 / (now - stats.since));
       stats.frames = 0;
@@ -974,10 +1134,12 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     requestAnimationFrame(frame);
   }
   controls.addEventListener("change", () => { dirty = true; });
+  for (const type of ["pointerdown", "wheel"]) canvas.addEventListener(type, () => { intro.on = false; }, { passive: true });
   new ResizeObserver(() => { fit(); if (!director.on) resetView(); }).observe(canvas.parentElement);
   fit();
   resetView();
   setLamps([]);
+  intro.on = !reducedMotion() && !stats.continuous;
   requestAnimationFrame(frame);
   return {
     addWorker, clearWorkers, setScreen, setEvidence, setLamps, setInbox, setThinking, setGate, celebrate,
@@ -986,9 +1148,12 @@ export function createOffice(canvas, labelLayer, overlayLayer) {
     registryPoint: logistics.registryPoint, housePoint: logistics.housePoint,
     isDirector: () => director.on,
     setAnimating: (on) => { animating = on; dirty = true; },
+    setAmbient: (on) => { ambient = on; dirty = true; },
+    setQuality: (on) => { post.enabled = on; dirty = true; },
     speed, stats,
     info: () => ({ fps: stats.fps, calls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
-                   pixelRatio: renderer.getPixelRatio(), workers: workers.size, fitDistance: +fitDistance.toFixed(2),
+                   pixelRatio: renderer.getPixelRatio(), workers: workers.size,
+                   fx: post.enabled, fxMemoryMB: post.enabled ? post.memoryMB() : 0, ambient, fitDistance: +fitDistance.toFixed(2),
                    camera: camera.position.toArray().map((value) => +value.toFixed(2)), target: controls.target.toArray().map((value) => +value.toFixed(2)),
                    positions: [...workers.values()].map((worker) => [worker.room, +worker.person.position.x.toFixed(2),
                                                                       +worker.person.position.z.toFixed(2), worker.path.length]) }),

@@ -10,13 +10,30 @@
 <main class="shell office-shell">
   <header class="masthead">
     <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>NPM AGENT <small>/ văn phòng 3D</small></span></div>
-    <nav class="office-nav"><a href="/" id="timeline-link">Dòng thời gian 2D</a></nav>
+    <nav class="office-nav"><a href="/" id="timeline-link">Xem dạng nhật ký 2D</a></nav>
   </header>
 
+  <details class="about" id="about" open>
+    <summary>Dự án này làm gì, làm thế nào, vì sao tin được</summary>
+    <div class="about-grid">
+      <section><h3>Làm gì</h3><p>Kiểm tra gói npm có script chạy lúc cài (<code>preinstall</code>, <code>install</code>, <code>postinstall</code>) <b>trước khi</b> cho script chạy. Kết luận gói <b>độc hại / đáng ngờ / lành tính</b>, rồi <b>chặn</b>, <b>chuyển người xem</b> hoặc <b>cho phép</b> script.</p></section>
+      <section><h3>Làm thế nào</h3><p>Một mô hình ngôn ngữ chạy cục bộ (Ollama) tự điều tra bằng công cụ <b>chỉ đọc</b>: đọc manifest, đọc file, tìm chỉ báo (URL, <code>eval</code>, đọc secret…). <b>Không chạy mã của gói.</b> Bốn bước: nhận diện → phân tích nguồn–hành động–đích → kiểm chứng → quyết định.</p></section>
+      <section><h3>Vì sao tin được</h3><p>Mô hình <b>chỉ đề xuất</b>. Luật cứng R1–R8 (<code>agent/decide.py</code>) mới chốt: bằng chứng <code>file:dòng</code> phải có thật trong gói; tin cậy ≥ 0,8 mới chặn/cho phép, còn lại chuyển người xem. Luôn chạy thử (dry-run).</p></section>
+    </div>
+  </details>
+
   <section class="office-bar" aria-label="Chọn lượt chạy và điều khiển phát lại">
+    <div class="mode-row">
+      <span class="bar-label" id="mode-label">Xem theo cách nào</span>
+      <div class="mode-tabs" role="radiogroup" aria-labelledby="mode-label">
+        <button type="button" role="radio" data-mode="truck"><b>Xe hàng</b><small>cả một lệnh cài</small></button>
+        <button type="button" role="radio" data-mode="compare"><b>Đua 3 model</b><small>cùng gói, 3 cỡ mô hình</small></button>
+        <button type="button" role="radio" data-mode="single"><b>Một model</b><small>một lần điều tra, chi tiết</small></button>
+      </div>
+      <select id="mode" class="visually-hidden" tabindex="-1" aria-hidden="true"><option value="truck">Xe hàng</option><option value="compare">Đua 3 model</option><option value="single">Một model</option></select>
+      <p class="mode-help" id="mode-help" aria-live="polite"></p>
+    </div>
     <div class="office-pick">
-      <label for="mode">Chế độ</label>
-      <select id="mode"><option value="truck">🚚 Xe hàng (luồng sản phẩm)</option><option value="compare">Đua 3 model</option><option value="single">Một model</option></select>
       <span id="scenario-pick" hidden><label for="scenario">Kịch bản</label> <select id="scenario"></select></span>
       <label for="run-select" id="run-label">Bộ run</label><select id="run-select"></select>
       <label for="package-select">Gói</label><select id="package-select"></select>
@@ -29,6 +46,22 @@
       <select id="rate"><option value="1">1× thật</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option><option value="16">16×</option><option value="32">32×</option><option value="64">64×</option></select>
       <label class="toggle"><input type="checkbox" id="director"> Máy quay tự động</label>
       <button type="button" id="reset-view">Góc nhìn chuẩn</button>
+      <details class="menu" id="rooms-menu">
+        <summary>Tới phòng ▾</summary>
+        <div class="menu-body rooms" id="room-jump" role="group" aria-label="Đưa máy quay tới phòng"></div>
+      </details>
+      <details class="menu" id="view-menu">
+        <summary>Hiển thị ▾</summary>
+        <div class="menu-body">
+          <label class="toggle"><input type="checkbox" id="labels-toggle" checked> Nhãn phòng, robot, nhân viên</label>
+          <label class="toggle" title="Cây, khói cà phê, chim, xe chạy cả khi đang dừng (tối đa 30 khung hình/giây)"><input type="checkbox" id="ambient" checked> Cảnh sống động</label>
+          <label class="toggle" title="Ánh sáng phát quang (bloom), viền tối, chỉnh màu. Tắt nếu máy yếu"><input type="checkbox" id="quality" checked> Đồ họa cao</label>
+          <hr>
+          <button type="button" id="snapshot">Chụp ảnh cảnh (PNG)</button>
+          <button type="button" id="record">Quay video (WebM)</button>
+          <small class="count">Ảnh/video chỉ có cảnh 3D, không có nhãn chữ.</small>
+        </div>
+      </details>
     </div>
     <div class="office-progress">
       <input type="range" id="progress" min="0" max="0" value="0" aria-label="Thời điểm trong trace">
@@ -89,6 +122,7 @@
         <small id="detail-title">QUYẾT ĐỊNH CUỐI (LUẬT CỨNG)</small>
         <p id="decision" class="office-decision">Chưa có quyết định</p>
         <ul id="reasons" class="plain-list"></ul>
+        <ol id="ladder" class="office-ladder" hidden aria-label="Luật xét từ trên xuống, luật khớp đầu tiên quyết định"></ol>
         <small>MÔ HÌNH ĐỀ XUẤT</small>
         <p id="proposal" class="count">Chưa có đề xuất</p>
         <ul id="behaviors" class="plain-list behaviors"></ul>

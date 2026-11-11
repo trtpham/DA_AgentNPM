@@ -1,5 +1,6 @@
 """Loopback-only, read-only HTTP access to agent traces."""
 
+import csv
 import json
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -20,10 +21,29 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/office.html": ("office.html", "text/html; charset=utf-8"),
           "/office.css": ("office.css", "text/css; charset=utf-8"),
           **{f"/office/{name}": (f"office/{name}", "text/javascript; charset=utf-8")
-             for name in ("main.mjs", "scene.mjs", "events.mjs", "explain.mjs", "people.mjs", "props.mjs", "outdoor.mjs", "logistics.mjs", "truck.mjs", "scenarios.mjs")},
+             for name in ("main.mjs", "scene.mjs", "events.mjs", "explain.mjs", "people.mjs", "props.mjs", "outdoor.mjs", "logistics.mjs", "truck.mjs", "scenarios.mjs", "fx.mjs", "rules.mjs")},
           **{f"/vendor/{name}": (f"vendor/{name}", "text/javascript; charset=utf-8")
              for name in ("three.module.min.js", "OrbitControls.js")}}
 SAMPLE_RUN = "sample_traces"
+# Reference labels for the "wrong vs reference" filter. Only this one file is read, never data/samples/.
+LABELS_FILE = Path(__file__).resolve().parents[1] / "data" / "labels.csv"
+REFERENCE_LABELS = {"benign", "suspicious", "malicious"}
+
+
+def reference_labels(path: Path = LABELS_FILE) -> dict[str, str]:
+    """`name@version` -> reference label from labels.csv; an unreadable or missing file gives {}."""
+    try:
+        with path.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+    except (OSError, csv.Error, UnicodeError):
+        return {}
+    labels = {}
+    for row in rows:
+        name, version, label = (row.get("name") or "").strip(), (row.get("version") or "").strip(), (row.get("label") or "").strip()
+        package = f"{name}@{version}"
+        if label in REFERENCE_LABELS and PACKAGE.fullmatch(package):
+            labels[package] = label
+    return labels
 
 
 def _inside(path: Path, root: Path) -> bool:
@@ -47,7 +67,7 @@ def _events(path: Path) -> tuple[list[dict], bool]:
     return events, valid
 
 
-def make_server(reports: str | Path, port: int = 8765) -> ThreadingHTTPServer:
+def make_server(reports: str | Path, port: int = 8765, labels_file: Path = LABELS_FILE) -> ThreadingHTTPServer:
     reports_root = Path(reports).resolve()
     viewer_root = Path(__file__).parent.resolve()
     forbidden = (viewer_root.parent / "data" / "samples").resolve()
@@ -134,8 +154,14 @@ def make_server(reports: str | Path, port: int = 8765) -> ThreadingHTTPServer:
                 end = next((event for event in reversed(events) if event.get("type") == "run_end"), {})
                 decision = next((event for event in reversed(events) if event.get("type") == "decision"), {})
                 final_verdict = verdict.get("verdict") if verdict.get("valid") else None
+                checks = decision.get("evidence_checks") if isinstance(decision.get("evidence_checks"), list) else []
                 packages.append({"package": package, "model": start.get("model"),
                                  "label": decision.get("final_label") or (final_verdict or {}).get("label"),
+                                 "action": decision.get("final_action"), "rule": decision.get("rule"),
+                                 "proposal_label": (final_verdict or {}).get("label"),
+                                 "proposal_action": (final_verdict or {}).get("action"),
+                                 "evidence_total": len(checks),
+                                 "evidence_ok": sum(1 for check in checks if isinstance(check, dict) and check.get("exists") is True),
                                  "confidence": (final_verdict or {}).get("confidence"),
                                  "steps": end.get("steps"), "elapsed_s": end.get("elapsed_s"),
                                  "valid_json": valid_lines and verdict.get("valid") if verdict else None,
@@ -181,6 +207,8 @@ def make_server(reports: str | Path, port: int = 8765) -> ThreadingHTTPServer:
                     self._json(200, self._packages(parts[3]))
                 elif path == "/api/trace":
                     self._json(200, self._trace(parsed.query))
+                elif path == "/api/labels":
+                    self._json(200, reference_labels(labels_file))
                 else:
                     self._json(404, {"error": "not_found"})
             except (ValueError, UnicodeError) as error:

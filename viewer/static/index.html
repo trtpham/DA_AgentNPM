@@ -4,42 +4,95 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trace agent npm</title>
 <link rel="stylesheet" href="/style.css">
-<script src="/app.js" defer></script>
+<script type="module" src="/app.js"></script>
 <body>
-<main class="shell">
+<main class="shell viewer-shell">
   <header class="masthead">
     <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>NPM AGENT <small>/ trình xem trace</small></span></div>
+    <nav class="top-nav" aria-label="Trang khác">
+      <a href="/office" id="office-link">Mở trong văn phòng 3D</a>
+    </nav>
     <div class="session-status" id="session-status"><span class="status-dot" aria-hidden="true"></span><span id="run-status" aria-live="polite">Đang tải danh sách run</span></div>
   </header>
 
-  <section class="picker" aria-labelledby="picker-title">
-    <div class="section-head"><h2 id="picker-title">Chọn lượt chạy</h2><span class="count" id="package-count"></span></div>
-    <div class="picker-row">
-      <label for="run-select">Run</label>
-      <select id="run-select"></select>
+  <details class="about" id="about" open>
+    <summary>Dự án này làm gì, làm thế nào, vì sao tin được</summary>
+    <div class="about-grid">
+      <section><h3>Làm gì</h3><p>Kiểm tra gói npm có script chạy lúc cài (<code>preinstall</code>, <code>install</code>, <code>postinstall</code>) <b>trước khi</b> cho script chạy. Kết luận gói <b>độc hại / đáng ngờ / lành tính</b>, rồi <b>chặn</b>, <b>chuyển người xem</b> hoặc <b>cho phép</b> script.</p></section>
+      <section><h3>Làm thế nào</h3><p>Một mô hình ngôn ngữ chạy cục bộ (Ollama) tự điều tra bằng công cụ <b>chỉ đọc</b>: đọc manifest, đọc file, tìm chỉ báo (URL, <code>eval</code>, đọc secret…). <b>Không chạy mã của gói.</b> Bốn bước: nhận diện → phân tích nguồn–hành động–đích → kiểm chứng → quyết định.</p></section>
+      <section><h3>Vì sao tin được</h3><p>Mô hình <b>chỉ đề xuất</b>. Luật cứng R1–R8 (<code>agent/decide.py</code>) mới chốt: bằng chứng <code>file:dòng</code> phải có thật trong gói; tin cậy ≥ 0,8 mới chặn/cho phép, còn lại chuyển người xem. Luôn chạy thử (dry-run).</p></section>
     </div>
-    <ul class="packages" id="packages" aria-label="Các gói trong run"></ul>
-  </section>
+    <p class="about-howto">Trang này: chọn một <b>run</b> (một lần chạy agent trên nhiều gói) → chọn <b>gói</b> → xem từng bước bên giữa và lý do kết luận bên phải. Bước có <span class="key-mark">★</span> là bước quyết định kết quả.</p>
+  </details>
 
-  <div class="workbench">
+  <div class="viewer">
+    <aside class="sidebar" aria-labelledby="picker-title">
+      <h2 id="picker-title" class="pane-title">Lượt chạy</h2>
+      <div class="field">
+        <label for="run-filter">Run <span class="count" id="run-count"></span></label>
+        <input type="search" id="run-filter" placeholder="Lọc tên run…" autocomplete="off">
+        <select id="run-select" aria-label="Chọn run"></select>
+      </div>
+      <dl class="run-overview" id="run-overview" aria-label="Tổng quan run"></dl>
+      <div class="chips" id="label-filter" role="group" aria-label="Lọc gói theo nhãn"></div>
+      <div class="field">
+        <span class="field-label">Ca cần chú ý</span>
+        <div class="chips" id="issue-filter" role="group" aria-label="Lọc ca cần chú ý"></div>
+      </div>
+      <div class="field">
+        <label for="package-filter">Gói <span class="count" id="package-count"></span></label>
+        <input type="search" id="package-filter" placeholder="Lọc tên gói…" autocomplete="off">
+      </div>
+      <ul class="packages" id="packages" aria-label="Các gói trong run"></ul>
+    </aside>
+
     <section class="activity" aria-labelledby="flow-title">
-      <div class="section-head"><h2 id="flow-title">Nhật ký điều tra</h2><span id="step-count" class="count">0 sự kiện</span></div>
+      <div class="pane-head">
+        <h2 id="flow-title" class="pane-title">Nhật ký điều tra</h2>
+        <span id="package-name" class="package-name"></span>
+        <button type="button" class="ghost" id="compare-toggle" aria-expanded="false" aria-controls="compare">So sánh model</button>
+        <button type="button" class="ghost" id="export-md" title="Tải báo cáo Markdown của gói đang xem">Xuất báo cáo</button>
+        <button type="button" class="ghost" id="copy-link" title="Chép đường dẫn tới gói này">Chép liên kết</button>
+      </div>
+
+      <section class="compare" id="compare" hidden aria-label="So sánh các model trên cùng gói">
+        <p class="compare-note" id="compare-note"></p>
+        <table class="compare-table"><thead><tr><th>Run</th><th>Model</th><th>Mô hình đề xuất</th><th>Luật chốt</th><th>Bằng chứng</th><th>Bước · giây</th><th></th></tr></thead><tbody id="compare-body"></tbody></table>
+      </section>
+
       <div class="transport" aria-label="Điều khiển phát lại">
-        <button type="button" id="previous">Bước trước</button><button type="button" class="primary" id="play">Phát lại</button><button type="button" id="next">Bước tiếp</button>
-        <label for="speed">Tốc độ</label><select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
+        <button type="button" id="previous" title="Bước trước (←)" aria-label="Bước trước">◀</button>
+        <button type="button" class="primary" id="play" title="Phát / tạm dừng (Space)">Phát lại</button>
+        <button type="button" id="next" title="Bước tiếp (→)" aria-label="Bước tiếp">▶</button>
+        <select id="speed" aria-label="Tốc độ"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
+        <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Tua tới sự kiện">
         <span id="replay-position" class="replay-position">0 / 0</span>
       </div>
-      <div class="current-action" aria-live="polite"><small>BƯỚC ĐANG XEM</small><strong id="current-action-text">Chưa chọn gói</strong><p id="current-action-detail">Chọn một run và một gói để xem lại từng bước của agent.</p></div>
+
+      <ol class="phase-track" id="phase-track" aria-label="Bốn giai đoạn của agent (bấm để tua tới)"></ol>
+
+      <div class="timeline-tools">
+        <div class="chips" id="kind-filter" role="group" aria-label="Lọc sự kiện"></div>
+        <label class="toggle"><input type="checkbox" id="show-all" checked> Hiện cả bước sau</label>
+      </div>
+
+      <div class="current-action" aria-live="polite">
+        <span class="current-index" id="current-index">—</span>
+        <div><strong id="current-action-text">Chưa chọn gói</strong><p id="current-action-detail">Chọn một run và một gói để xem lại từng bước của agent.</p></div>
+      </div>
       <ol class="timeline" id="timeline"></ol>
+      <p class="keys"><kbd>←</kbd><kbd>→</kbd> từng bước · <kbd>Space</kbd> phát/dừng · <kbd>Home</kbd><kbd>End</kbd> đầu/cuối · bấm một sự kiện để nhảy tới</p>
     </section>
+
     <aside class="result pending" id="result" aria-labelledby="result-title">
-      <h2 id="result-title">Quyết định</h2>
-      <p class="result-note">Quyết định cuối do luật trong <code>agent/decide.py</code> đưa ra, luôn ở chế độ dry-run; chưa phải nhãn dữ liệu chuẩn.</p>
+      <h2 id="result-title" class="pane-title">Vì sao ra kết luận này</h2>
       <div id="result-body"><p class="pending-copy">Chưa có quyết định</p></div>
+      <details class="terms" id="terms"><summary>Thuật ngữ trên trang</summary><dl id="terms-list"></dl></details>
+      <p class="result-note">Quyết định cuối do luật trong <code>agent/decide.py</code> đưa ra, luôn dry-run; chưa phải nhãn dữ liệu chuẩn.</p>
     </aside>
   </div>
 
-  <footer class="footnote">Trình xem chỉ đọc trace JSONL trên máy này. Nội dung lấy từ gói và lời mô hình được hiển thị như dữ liệu không tin cậy; trang không chạy mã npm. Kết luận vẫn cần người kiểm tra.</footer>
+  <footer class="footnote">Trình xem chỉ đọc trace JSONL trên máy này. Nội dung lấy từ gói và lời mô hình là dữ liệu không tin cậy, chỉ hiển thị dạng văn bản; trang không chạy mã npm. Kết luận vẫn cần người kiểm tra.</footer>
 </main>
 </body>
 </html>

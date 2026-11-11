@@ -121,9 +121,13 @@ export const textures = {
 export function plant(size = 1) {
   const group = new THREE.Group();
   group.add(at(mesh(new THREE.CylinderGeometry(0.22, 0.17, 0.35, 10), "#9a6b4f"), 0, 0.18, 0));
-  group.add(at(mesh(new THREE.IcosahedronGeometry(0.38, 0), "#3f9a6b", { roughness: 1 }), 0, 0.62, 0));
-  group.add(at(mesh(new THREE.IcosahedronGeometry(0.26, 0), "#57b884", { roughness: 1 }), 0.15, 0.9, 0.05));
-  group.add(at(mesh(new THREE.IcosahedronGeometry(0.2, 0), "#2f7d55", { roughness: 1 }), -0.14, 0.82, -0.08));
+  // The leaves sit in their own group pivoting at the pot rim, so scene.mjs can sway them gently.
+  const crown = at(new THREE.Group(), 0, 0.35, 0);
+  crown.add(at(mesh(new THREE.IcosahedronGeometry(0.38, 0), "#3f9a6b", { roughness: 1 }), 0, 0.27, 0));
+  crown.add(at(mesh(new THREE.IcosahedronGeometry(0.26, 0), "#57b884", { roughness: 1 }), 0.15, 0.55, 0.05));
+  crown.add(at(mesh(new THREE.IcosahedronGeometry(0.2, 0), "#2f7d55", { roughness: 1 }), -0.14, 0.47, -0.08));
+  group.add(crown);
+  group.userData.crown = crown;
   group.scale.setScalar(size);
   return group;
 }

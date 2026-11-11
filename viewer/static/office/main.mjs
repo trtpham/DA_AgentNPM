@@ -11,6 +11,7 @@ import { ROOMS, roomFor } from "./events.mjs";
 import { argsText, explainStep, thinkingStep } from "./explain.mjs";
 import { buildTruck, currentParcel, parcelZone, tally, truckPhase } from "./truck.mjs";
 import { composeScenario, SCENARIOS, SOURCES } from "./scenarios.mjs";
+import { ruleLadder, ruleSentence } from "./rules.mjs";
 
 const $ = (id) => document.getElementById(id);
 const PHASE = { reception: 0, code: 1, intel: 1, lab: 1, evidence: 2, decision: 3 };
@@ -323,7 +324,11 @@ function renderDetail(lane) {
   $("detail-title").textContent = `${lane.name}: QUYẾT ĐỊNH CUỐI (LUẬT CỨNG)`;
   $("decision").textContent = decision ? `${LABELS[decision.final_label] || decision.final_label} · ${ACTIONS[decision.final_action] || "—"} · luật ${decision.rule}` : "Chưa có quyết định";
   $("decision").dataset.action = decision?.final_action || "";
-  $("reasons").replaceChildren(...(decision?.reasons || []).map((reason) => element("li", reason)));
+  $("reasons").replaceChildren(...(decision ? [element("li", ruleSentence(decision.rule), "rule-sentence")] : []),
+    ...(decision?.reasons || []).map((reason) => element("li", reason)));
+  $("ladder").replaceChildren(...(decision ? ruleLadder(decision.rule) : []).map((rule) =>
+    element("li", `${rule.code} · ${rule.state === "fired" ? `KHỚP → ${rule.then}` : rule.state === "skipped" ? "không khớp" : "không xét"}`, rule.state)));
+  $("ladder").hidden = !decision;
   $("proposal").textContent = proposal
     ? `${LABELS[proposal.label] || proposal.label} · tin cậy ${Math.round((proposal.confidence ?? 0) * 100)}% — ${proposal.description || ""}`
     : "Chưa có đề xuất";
@@ -706,6 +711,7 @@ async function loadChoice(preferredPackage) {
 
 async function loadMode(preferredRun, preferredPackage) {
   const mode = $("mode").value;
+  syncModeTabs(mode);
   const compare = mode === "compare";
   const choices = compare ? [...groups.keys()] : runs;
   document.body.dataset.mode = mode;
@@ -747,6 +753,104 @@ async function start() {
 }
 
 $("mode").addEventListener("change", () => loadMode(null, $("package-select").value));
+
+// --- page controls around the 3D view (the scene itself is untouched) -----------------------------
+// What each way of watching shows, in one sentence the viewer can act on.
+const MODE_HELP = {
+  truck: "Một lệnh npm install kéo về nhiều gói (mỗi gói là một thùng). Xem cả xe qua cổng: từng gói được kiểm; "
+    + "chỉ một gói độc là cả xe bị giữ. Đây là cách sản phẩm sẽ dùng agent.",
+  compare: "Cùng một gói, ba cỡ mô hình (LLM, SLM, TLM) điều tra song song trên đồng hồ thật. "
+    + "So xem ai nhanh hơn, ai cần nhiều bước hơn và ai kết luận khác luật cứng.",
+  single: "Xem kỹ một lần điều tra: mô hình gọi công cụ nào, đọc dòng nào, nộp kết luận gì "
+    + "và luật cứng chốt ra sao. Phù hợp để giải thích một ca cụ thể.",
+};
+function syncModeTabs(mode) {
+  for (const tab of document.querySelectorAll(".mode-tabs [data-mode]")) {
+    const option = $("mode").querySelector(`option[value="${tab.dataset.mode}"]`);
+    tab.setAttribute("aria-checked", String(tab.dataset.mode === mode));
+    tab.tabIndex = tab.dataset.mode === mode ? 0 : -1;
+    tab.disabled = Boolean(option?.disabled);
+    if (option?.disabled) tab.title = "Chưa có bộ run đủ 3 model để so";
+  }
+  $("mode-help").textContent = MODE_HELP[mode] || "";
+}
+const modeTabs = [...document.querySelectorAll(".mode-tabs [data-mode]")];
+for (const tab of modeTabs) {
+  tab.addEventListener("click", () => {
+    if ($("mode").value === tab.dataset.mode) return;
+    $("mode").value = tab.dataset.mode;
+    $("mode").dispatchEvent(new Event("change"));
+  });
+  // Radio group keys: arrows move between the ways of watching.
+  tab.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    event.preventDefault();
+    const usable = modeTabs.filter((item) => !item.disabled);
+    const next = usable[(usable.indexOf(tab) + (event.key === "ArrowRight" ? 1 : usable.length - 1)) % usable.length];
+    next.focus();
+    next.click();
+  });
+}
+syncModeTabs($("mode").value);
+
+// Camera to a room: the director camera flies there (the same camera the replay uses).
+const JUMP_ROOMS = [["gate", "Cổng npm"], ["reception", ROOMS.reception?.name], ["code", ROOMS.code?.name], ["intel", ROOMS.intel?.name],
+  ["evidence", ROOMS.evidence?.name], ["decision", ROOMS.decision?.name], ["reviewer", "Bàn người xem"], ["server", "Máy chủ Ollama"], ["lab", ROOMS.lab?.name]];
+$("room-jump").replaceChildren(...JUMP_ROOMS.filter(([, name]) => name).map(([room, name]) => {
+  const button = element("button", name);
+  button.type = "button";
+  button.addEventListener("click", () => {
+    $("director").checked = true;
+    office.setDirector(true);
+    office.focus(room, 0.32);
+    $("rooms-menu").open = false;
+  });
+  return button;
+}));
+// Close an open menu when clicking elsewhere.
+document.addEventListener("click", (event) => {
+  for (const menu of document.querySelectorAll("details.menu[open]")) if (!menu.contains(event.target)) menu.open = false;
+});
+
+// Secondary labels (rooms, robots, staff) can be hidden; the model workers' tags always stay.
+function applyLabels(on) { document.querySelector(".office-view").classList.toggle("quiet", !on); }
+try { const saved = localStorage.getItem("office.labels"); if (saved !== null) $("labels-toggle").checked = saved === "1"; } catch { /* no storage */ }
+applyLabels($("labels-toggle").checked);
+$("labels-toggle").addEventListener("change", (event) => {
+  applyLabels(event.target.checked);
+  try { localStorage.setItem("office.labels", event.target.checked ? "1" : "0"); } catch { /* no storage */ }
+});
+
+function download(blob, name) {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+}
+const fileStem = () => `van-phong-${($("package-select").value || $("run-select").value || "canh").replace(/[^a-z0-9.@-]+/gi, "_")}`;
+// The canvas keeps no copy of the last frame, so ask for a fresh render and read it in the same frame.
+$("snapshot").addEventListener("click", () => {
+  office.setQuality($("quality").checked);
+  requestAnimationFrame(() => $("office-canvas").toBlob((blob) => { if (blob) download(blob, `${fileStem()}.png`); }, "image/png"));
+});
+let recorder = null;
+$("record").addEventListener("click", () => {
+  if (recorder) { recorder.stop(); return; }
+  if (!window.MediaRecorder || !$("office-canvas").captureStream) { $("record").textContent = "Trình duyệt không hỗ trợ quay"; return; }
+  const chunks = [];
+  recorder = new MediaRecorder($("office-canvas").captureStream(30), { mimeType: "video/webm" });
+  recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+  recorder.onstop = () => {
+    download(new Blob(chunks, { type: "video/webm" }), `${fileStem()}.webm`);
+    recorder = null;
+    $("record").textContent = "Quay video (WebM)";
+    $("record").classList.remove("recording");
+  };
+  recorder.start(500);
+  $("record").textContent = "■ Dừng quay và lưu";
+  $("record").classList.add("recording");
+});
 $("scenario").replaceChildren(...SCENARIOS.map((scenario) => { const option = element("option", scenario.title); option.value = scenario.id; return option; }));
 $("scenario").value = SCENARIOS.some((item) => item.id === params.get("scenario")) ? params.get("scenario") : "batch";
 $("scenario").addEventListener("change", () => loadTruck($("run-select").value));
@@ -757,6 +861,16 @@ $("progress").addEventListener("input", (event) => { stop(); seek(Number(event.t
 $("rate").addEventListener("change", (event) => { clock.rate = Number(event.target.value); office.speed.value = Math.min(2.5, Math.max(1, clock.rate / 4)); });
 $("director").addEventListener("change", (event) => { office.setDirector(event.target.checked); office.focus(null, 0.8); });
 $("reset-view").addEventListener("click", () => { $("director").checked = false; office.setDirector(false); });
+// Look toggles are remembered per browser; storage may be blocked, so every access is guarded.
+for (const [id, apply] of [["ambient", office.setAmbient], ["quality", office.setQuality]]) {
+  const key = `office.${id}`;
+  try { const saved = localStorage.getItem(key); if (saved !== null) $(id).checked = saved === "1"; } catch { /* no storage */ }
+  apply($(id).checked);
+  $(id).addEventListener("change", (event) => {
+    apply(event.target.checked);
+    try { localStorage.setItem(key, event.target.checked ? "1" : "0"); } catch { /* no storage */ }
+  });
+}
 $("previous").addEventListener("click", () => {
   stop();
   const lane = lanes[focusLane];
@@ -775,3 +889,7 @@ addEventListener("keydown", (event) => {
   else if (["1", "2", "3"].includes(event.key) && lanes[Number(event.key) - 1]) { focusLane = Number(event.key) - 1; render(); }
 });
 start().catch((error) => { $("caption-who").textContent = `Không tải được dữ liệu: ${error.message}`; });
+
+// The "what this project does" box stays closed once the viewer has read it.
+try { if (localStorage.getItem("viewer.about") === "0") $("about").open = false; } catch { /* no storage */ }
+$("about").addEventListener("toggle", () => { try { localStorage.setItem("viewer.about", $("about").open ? "1" : "0"); } catch { /* no storage */ } });

@@ -63,6 +63,8 @@ def test_runs_packages_and_events_after_sequence(viewer):
     status, _, body = request(server, "GET", "/api/runs/run-1/packages")
     assert status == 200
     assert json.loads(body) == [{"package": package, "model": "qwen3.5:4b", "label": "benign",
+                                 "action": None, "rule": None, "proposal_label": "benign", "proposal_action": None,
+                                 "evidence_total": 0, "evidence_ok": 0,
                                  "confidence": 0.91, "steps": 2, "elapsed_s": 1.5,
                                  "valid_json": True, "status": "done"}]
     target = f"/api/trace?run=run-1&pkg={quote(package, safe='')}&after=1"
@@ -180,3 +182,28 @@ def test_vendored_three_matches_recorded_hashes():
         assert digest in readme, name
     patched = hashlib.sha256((STATIC_ROOT / "vendor" / "OrbitControls.js").read_bytes()).hexdigest()
     assert f"SHA-256 sau sửa: `{patched}`" in readme
+
+
+def test_reference_labels_api_reads_only_valid_rows(tmp_path):
+    labels = tmp_path / "labels.csv"
+    labels.write_text("id,name,version,label,behavior_main\n"
+                      "1,left-pad,1.3.0,benign,x\n"
+                      "2,@scope/evil,0.1.0,malicious,y\n"
+                      "3,bad name,1.0.0,malicious,z\n"
+                      "4,odd,1.0.0,unknown,z\n", encoding="utf-8")
+    server = make_server(tmp_path / "reports", 0, labels_file=labels)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        status, _, body = request(server, "GET", "/api/labels")
+        assert status == 200
+        assert json.loads(body) == {"left-pad@1.3.0": "benign", "@scope/evil@0.1.0": "malicious"}
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_reference_labels_missing_file_is_empty(tmp_path):
+    from viewer.server import reference_labels
+    assert reference_labels(tmp_path / "missing.csv") == {}
