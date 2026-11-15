@@ -212,3 +212,9 @@
 :root[data-theme="light"] .lane-decision[data-action="deny"]{color:var(--red)}
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .source-design,:root:not([data-theme="dark"]) .source-real-design{color:var(--ink)}
   :root:not([data-theme="dark"]) .lane-decision[data-action="deny"]{color:var(--red)}}
+
+/* model picker for "So sánh model": tick one to three models */
+.model-pick{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px 12px;padding:4px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface)}
+.model-toggle span{font-weight:700}
+.model-toggle span::before{content:"";display:inline-block;width:8px;height:8px;margin-right:5px;border-radius:50%;background:var(--worker);vertical-align:middle}
+.model-toggle input{accent-color:var(--worker)}

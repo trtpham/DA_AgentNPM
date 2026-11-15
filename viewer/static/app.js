@@ -34,7 +34,7 @@ const WHO = {model: 'Mô hình AI', tool: 'Công cụ', rules: 'Luật / kiểm 
 const $ = (id) => document.getElementById(id);
 const state = {
   run: null, pkg: null, events: [], cursor: -1, timer: null, poll: null, live: false,
-  phases: [], runs: [], packages: [], packageFilter: 'all', reviewed: new Set(), eventFilter: 'all', issueFilter: null, truth: {},
+  phases: [], runs: [], packages: [], packageFilter: 'all', reviewed: new Set(), view: 'single', models: new Set(), eventFilter: 'all', issueFilter: null, truth: {},
 };
 
 function el(tag, className, text) {
@@ -417,9 +417,11 @@ function selectPackage(pkg) {
   $('package-name').textContent = pkg;
   $('reviewed-toggle').checked = state.reviewed.has(reviewKey(pkg));
   history.replaceState(null, '', `#${linkFor(pkg)}`);
+  syncViewHash();
   $('office-link').href = `/office#mode=single&${linkFor(pkg)}`;
   render();
   poll(pkg);
+  if (state.view === 'single') renderModelPick(siblingsOf(state.run));
   renderCompare();
 }
 
@@ -630,9 +632,10 @@ async function renderCompare() {
   if (panel.hidden || !state.pkg) return;
   const body = $('compare-body');
   body.replaceChildren();
-  const siblings = VARIANT.test(state.run)
-    ? state.runs.filter((run) => run.replace(VARIANT, '$1a-*') === state.run.replace(VARIANT, '$1a-*'))
-    : [state.run];
+  const allSiblings = siblingsOf(state.run);
+  renderModelPick(allSiblings);
+  const siblings = allSiblings.filter((run) => !state.models.size || state.models.has(variantOf(run)));
+  renderSide(siblings);
   const group = state.run.replace(VARIANT, '$1a-*');
   $('compare-note').textContent = siblings.length > 1
     ? `Cùng gói ${state.pkg} trong ${siblings.length} run chỉ khác cỡ mô hình. Ô màu vàng: khác với run đang xem.`
@@ -716,6 +719,198 @@ function exportReport() {
   setTimeout(() => URL.revokeObjectURL(link.href), 4000);
 }
 
+function variantOf(run) {
+  const match = VARIANT.exec(run);
+  return match ? match[2].toUpperCase() : run;
+}
+
+// Runs that differ from `run` only in the model size, LLM first.
+function siblingsOf(run) {
+  const order = {LLM: 0, SLM: 1, TLM: 2};
+  return (VARIANT.test(run) ? state.runs.filter((other) => other.replace(VARIANT, '$1a-*') === run.replace(VARIANT, '$1a-*')) : [run])
+    .sort((a, b) => (order[variantOf(a)] ?? 9) - (order[variantOf(b)] ?? 9));
+}
+
+// "Một model": the same package with another model size; the run changes, the package stays.
+function switchModel(run) {
+  if (run === state.run) return;
+  stopReplay();
+  stopPolling();
+  const pkg = state.pkg;
+  state.run = run;
+  renderRunOptions();
+  loadPackages(true, pkg);
+}
+
+// Model picker. "Một model": choose which one model to read. "So sánh model": tick one to three.
+function renderModelPick(siblings) {
+  const box = $('model-pick');
+  box.hidden = siblings.length < 2;
+  if (box.hidden) return;
+  if (state.view === 'single') {
+    box.replaceChildren(el('span', 'field-label', 'Model cần xem:'), ...siblings.map((run) => {
+      const variant = variantOf(run);
+      const label = el('label', 'toggle model-toggle');
+      label.dataset.variant = variant;
+      const input = el('input');
+      input.type = 'radio';
+      input.name = 'one-model';
+      input.checked = run === state.run;
+      input.title = run;
+      input.addEventListener('change', () => switchModel(run));
+      label.append(input, el('span', null, `A-${variant}`));
+      return label;
+    }), el('small', 'count', 'cùng gói, đổi cỡ mô hình'));
+    return;
+  }
+  const active = siblings.filter((run) => !state.models.size || state.models.has(variantOf(run))).map(variantOf);
+  box.replaceChildren(el('span', 'field-label', 'Model:'), ...siblings.map((run) => {
+    const variant = variantOf(run);
+    const label = el('label', 'toggle model-toggle');
+    label.dataset.variant = variant;
+    const input = el('input');
+    input.type = 'checkbox';
+    input.checked = active.includes(variant);
+    input.title = run;
+    input.addEventListener('change', () => {
+      const next = [...box.querySelectorAll('input')].filter((item) => item.checked);
+      if (!next.length) { input.checked = true; return; } // at least one model stays
+      state.models = new Set(next.map((item) => item.parentElement.dataset.variant));
+      syncViewHash();
+      renderCompare();
+    });
+    label.append(input, el('span', null, `A-${variant}`));
+    return label;
+  }), el('small', 'count', '1 model: xem riêng · 2–3 model: chạy cùng lúc, cạnh nhau'));
+}
+
+// One column per chosen model: outcome, the rule that decided, the evidence, then each step in one line.
+async function renderSide(runs) {
+  const side = $('side');
+  const pkg = state.pkg;
+  const traces = await Promise.all(runs.map(async (run) => {
+    try { return {run, events: await getJson(`/api/trace?run=${encodeURIComponent(run)}&pkg=${encodeURIComponent(pkg)}&after=-1`)}; }
+    catch { return {run, events: []}; }
+  }));
+  if (pkg !== state.pkg) return;
+  stopSide();
+  sidePlay.columns = [];
+  side.style.setProperty('--columns', String(Math.max(1, traces.length)));
+  side.replaceChildren(...traces.map(({run, events}) => {
+    const t0 = Date.parse(events[0]?.ts);
+    const at = (event) => { const t = Date.parse(event?.ts); return Number.isNaN(t) || Number.isNaN(t0) ? 0 : (t - t0) / 1000; };
+    const column = el('article', 'side-col');
+    column.dataset.variant = variantOf(run);
+    const start = events.find((event) => event.type === 'run_start');
+    const decision = events.find((event) => event.type === 'decision');
+    const end = events.find((event) => event.type === 'run_end');
+    const head = el('header');
+    const status = el('span', 'side-status', '');
+    head.append(el('strong', null, `A-${variantOf(run)}`), el('span', 'count', `${start?.model ?? '?'} · ${end ? `${end.steps} bước · ${end.elapsed_s} s` : 'chưa xong'}`), status);
+    column.append(head);
+    if (!events.length) { column.append(el('p', 'empty', 'Run này không có gói đang xem.')); return column; }
+    const result = el('div', 'side-result');
+    const waiting = el('p', 'side-waiting', 'Đang điều tra… kết luận hiện khi tới bước quyết định.');
+    column.append(result, waiting);
+    if (decision) {
+      const label = ['benign', 'suspicious', 'malicious'].includes(decision.final_label) ? decision.final_label : '';
+      const verdictHead = el('div', 'verdict-head');
+      verdictHead.append(el('p', `outcome ${label}`, LABELS[decision.final_label] ?? decision.final_label),
+        el('span', `badge ${decision.final_action ?? ''}`, ACTIONS[decision.final_action] ?? decision.final_action));
+      const checks = decision.evidence_checks || [];
+      result.append(verdictHead, el('p', 'side-rule', ruleSentence(decision.rule)),
+        el('p', 'count', checks.length ? `Bằng chứng: ${checks.filter((check) => check.exists).length}/${checks.length} vị trí có thật` : 'Không nêu bằng chứng'));
+    } else {
+      result.append(el('p', 'pending-copy', 'Chưa có quyết định'));
+    }
+    const steps = el('ol', 'side-steps');
+    const items = [];
+    events.forEach((event, index) => {
+      const step = explainStep(events, index);
+      const key = ['verdict', 'decision', 'error', 'limit'].includes(event.type);
+      const item = el('li', key ? 'key' : null);
+      items.push({item, t: at(event)});
+      item.append(el('b', null, step.title), el('span', step.untrustedOutput ? 'untrusted' : null, step.output));
+      steps.append(item);
+    });
+    column.append(steps);
+    sidePlay.columns.push({items, list: steps, result, waiting, status, decisionAt: decision ? at(decision) : Infinity,
+      endAt: end ? at(end) : (items.at(-1)?.t ?? 0)});
+    if (run !== state.run) {
+      const open = el('a', 'link-button', 'Mở model này ở chế độ Một model');
+      open.href = `#run=${encodeURIComponent(run)}&pkg=${encodeURIComponent(pkg)}`;
+      open.addEventListener('click', () => setView('single'));
+      column.append(open);
+    }
+    return column;
+  }));
+  sidePlay.duration = Math.max(0.1, ...sidePlay.columns.map((column) => column.endAt));
+  $('side-scrub').max = String(sidePlay.duration);
+  setSideClock(sidePlay.duration); // open fully played; "Phát cùng lúc" restarts from zero
+}
+
+// One shared clock for every column, in trace seconds: a step shows once its model had reached it.
+const sidePlay = {columns: [], duration: 0, clock: 0, timer: null};
+
+function setSideClock(clock) {
+  sidePlay.clock = Math.min(clock, sidePlay.duration);
+  for (const column of sidePlay.columns) {
+    let now = null;
+    for (const {item, t} of column.items) {
+      const shown = t <= sidePlay.clock + 1e-6;
+      item.classList.toggle('later', !shown);
+      item.classList.remove('now');
+      if (shown) now = item;
+    }
+    now?.classList.add('now');
+    if (now && sidePlay.timer) column.list.scrollTop = now.offsetTop - column.list.offsetTop - column.list.clientHeight / 2;
+    const decided = sidePlay.clock >= column.decisionAt;
+    column.result.hidden = !decided;
+    column.waiting.hidden = decided;
+    const done = sidePlay.clock >= column.endAt;
+    column.status.textContent = done ? `✓ xong lúc ${column.endAt.toFixed(1)} s` : `đang chạy · bước ${column.items.filter(({t}) => t <= sidePlay.clock).length}`;
+    column.status.classList.toggle('running', !done);
+  }
+  $('side-scrub').value = String(sidePlay.clock);
+  $('side-clock').textContent = `${sidePlay.clock.toFixed(1)} / ${sidePlay.duration.toFixed(1)} s`;
+}
+
+function stopSide() {
+  clearInterval(sidePlay.timer);
+  sidePlay.timer = null;
+  $('side-play').textContent = '▶ Phát cùng lúc';
+}
+
+function playSide() {
+  if (sidePlay.timer) { stopSide(); return; }
+  if (sidePlay.clock >= sidePlay.duration) setSideClock(0);
+  $('side-play').textContent = '⏸ Tạm dừng';
+  let last = performance.now();
+  sidePlay.timer = setInterval(() => {
+    const now = performance.now();
+    setSideClock(sidePlay.clock + (now - last) / 1000 * Number($('side-speed').value));
+    last = now;
+    if (sidePlay.clock >= sidePlay.duration) stopSide();
+  }, 100);
+}
+
+function setView(view) {
+  state.view = view;
+  document.body.dataset.view = view;
+  for (const button of document.querySelectorAll('.view-mode button')) button.setAttribute('aria-checked', String(button.dataset.view === view));
+  $('compare').hidden = view !== 'compare';
+  if (view !== 'compare') stopSide();
+  syncViewHash();
+  if (view === 'single' && state.run) renderModelPick(siblingsOf(state.run));
+  renderCompare();
+}
+
+function syncViewHash() {
+  if (!state.pkg) return;
+  const extra = state.view === 'compare' ? `&view=compare${state.models.size ? `&models=${[...state.models].join(',')}` : ''}` : '';
+  history.replaceState(null, '', `#${linkFor(state.pkg)}${extra}`);
+}
+
 function onKey(event) {
   const target = event.target instanceof Element ? event.target : document.body;
   if (event.ctrlKey || event.metaKey || event.altKey || target.closest('input, select, textarea')) return;
@@ -792,12 +987,11 @@ async function init() {
     setTimeout(() => { button.textContent = 'Chép liên kết'; }, 1500);
   });
   document.addEventListener('keydown', onKey);
-  $('compare-toggle').addEventListener('click', () => {
-    const panel = $('compare');
-    panel.hidden = !panel.hidden;
-    $('compare-toggle').setAttribute('aria-expanded', String(!panel.hidden));
-    renderCompare();
-  });
+  for (const button of document.querySelectorAll('.view-mode button')) button.addEventListener('click', () => setView(button.dataset.view));
+  state.models = new Set((params.get('models') || '').split(',').filter((name) => ['LLM', 'SLM', 'TLM'].includes(name)));
+  setView(params.get('view') === 'compare' ? 'compare' : 'single');
+  $('side-play').addEventListener('click', playSide);
+  $('side-scrub').addEventListener('input', (event) => { stopSide(); setSideClock(Number(event.target.value)); });
   $('export-md').addEventListener('click', exportReport);
   // A link pasted into the address bar of an open page changes only the hash: follow it.
   window.addEventListener('hashchange', () => {

@@ -27,16 +27,17 @@
       <span class="bar-label" id="mode-label">Xem theo cách nào</span>
       <div class="mode-tabs" role="radiogroup" aria-labelledby="mode-label">
         <button type="button" role="radio" data-mode="truck"><b>Xe hàng</b><small>cả một lệnh cài</small></button>
-        <button type="button" role="radio" data-mode="compare"><b>Đua 3 model</b><small>cùng gói, 3 cỡ mô hình</small></button>
-        <button type="button" role="radio" data-mode="single"><b>Một model</b><small>một lần điều tra, chi tiết</small></button>
+        <button type="button" role="radio" data-mode="compare"><b>So sánh model</b><small>chọn 1–3 model, cùng gói</small></button>
+        <button type="button" role="radio" data-mode="single"><b>Một run bất kỳ</b><small>mọi run, kể cả run thử</small></button>
       </div>
-      <select id="mode" class="visually-hidden" tabindex="-1" aria-hidden="true"><option value="truck">Xe hàng</option><option value="compare">Đua 3 model</option><option value="single">Một model</option></select>
+      <select id="mode" class="visually-hidden" tabindex="-1" aria-hidden="true"><option value="truck">Xe hàng</option><option value="compare">So sánh model</option><option value="single">Một run bất kỳ</option></select>
       <p class="mode-help" id="mode-help" aria-live="polite"></p>
     </div>
     <div class="office-pick">
       <span id="scenario-pick" hidden><label for="scenario">Kịch bản</label> <select id="scenario"></select></span>
       <label for="run-select" id="run-label">Bộ run</label><select id="run-select"></select>
       <label for="package-select">Gói</label><select id="package-select"></select>
+      <span class="model-pick" id="model-pick" role="group" aria-label="Chọn model chạy (1 đến 3)" hidden></span>
     </div>
     <div class="office-transport">
       <button type="button" id="previous" aria-label="Sự kiện trước (phím ←)">◀</button>

@@ -614,6 +614,7 @@ const groups = new Map(); // "w57-reg-a-*" -> runs that differ only in the model
 function syncHash() {
   const next = new URLSearchParams({ mode: $("mode").value, run: $("run-select").value, pkg: $("package-select").value });
   if ($("mode").value === "truck") next.set("scenario", $("scenario").value);
+  if ($("mode").value === "compare") next.set("models", modelRuns($("run-select").value).map(variantOf).join(","));
   if (params.get("bench") === "1") next.set("bench", "1");
   history.replaceState(null, "", `#${next}`);
   const first = lanes[0];
@@ -668,9 +669,64 @@ async function loadTruck(run) {
   seek(0);
 }
 
+// "So sánh model": the runs of the chosen group whose model box is ticked (one model, or two or three).
+const MODEL_ORDER = { LLM: 0, SLM: 1, TLM: 2 };
+const pickedModels = new Set((params.get("models") || "").split(",").filter((name) => name in MODEL_ORDER));
+function modelRuns(choice) {
+  const members = [...(groups.get(choice) || [])].sort((a, b) => (MODEL_ORDER[variantOf(a)] ?? 9) - (MODEL_ORDER[variantOf(b)] ?? 9));
+  const picked = members.filter((run) => pickedModels.has(variantOf(run)));
+  return picked.length ? picked : members;
+}
+function renderModelPick(choice) {
+  const box = $("model-pick");
+  const mode = $("mode").value;
+  // "Một run": a run of a LLM/SLM/TLM set gets a one-of-three switch that keeps the package.
+  const groupKey = mode === "single" && variantOf(choice) ? choice.replace(VARIANT, (_, lead) => `${lead}a-*`) : null;
+  box.hidden = !(mode === "compare" || (groupKey && groups.has(groupKey)));
+  if (box.hidden) return;
+  if (mode === "single") {
+    const members = [...groups.get(groupKey)].sort((a, b) => (MODEL_ORDER[variantOf(a)] ?? 9) - (MODEL_ORDER[variantOf(b)] ?? 9));
+    box.replaceChildren(element("span", "Model cần xem:", "bar-label"), ...members.map((run) => {
+      const variant = variantOf(run);
+      const label = element("label", undefined, "toggle model-toggle");
+      label.style.setProperty("--worker", VARIANT_COLORS[variant] || "#61e8c2");
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "one-model";
+      input.checked = run === choice;
+      input.title = run;
+      input.addEventListener("change", () => { $("run-select").value = run; loadChoice($("package-select").value); });
+      label.append(input, element("span", `A-${variant}`));
+      return label;
+    }), element("small", "cùng gói, đổi cỡ mô hình", "count"));
+    return;
+  }
+  const members = [...(groups.get(choice) || [])].sort((a, b) => (MODEL_ORDER[variantOf(a)] ?? 9) - (MODEL_ORDER[variantOf(b)] ?? 9));
+  const active = new Set(modelRuns(choice).map(variantOf));
+  box.replaceChildren(element("span", "Model:", "bar-label"), ...members.map((run) => {
+    const variant = variantOf(run);
+    const label = element("label", undefined, "toggle model-toggle");
+    label.style.setProperty("--worker", VARIANT_COLORS[variant] || "#61e8c2");
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = active.has(variant);
+    input.title = run;
+    input.addEventListener("change", () => {
+      const next = new Set([...box.querySelectorAll("input")].filter((item) => item.checked).map((item) => item.dataset.variant));
+      if (!next.size) { input.checked = true; return; } // at least one model always runs
+      pickedModels.clear();
+      for (const name of next) pickedModels.add(name);
+      loadChoice($("package-select").value);
+    });
+    input.dataset.variant = variant;
+    label.append(input, element("span", `A-${variant}`));
+    return label;
+  }), element("small", "1 model: xem một mình · 2–3 model: chạy song song để so", "count"));
+}
+
 async function packagesFor(choice) {
   if ($("mode").value !== "compare") return (await getJson(`/api/runs/${encodeURIComponent(choice)}/packages`)).map((item) => item.package);
-  const lists = await Promise.all(groups.get(choice).map((run) => getJson(`/api/runs/${encodeURIComponent(run)}/packages`)));
+  const lists = await Promise.all(modelRuns(choice).map((run) => getJson(`/api/runs/${encodeURIComponent(run)}/packages`)));
   const [first, ...rest] = lists.map((list) => list.map((item) => item.package));
   return (first || []).filter((name) => rest.every((list) => list.includes(name)));
 }
@@ -684,10 +740,7 @@ async function loadLanes() {
   }
   const choice = $("run-select").value;
   const pkg = $("package-select").value;
-  const order = { LLM: 0, SLM: 1, TLM: 2 };
-  const chosen = $("mode").value === "compare"
-    ? [...groups.get(choice)].sort((a, b) => (order[variantOf(a)] ?? 9) - (order[variantOf(b)] ?? 9))
-    : [choice];
+  const chosen = $("mode").value === "compare" ? modelRuns(choice) : [choice];
   office.clearWorkers(chosen.length);
   focusLane = 0;
   $("event-log").dataset.run = "";
@@ -703,7 +756,8 @@ async function loadLanes() {
 }
 
 async function loadChoice(preferredPackage) {
-  if ($("mode").value === "truck") return loadTruck($("run-select").value);
+  if ($("mode").value === "truck") { $("model-pick").hidden = true; return loadTruck($("run-select").value); }
+  renderModelPick($("run-select").value);
   const names = await packagesFor($("run-select").value);
   $("package-select").replaceChildren(...names.map((name) => { const option = element("option", name); option.value = name; return option; }));
   $("package-select").value = names.includes(preferredPackage) ? preferredPackage : names[0] || "";
@@ -760,10 +814,10 @@ $("mode").addEventListener("change", () => loadMode(null, $("package-select").va
 const MODE_HELP = {
   truck: "Một lệnh npm install kéo về nhiều gói (mỗi gói là một thùng). Xem cả xe qua cổng: từng gói được kiểm; "
     + "chỉ một gói độc là cả xe bị giữ. Đây là cách sản phẩm sẽ dùng agent.",
-  compare: "Cùng một gói, ba cỡ mô hình (LLM, SLM, TLM) điều tra song song trên đồng hồ thật. "
-    + "So xem ai nhanh hơn, ai cần nhiều bước hơn và ai kết luận khác luật cứng.",
-  single: "Xem kỹ một lần điều tra: mô hình gọi công cụ nào, đọc dòng nào, nộp kết luận gì "
-    + "và luật cứng chốt ra sao. Phù hợp để giải thích một ca cụ thể.",
+  compare: "Cùng một gói, chọn 1, 2 hoặc 3 cỡ mô hình (LLM 9B, SLM 4B, TLM 0,8B) ở ô Model. Một model: xem riêng. "
+    + "Hai–ba model: chạy song song trên đồng hồ thật để so ai nhanh hơn, ai cần nhiều bước hơn, ai kết luận khác.",
+  single: "Mở một run bất kỳ (kể cả run thử nghiệm không thuộc bộ LLM/SLM/TLM) và xem kỹ một lần điều tra: "
+    + "gọi công cụ nào, đọc dòng nào, nộp kết luận gì, luật cứng chốt ra sao.",
 };
 function syncModeTabs(mode) {
   for (const tab of document.querySelectorAll(".mode-tabs [data-mode]")) {

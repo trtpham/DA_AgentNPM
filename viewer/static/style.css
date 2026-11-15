@@ -242,3 +242,49 @@ kbd{display:inline-block;padding:0 5px;margin:0 2px;border:1px solid var(--line-
 .present .sidebar,.present .about,.present .footnote,.present .keys,.present .compare{display:none}
 .present .viewer{grid-template-columns:minmax(0,1fr) minmax(380px,32%)}
 .present .timeline{max-height:calc(100vh - 260px)}
+
+/* ---- 2D: one model, or two-three models side by side ---------------------------------------------- */
+.view-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}
+.view-mode button{font-size:.86rem;padding:5px 14px}
+.model-pick{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px 12px;padding:4px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface)}
+.model-toggle span{font-weight:700}
+.model-toggle span::before{content:"";display:inline-block;width:8px;height:8px;margin-right:5px;border-radius:50%;background:var(--variant,var(--mint));vertical-align:middle}
+.model-toggle[data-variant="SLM"],.side-col[data-variant="SLM"]{--variant:var(--blue)}
+.model-toggle[data-variant="TLM"],.side-col[data-variant="TLM"]{--variant:var(--amber)}
+body[data-view="compare"] .transport,body[data-view="compare"] .phase-track,body[data-view="compare"] .timeline-tools,
+body[data-view="compare"] .current-action,body[data-view="compare"] .timeline,body[data-view="compare"] .keys,
+body[data-view="compare"] .result{display:none}
+body[data-view="compare"] .viewer{grid-template-columns:300px minmax(0,1fr)}
+.compare{padding:12px}
+.side{display:grid;grid-template-columns:repeat(var(--columns,1),minmax(240px,1fr));gap:12px;margin-bottom:14px;overflow-x:auto}
+.side-col{display:flex;flex-direction:column;gap:8px;min-width:0;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.side-col header strong::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:50%;background:var(--variant,var(--mint));vertical-align:middle}
+.side-col header{display:grid;gap:2px}
+.side-col header strong{font-size:1.1rem}
+.side-col .outcome{font-size:1.2rem}
+.side-rule{margin:0;font-size:.84rem}
+.side-steps{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:52vh;overflow:auto;font-size:.8rem;counter-reset:step}
+.side-steps li{display:grid;gap:1px;padding:5px 8px;border-radius:6px;background:var(--surface);counter-increment:step}
+.side-steps li b{font-weight:600}
+.side-steps li b::before{content:counter(step) ". ";color:var(--faint);font-family:var(--mono)}
+.side-steps li span{color:var(--muted);overflow-wrap:anywhere}
+.side-steps li span.untrusted{font-family:var(--mono);font-size:.76rem}
+.side-steps li.key{outline:1px solid var(--amber)}
+.side-steps li.key b::after{content:" ★";color:var(--amber)}
+@media(max-width:820px){body[data-view="compare"] .viewer{grid-template-columns:1fr}}
+
+/* ---- 2D compare: one shared clock for all chosen models ------------------------------------------- */
+.side-transport{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.side-transport .primary{background:var(--mint);border:1px solid var(--mint);color:var(--bg);font-weight:700;border-radius:8px;min-height:34px;padding:4px 12px}
+.side-transport select{background:var(--surface-2);border:1px solid var(--line-strong);border-radius:8px;min-height:34px;padding:4px 8px}
+.side-transport input[type=range]{flex:1 1 160px;accent-color:var(--mint)}
+.side-status{font-size:.76rem;font-weight:700;color:var(--mint)}
+.side-status.running{color:var(--amber)}
+.side-waiting{margin:0;color:var(--faint);font-size:.82rem;font-style:italic}
+.side-steps li.later{display:none}
+.side-steps li.now{background:var(--surface-3);outline:1px solid var(--mint)}
+.side-steps{position:relative}
+/* narrow screens: the model picker wraps, compared models stack instead of scrolling sideways */
+.model-pick{max-width:100%;min-width:0}
+.model-pick small{flex-basis:100%;white-space:normal}
+@media(max-width:820px){.side{grid-template-columns:1fr}.side-steps{max-height:40vh}}

@@ -52,13 +52,27 @@
         <span id="package-name" class="package-name"></span>
         <label class="toggle reviewed-toggle" title="Chỉ lưu trong trình duyệt này (phím M)"><input type="checkbox" id="reviewed-toggle"> Đã xem xong</label>
         <button type="button" class="ghost" id="present" aria-pressed="false" title="Ẩn cột trái, chữ to, toàn màn hình (phím P)">Trình chiếu</button>
-        <button type="button" class="ghost" id="compare-toggle" aria-expanded="false" aria-controls="compare">So sánh model</button>
         <button type="button" class="ghost" id="export-md" title="Tải báo cáo Markdown của gói đang xem">Xuất báo cáo</button>
         <button type="button" class="ghost" id="copy-link" title="Chép đường dẫn tới gói này">Chép liên kết</button>
       </div>
 
+      <div class="view-row">
+        <div class="seg view-mode" role="radiogroup" aria-label="Cách xem">
+          <button type="button" role="radio" data-view="single">Một model</button>
+          <button type="button" role="radio" data-view="compare">So sánh model</button>
+        </div>
+        <span class="model-pick" id="model-pick" role="group" aria-label="Chọn model (1 đến 3)" hidden></span>
+      </div>
+
       <section class="compare" id="compare" hidden aria-label="So sánh các model trên cùng gói">
         <p class="compare-note" id="compare-note"></p>
+        <div class="side-transport" aria-label="Phát các model cùng lúc">
+          <button type="button" class="primary" id="side-play" title="Các model chạy trên cùng một đồng hồ, theo thời gian thật của trace">▶ Phát cùng lúc</button>
+          <select id="side-speed" aria-label="Tốc độ"><option value="1">1× thật</option><option value="4" selected>4×</option><option value="16">16×</option><option value="64">64×</option></select>
+          <input type="range" id="side-scrub" min="0" max="0" step="0.1" value="0" aria-label="Tua đồng hồ chung">
+          <span class="replay-position" id="side-clock">—</span>
+        </div>
+        <div class="side" id="side"></div>
         <table class="compare-table"><thead><tr><th>Run</th><th>Model</th><th>Mô hình đề xuất</th><th>Luật chốt</th><th>Bằng chứng</th><th>Bước · giây</th><th></th></tr></thead><tbody id="compare-body"></tbody></table>
       </section>
 
