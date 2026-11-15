@@ -145,11 +145,19 @@ Theo quyết định của PO, các việc dưới đây được ghi vào báo 
 | 11/11 | Cắt bộ nhãn về 500 dòng: mỗi lần cắt một dòng ở cụm lớn nhất cùng nhãn, giữ cả 30 `suspicious` | Còn 235 lành, 235 độc, 30 đáng ngờ | `ec020cd` |
 | 15/11 | Đóng băng `data/labels-v1.csv`, chia dev/test theo cụm | Dev 200 (94 lành / 94 độc / 12 đáng ngờ); test 300 (141 / 141 / 18); 453 cụm | `637643b` |
 
+**Hình 8.** Bộ nhãn labels-v1 đóng băng ngày 15/11/2026: dev 200 gói, test 300 gói, chia theo 453 cụm; cùng ngày, bộ kiểm thử chạy lại đạt 322 bài (14 bài Docker bỏ qua khi không bật).
+
+![Bộ nhãn labels-v1 và kết quả pytest ngày 15/11](../hinh-anh/tuan-05-them-labels-v1-pytest.png)
+
 ### Trình xem và GitHub (11/11 và 15/11)
 
 - 11/11: thêm giao diện sáng/tối và chức năng con cho trình xem (`c957d11`), làm rõ trình xem 2D và văn phòng 3D (`cf438b9`).
 - 15/11: cho chọn một hoặc nhiều model trong trình xem (`01648b2`). Theo phiên điều phối: pytest của trình xem 12/12, test JS 23/23.
 - Đã push lên GitHub: 10 commit dữ liệu (tới `637643b`), sau đó 3 commit trình xem (tới `01648b2`) (số commit theo phiên điều phối). Nhánh `main` khớp `origin/main`.
+
+**Hình 9.** Trình xem trace ở chế độ **So sánh model**, giao diện sáng (trái) và tối (phải). Chọn được một hoặc nhiều model; ví dụ là gói mô phỏng mang tên đáng sợ nhưng mã vô hại (bẫy tên): A-LLM và A-SLM cho phép (R7), A-TLM chuyển người xem (R3). Lượt chạy `corpus-x1108-*`.
+
+![Trình xem so sánh 3 model, giao diện sáng và tối](../hinh-anh/tuan-05-them-trinh-xem-sang-toi.png)
 
 ### Môi trường và kiểm thử (15/11)
 

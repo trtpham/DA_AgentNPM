@@ -306,6 +306,7 @@ PO quyết định ghi các việc ngày 11–15/11 vào tuần 5 để chạy t
   - 11/11: giao diện sáng/tối (`c957d11`, `cf438b9`).
   - 15/11: chọn một hoặc nhiều model (`01648b2`).
   - Đã push GitHub tới `01648b2`.
+- **Ảnh:** [labels-v1 và pytest](../hinh-anh/tuan-05-them-labels-v1-pytest.png), [trình xem sáng/tối, so sánh model](../hinh-anh/tuan-05-them-trinh-xem-sang-toi.png) (Hình 8, 9 của báo cáo tuần 5).
 - **Kiểm chứng (15/11):**
   - pytest: 322 passed, 14 skipped (chạy lại 15/11, 14 test bỏ qua là test Docker);
   - `RUN_SANDBOX_TESTS=1`: 14/14 (theo phiên điều phối);
