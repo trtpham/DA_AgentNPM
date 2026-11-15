@@ -290,3 +290,32 @@ Có 2 Gate B0 ngày 05/11 trong `docs/brownfield/TRANSITION_APPROVAL.md`. Owner:
 - Căn cứ: test Docker `14 passed`; `repro_sandbox --runs 3`: `all_same: true`, `no_host_leak: true`; bảng 9 fixture trong phiếu W5-5.
 - Swap: phương án 1 — `--memory-swap 256m` là mặc định; fixture `memory` dừng ở 192 MB (trước 448 MB); test Docker chạy lại sau khi đổi: `14 passed`.
 - Kết luận: **ĐẠT**. W5-6 mở cho gói thử vô hại; gói thật và corpus mô phỏng vẫn không chạy trong container.
+
+## Làm trước kế hoạch (11–15/11/2026)
+
+PO quyết định ghi các việc ngày 11–15/11 vào tuần 5 để chạy trước, tránh dồn việc. Theo kế hoạch gốc, các việc này thuộc tuần 7. Ngày ghi là ngày làm thật. Chi tiết và bảng số: [báo cáo tuần 5, mục 6](../bao-cao-tuan/BaoCaoTienDo_Tuan05.md).
+
+- **Người thực hiện / người kiểm tra:** Claude / chưa có người kiểm tra.
+- **Nhãn (11/11):**
+  - Mở rộng và rà soát bộ nhãn, lượt 21–26 (`44eca2a`).
+  - Sửa nhãn nháp cho 42 dòng `revise`, rà soát lại ở lượt 27: 38 `verified`, 4 `exclude` (`62e061d`).
+  - Sửa `data_report` để lượt rà soát sau thay được lượt trước, có thêm test (`62e061d`).
+  - Cắt bộ nhãn về 500 dòng (`ec020cd`).
+- **Nhãn (15/11):** đóng băng `data/labels-v1.csv` (`637643b`): dev 200 (94/94/12), test 300 (141/141/18), 453 cụm.
+- **Trình xem:**
+  - 11/11: giao diện sáng/tối (`c957d11`, `cf438b9`).
+  - 15/11: chọn một hoặc nhiều model (`01648b2`).
+  - Đã push GitHub tới `01648b2`.
+- **Kiểm chứng (15/11):**
+  - pytest: 322 passed, 14 skipped (chạy lại 15/11, 14 test bỏ qua là test Docker);
+  - `RUN_SANDBOX_TESTS=1`: 14/14 (theo phiên điều phối);
+  - trình xem 12/12, JS 23/23 (theo phiên điều phối);
+  - máy ảo Ubuntu 24.04 dựng lại, snapshot `sach`, test sandbox 14 + 7 passed (theo phiên điều phối).
+- **Vướng mắc:**
+  - Sandbox pha A trên lô dev phần lớn `failed`: `npm install --offline` dừng ở `ENOTCACHED` khi gói có phụ thuộc, và `/tmp` chỉ đọc (`EROFS`).
+  - Đề xuất sửa đang chờ Gate B0. Kết quả pha A chưa dùng được.
+- **Bước tiếp:**
+  - chạy agent trên tập dev;
+  - sửa sandbox rồi chạy lại pha A;
+  - chọn ngưỡng, chạy tập test và GuardDog;
+  - điền Chương 4.

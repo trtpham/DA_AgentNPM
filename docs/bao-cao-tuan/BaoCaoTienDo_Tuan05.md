@@ -2,7 +2,7 @@
 
 **Thành viên:** Lê Đặng Thiên Phước (TV1) · Phạm Minh Triết (TV2, PO) · Nguyễn Đình Thiên (TV3)
 
-**Giai đoạn:** Hoàn thiện sandbox, chống học vẹt và công cụ mở rộng · **Ngày làm:** 04–05/11/2026 (W5-5, W5-6 hoàn tất 08/11) · **Cập nhật tình trạng:** 08/11/2026
+**Giai đoạn:** Hoàn thiện sandbox, chống học vẹt và công cụ mở rộng · **Ngày làm:** 04–05/11/2026 (W5-5, W5-6 hoàn tất 08/11) · **Cập nhật tình trạng:** 08/11/2026; bổ sung phần **làm trước kế hoạch 11–15/11/2026** (mục 6)
 **Nghiệm thu:** W5-5 cách ly sandbox — Phạm Minh Triết nghiệm thu thay Nguyễn Đình Thiên, dựa trên lần chạy ngày 08/11 (ngoại lệ do PO quyết); agent — TV2 Phạm Minh Triết
 
 > Số liệu lấy từ lần chạy thật trên máy của nhóm (Ollama cục bộ, Docker 29.1.3). Mỗi bảng ghi `run_id` để mở lại trong `reports/`. Chi tiết ở [nhật ký tuần 5](../nhat-ky-tuan/tuan-05.md); kịch bản demo là tài liệu nội bộ của nhóm (không đưa lên GitHub).
@@ -130,3 +130,56 @@ Nhóm **chưa có ảnh chụp thực tế buổi báo cáo tuần 5**. Khi có,
 3. **Tập test với họ gói và chiến dịch mới:** **đã chuẩn bị** 240 mẫu độc thuộc 240 cụm khác nhau (bộ Datadog, đọc trong container) và 200 gói lành.
 4. **Văn phòng 3D cho demo cuối kỳ:** đã có 12 tình huống; còn đo FPS trên trình duyệt thật.
 5. Chi tiết tuần 6: [báo cáo tuần 6](BaoCaoTienDo_Tuan06.md); các bước tuần 7–10 nằm trong quy trình thực nghiệm nội bộ của nhóm.
+
+## 6. Phần làm trước kế hoạch (11–15/11/2026)
+
+Theo quyết định của PO, các việc dưới đây được ghi vào báo cáo tuần 5 để chạy trước công việc, tránh dồn việc về cuối kỳ. Ngày ghi là **ngày làm thật**. Theo kế hoạch gốc, các việc này thuộc tuần 7 ("Hiệu chỉnh trên tập phát triển").
+
+### Bộ nhãn (11/11 và 15/11)
+
+| Ngày | Việc | Kết quả | Commit |
+| --- | --- | --- | --- |
+| 11/11 | Mở rộng và rà soát bộ gói thứ hai, lượt 21–26 | Lượt 21: 24 `verified`, 9 `revise`, 7 `exclude`. Lượt 22–26: 113 `verified`, 0 `revise`, 56 `exclude` | `44eca2a` |
+| 11/11 | Sửa nhãn nháp cho 42 dòng `revise`, rồi rà soát lại ở lượt 27 | 38 `verified`, 4 `exclude` | `62e061d` |
+| 11/11 | Sửa `data_report`: lượt rà soát sau thay được kết quả lượt trước | Có thêm test trong `tests/test_data_report.py` | `62e061d` |
+| 11/11 | Cắt bộ nhãn về 500 dòng: mỗi lần cắt một dòng ở cụm lớn nhất cùng nhãn, giữ cả 30 `suspicious` | Còn 235 lành, 235 độc, 30 đáng ngờ | `ec020cd` |
+| 15/11 | Đóng băng `data/labels-v1.csv`, chia dev/test theo cụm | Dev 200 (94 lành / 94 độc / 12 đáng ngờ); test 300 (141 / 141 / 18); 453 cụm | `637643b` |
+
+### Trình xem và GitHub (11/11 và 15/11)
+
+- 11/11: thêm giao diện sáng/tối và chức năng con cho trình xem (`c957d11`), làm rõ trình xem 2D và văn phòng 3D (`cf438b9`).
+- 15/11: cho chọn một hoặc nhiều model trong trình xem (`01648b2`). Theo phiên điều phối: pytest của trình xem 12/12, test JS 23/23.
+- Đã push lên GitHub: 10 commit dữ liệu (tới `637643b`), sau đó 3 commit trình xem (tới `01648b2`) (số commit theo phiên điều phối). Nhánh `main` khớp `origin/main`.
+
+### Môi trường và kiểm thử (15/11)
+
+- Pytest toàn bộ: 322 passed, 14 skipped (chạy lại 15/11, 14 test bỏ qua là test Docker). Test sandbox (`RUN_SANDBOX_TESTS=1`): 14/14, theo phiên điều phối.
+- Dựng lại máy ảo VMware Ubuntu 24.04 cho sandbox và chụp snapshot `sach`. Trong máy ảo, test sandbox: 14 + 7 passed (theo phiên điều phối).
+
+### Sandbox: vấn đề tồn đọng
+
+- Lô dev pha A (chạy sandbox cho gói trong tập dữ liệu) phần lớn có kết quả `failed`.
+- Nguyên nhân 1: `npm install --offline` dừng ở lỗi `ENOTCACHED` khi gói có phụ thuộc, nên install script không được chạy.
+- Nguyên nhân 2: `/tmp` trong container chỉ đọc (`EROFS`).
+- Đề xuất sửa đã có: bước chuẩn bị có mạng dùng `--ignore-scripts`; sandbox cài gói giống người dùng; `/tmp` là tmpfs. Đề xuất đang tạm gác, chờ Gate B0.
+- **Kết quả pha A hiện chưa dùng được. Không có số liệu sandbox cho tập dữ liệu.**
+
+### Báo cáo cuối và slide (11–15/11)
+
+- Cập nhật số nhãn trong báo cáo và slide theo bộ labels-v1.
+- Viết xong Chương 3 (thiết kế), có hình kiến trúc mới.
+- Dựng khung Chương 4 với 12 bảng chờ số (ô TBD ghi lệnh hoặc `run_id` sinh số liệu), kèm mục phân tích ca sai và mục các yếu tố ảnh hưởng tới tính hợp lệ.
+- Slide bảo vệ có bố cục 20 trang. Báo cáo nháp hiện 46 trang.
+
+### Kế hoạch tuần tới
+
+1. Chạy agent trên tập dev: A-LLM, A-SLM, A-TLM và các bản -X.
+2. Sửa sandbox (sau Gate B0), rồi chạy lại pha A.
+3. Chọn ngưỡng trên dev; chạy tập test và GuardDog.
+4. Điền số vào Chương 4 và slide.
+
+### Còn chờ
+
+- MSSV của Lê Đặng Thiên Phước.
+- Phản hồi của giảng viên cho tuần 5 và tuần 6.
+- Người kiểm tra lại một phần nhãn.
