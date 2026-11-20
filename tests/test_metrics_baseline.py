@@ -52,3 +52,23 @@ def test_guarddog_scan_runs_offline_read_only_and_parses(tmp_path):
     broken = scan(tmp_path, runner=lambda command, **_k: subprocess.CompletedProcess(command, 1, "not json", ""))
     assert broken["ok"] is False
     assert scan_command(Path(tmp_path))[0] == "docker"
+
+
+def test_missing_lists_labelled_rows_without_a_result():
+    labels = [{"name": "a", "version": "1", "label": "malicious"}, {"name": "b", "version": "1", "label": "benign"}]
+    result = score([{"package": "a@1", "ok": True, "data": {"issues": 2}}], labels, "guarddog")
+    assert result["missing"] == ["b@1"] and result["scored"] == 1 and result["binary"]["tp"] == 1
+
+
+def test_metrics_cli_scores_only_the_chosen_split(tmp_path):
+    import sys
+    labels = tmp_path / "labels.csv"
+    labels.write_text("id,name,version,label,behavior_main,technique,file,lines,source,split,cluster\n"
+                      "d,a,1,malicious,x,x,x,1,s,dev,c1\nt,b,1,benign,x,x,x,1,s,test,c2\n", encoding="utf-8")
+    (tmp_path / "a@1.json").write_text(json.dumps({"package": "a@1", "ok": True, "data": {"issues": 0}}))
+    (tmp_path / "b@1.json").write_text(json.dumps({"package": "b@1", "ok": True, "data": {"issues": 1}}))
+    out = subprocess.run([sys.executable, "-m", "experiments.metrics", str(tmp_path), "--labels", str(labels),
+                          "--source", "guarddog", "--split", "dev"], capture_output=True, text=True, check=True)
+    result = json.loads(out.stdout)
+    assert result["split"] == "dev" and result["scored"] == 1 and result["unmatched"] == ["b@1"]
+    assert result["binary"] == {"tp": 0, "fp": 0, "tn": 0, "fn": 1}

@@ -61,9 +61,12 @@ def score(results: list[dict], labels: list[dict], source: str = "agent") -> dic
         if result.get("elapsed_s") is not None:
             seconds.append(result["elapsed_s"])
     total = tp + fp + tn + fn
+    # Labelled rows with no result at all (e.g. never scanned): listed, not scored.
+    seen = {result.get("package") for result in results}
+    missing = sorted(package for package in truth if package not in seen)
     precision, recall = _ratio(tp, tp + fp), _ratio(tp, tp + fn)
     return {
-        "source": source, "scored": total, "unmatched": unmatched,
+        "source": source, "scored": total, "unmatched": unmatched, "missing": missing,
         "per_class": {label: sum(confusion[label].values()) for label in CLASSES},
         "confusion": confusion,
         "binary": {"tp": tp, "fp": fp, "tn": tn, "fn": fn},
@@ -98,9 +101,12 @@ def main() -> None:
     parser.add_argument("results", type=Path, help="reports/<run_id> or reports/<run_id>/guarddog")
     parser.add_argument("--labels", type=Path, default=Path("data/labels.csv"))
     parser.add_argument("--source", choices=("agent", "guarddog"), default="agent")
+    parser.add_argument("--split", choices=("dev", "test"), help="score only the labelled rows of this split")
     args = parser.parse_args()
     unreadable: list[str] = []
-    result = score(load_results(args.results, unreadable), load_labels(args.labels), args.source)
+    labels = [row for row in load_labels(args.labels) if not args.split or row["split"] == args.split]
+    result = score(load_results(args.results, unreadable), labels, args.source)
+    result["split"] = args.split
     result["unreadable"] = unreadable
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
