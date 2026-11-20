@@ -19,3 +19,7 @@ Mở `http://127.0.0.1:8765/`, chọn run rồi chọn gói. Lọc run/gói theo
 | `sample_traces/` | 3 trace mẫu vô hại để demo (một trace có chuỗi XSS thử nghiệm) |
 
 Nội dung trace được đưa vào trang bằng `textContent`, không bao giờ chạy. Trang không có nút chạy agent.
+
+## Đo hiệu năng
+
+FPS văn phòng 3D trên 12 tình huống demo, giao diện sáng và tối: [`docs/do-fps-van-phong-3d.md`](docs/do-fps-van-phong-3d.md) (kèm script đo).

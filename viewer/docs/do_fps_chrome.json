@@ -1,0 +1,11 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "launchOptions": {
+      "channel": "chrome",
+      "headless": false,
+      "args": ["--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding", "--disable-background-timer-throttling"]
+    },
+    "contextOptions": { "viewport": { "width": 1600, "height": 900 } }
+  }
+}
