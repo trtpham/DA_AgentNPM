@@ -37,9 +37,30 @@ export function argsText(args) {
   return Object.keys(args).length ? clip(JSON.stringify(args), 60) : "toàn bộ đường cài đặt của gói";
 }
 
+// Package text quoted in a trace. Older traces carry it as plain `data_preview`; from 20/11/2026 tools that
+// return package code write `data_preview_b64` (base64 of the UTF-8 text) with `data_preview_encoding:
+// "base64"`, so antivirus does not quarantine a trace that quotes malware. Decoding here is for display
+// only: callers put the result on the page with textContent, never as markup, and never run it.
+export function previewOf(event) {
+  if (!event) return "";
+  if (typeof event.data_preview_b64 === "string") {
+    const encoding = event.data_preview_encoding ?? "base64";
+    if (encoding !== "base64") return `[không hiển thị được: mã hóa "${clip(encoding, 20)}" chưa hỗ trợ]`;
+    try {
+      const binary = atob(event.data_preview_b64);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return new TextDecoder("utf-8").decode(bytes);  // invalid UTF-8 becomes U+FFFD, never an exception
+    } catch {
+      return "[không giải mã được dữ liệu base64]";
+    }
+  }
+  if (event.data_preview == null) return "";
+  return typeof event.data_preview === "string" ? event.data_preview : JSON.stringify(event.data_preview);
+}
+
 // Summarise a tool's data preview: JSON indicators become a count, file text becomes its first lines.
 export function previewText(event) {
-  const preview = event.data_preview;
+  const preview = previewOf(event);
   if (!preview) return "";
   if (event.tool === "extract_indicators") {
     const types = [...new Set([...String(preview).matchAll(/"type":\s*"([a-z_]+)"/g)].map((match) => match[1]))];

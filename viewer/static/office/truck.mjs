@@ -2,6 +2,7 @@
 // One install request = one truck carrying every package of a run. Packages are analysed one after
 // another on the real clock of their traces; the whole truck gets the strictest verdict
 // (deny > review > approve): one malicious parcel holds the whole delivery.
+import { previewOf } from "./explain.mjs";
 
 export const INTRO = 7;  // trace seconds: the request reaches the registry and the truck drives to the gate
 export const GAP = 2;    // between two parcels
@@ -17,8 +18,9 @@ export function finalAction(actions) {
 // read_manifest previews list the lifecycle hooks; none means npm would run no install script.
 export function hasInstallHooks(events) {
   const result = events.find((event) => event.type === "tool_result" && event.tool === "read_manifest" && event.ok);
-  if (!result || !result.data_preview) return null;
-  return /"(preinstall|install|postinstall)":\s*"/.test(String(result.data_preview));
+  const preview = previewOf(result);
+  if (!preview) return null;
+  return /"(preinstall|install|postinstall)":\s*"/.test(preview);
 }
 
 /**

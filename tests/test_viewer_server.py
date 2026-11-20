@@ -113,7 +113,7 @@ def test_bundled_demo_is_visible_with_default_static_files(tmp_path):
     try:
         assert request(server, "GET", "/")[0] == 200
         status, _, body = request(server, "GET", "/api/runs/sample_traces/packages")
-        assert status == 200 and len(json.loads(body)) == 3
+        assert status == 200 and len(json.loads(body)) == 4
         package = "comment-injection-demo@1.0.0"
         target = f"/api/trace?run=sample_traces&pkg={quote(package, safe='')}&after=-1"
         status, _, body = request(server, "GET", target)
@@ -207,3 +207,25 @@ def test_reference_labels_api_reads_only_valid_rows(tmp_path):
 def test_reference_labels_missing_file_is_empty(tmp_path):
     from viewer.server import reference_labels
     assert reference_labels(tmp_path / "missing.csv") == {}
+
+
+def test_bundled_base64_sample_keeps_package_text_encoded(tmp_path):
+    """Trace format from 20/11/2026: package text travels as base64; the viewer decodes it for display."""
+    import base64
+    server = make_server(tmp_path / "reports", 0)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        package = "base64-preview-demo@1.0.0"
+        status, _, body = request(server, "GET", f"/api/trace?run=sample_traces&pkg={quote(package, safe='')}&after=-1")
+        assert status == 200
+        raw = body.decode("utf-8")
+        assert "<img src=x onerror=alert(1)>" not in raw          # only in base64 on disk and on the wire
+        results = [event for event in json.loads(body) if event["type"] == "tool_result"]
+        assert results and all("data_preview" not in event and event["data_preview_encoding"] == "base64" for event in results)
+        source = base64.b64decode(results[-1]["data_preview_b64"]).decode("utf-8")
+        assert "<img src=x onerror=alert(1)>" in source and "writeFileSync" in source
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)

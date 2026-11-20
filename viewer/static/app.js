@@ -1,6 +1,6 @@
 // Read-only replay/live viewer. Trace content is untrusted: it only ever reaches the page through textContent.
 // Shares the plain-language step text, the room/phase map and the rule ladder with the 3D office.
-import {explainStep} from '/office/explain.mjs';
+import {explainStep, previewOf} from '/office/explain.mjs';
 import {roomFor} from '/office/events.mjs';
 import {ruleLadder, ruleSentence, TERMS} from '/office/rules.mjs';
 import {icon, iconLabel, initPrefs} from '/ui.mjs';
@@ -100,7 +100,7 @@ function describe(event) {
     case 'tool_result':
       return {name: `Kết quả ${event.tool ?? ''}`, tone: event.ok ? 'ok' : 'error', group: event.ok ? 'tool' : 'problem',
         detail: `${event.ok ? 'Thành công' : 'Lỗi'} · ${event.summary ?? ''}${event.duration_ms != null ? ` · ${event.duration_ms} ms` : ''}`,
-        preview: event.untrusted ? event.data_preview : null, previewLabel: 'Dữ liệu mã gói — không tin cậy'};
+        preview: event.untrusted ? previewOf(event) || null : null, previewLabel: 'Dữ liệu mã gói — không tin cậy'};
     case 'verdict': {
       const verdict = event.verdict || {};
       return event.valid
