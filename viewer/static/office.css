@@ -218,3 +218,31 @@
 .model-toggle span{font-weight:700}
 .model-toggle span::before{content:"";display:inline-block;width:8px;height:8px;margin-right:5px;border-radius:50%;background:var(--worker);vertical-align:middle}
 .model-toggle input{accent-color:var(--worker)}
+
+/* page controls: full scenario names, a panel that never scrolls sideways, mode help on its own line */
+.office-bar #scenario{max-width:min(100%,560px)}
+.office-panel{grid-template-columns:minmax(0,1fr)}
+.panel-block{min-width:0}
+.truck-final,.scenario-what{overflow-wrap:anywhere}
+.mode-row{grid-template-columns:auto 1fr}
+.mode-help{grid-column:1 / -1;max-width:96ch}
+.panel-block .count{white-space:normal;overflow-wrap:anywhere}
+.mode-tabs{justify-self:start}
+@media(max-width:900px){.mode-row{grid-template-columns:1fr}.mode-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));justify-self:stretch}.mode-tabs button{min-width:0;padding:6px 8px}.mode-tabs button small{white-space:normal}}
+.office-bar{grid-template-columns:minmax(0,1fr)}@media(max-width:900px){.mode-row{grid-template-columns:minmax(0,1fr)}}
+
+/* parcel status: a dot instead of an icon (grey waiting, amber review, red deny, mint approve) */
+.parcel-dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--line-strong);align-self:center}
+.parcel-item.current .parcel-dot{background:var(--ink)}
+.parcel-item[data-action="approve"] .parcel-dot{background:var(--mint)}
+.parcel-item[data-action="review"] .parcel-dot{background:var(--amber)}
+.parcel-item[data-action="deny"] .parcel-dot{background:var(--red)}
+/* scenario picker fits a phone: the select shrinks with its row */
+#scenario-pick{display:inline-flex;align-items:center;gap:8px;max-width:100%;min-width:0}
+#scenario-pick select{min-width:0;flex:1 1 auto}
+/* parcel rows shrink with the panel; the long name is cut with an ellipsis, never a sideways scrollbar */
+.truck-parcels{overflow-x:hidden;grid-template-columns:minmax(0,1fr)}
+.parcel-item{min-width:0}
+.parcel-item .parcel-name{min-width:0}
+/* the "being viewed" heading is a package name or a story title: readable text, wraps on words */
+.panel-block h2{font-family:inherit;font-size:1.05rem;line-height:1.35;overflow-wrap:break-word}
