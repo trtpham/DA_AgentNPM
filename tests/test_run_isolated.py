@@ -170,3 +170,71 @@ def test_inside_passes_context_to_agent_and_reports_container_peak(monkeypatch, 
     out = iso.inside({"row": {"name": "a", "version": "1.0.0"}, "config": {"name": "A-TLM", "model": "m"},
                       "context": {"osv": {"ok": True}}})
     assert got["context"] == {"osv": {"ok": True}} and out["result"]["container_peak_mb"] == 123.4
+
+
+# Gate B0 2026-11-20: package text in trace previews leaves the container only as base64.
+def _fixture_trace() -> tuple[str, str]:
+    from pathlib import Path
+    code = (Path(__file__).parent / "fixtures" / "packages" / "obfuscated-package" / "install.min.js").read_text(
+        encoding="utf-8")[:2000]
+    events = [{"type": "run_start", "model": "m"},
+              {"type": "tool_result", "tool": "read_file", "ok": True, "data_preview": code, "untrusted": True},
+              {"type": "tool_result", "tool": "deobfuscate", "ok": True, "data_preview": "eval(atob('x'))\n// é"},
+              {"type": "tool_result", "tool": "read_manifest", "ok": False, "data_preview": None}]
+    return "".join(json.dumps(event, ensure_ascii=False) + "\n" for event in events), code
+
+
+def test_trace_previews_are_base64_and_decode_to_the_original():
+    import base64
+    text, code = _fixture_trace()
+    encoded = iso.encode_previews(text)
+    snippet = code[40:120]
+    assert snippet in text and snippet not in encoded and "eval(atob" not in encoded
+    events = [json.loads(line) for line in encoded.splitlines()]
+    assert all("data_preview" not in event for event in events)
+    read, deob, manifest = events[1], events[2], events[3]
+    assert read["data_preview_encoding"] == "base64"
+    assert base64.b64decode(read["data_preview_b64"]).decode("utf-8") == code
+    assert base64.b64decode(deob["data_preview_b64"]).decode("utf-8") == "eval(atob('x'))\n// é"
+    assert manifest["data_preview_b64"] is None and manifest["data_preview_encoding"] == "base64"
+    assert not iso.has_plain_preview(encoded) and iso.has_plain_preview(text)
+
+
+def test_host_refuses_to_write_a_plain_preview_and_writes_encoded_ones(tmp_path, monkeypatch):
+    from experiments import run_batch as batch
+    monkeypatch.setattr(batch, "run_meta", lambda run_id, config, inputs, labels: {"config": config})
+    text, code = _fixture_trace()
+    rows = [{"name": "a", "version": "1.0.0", "source": "s"}]
+
+    def runner(trace):
+        def run(command, input, **_kwargs):
+            out = {"result": {"package": "a@1.0.0", "status": "ok", "trace": "t.jsonl"}, "trace": trace}
+            return CompletedProcess(command, 0, json.dumps(out), "")
+        return run
+
+    with pytest.raises(RuntimeError, match="plain data_preview"):
+        iso.run("iso-plain", "A-TLM", rows, tmp_path, runner(text))
+    assert not (tmp_path / "iso-plain" / "t.jsonl").exists()
+    iso.run("iso-b64", "A-TLM", rows, tmp_path, runner(iso.encode_previews(text)))
+    written = (tmp_path / "iso-b64" / "t.jsonl").read_text(encoding="utf-8")
+    assert code[40:120] not in written and "data_preview_b64" in written
+
+
+def test_inside_sends_out_only_encoded_traces(monkeypatch, tmp_path):
+    from experiments import resources, run_batch as batch
+    text, code = _fixture_trace()
+    run_dir = tmp_path / "run"
+
+    def fake_run_one(item, directory, config, contexts):
+        from agent.trace import trace_filename
+        (run_dir / trace_filename(item["package"])).write_text(text, encoding="utf-8")
+        return {"package": item["package"], "status": "ok"}
+
+    real_path = iso.Path
+    monkeypatch.setattr(iso, "Path", lambda value: run_dir if value == "/tmp/run" else real_path(value))
+    monkeypatch.setattr(batch, "run_one", fake_run_one)
+    monkeypatch.setattr(iso, "materialize", lambda row, work: tmp_path)
+    monkeypatch.setattr(resources, "container_peak_mb", lambda: 1.0)
+    monkeypatch.setattr(iso.shutil, "rmtree", lambda *a, **k: None)
+    out = iso.inside({"row": {"name": "a", "version": "1.0.0"}, "config": {"name": "A-TLM", "model": "m"}})
+    assert code[40:120] not in out["trace"] and not iso.has_plain_preview(out["trace"])

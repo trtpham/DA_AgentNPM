@@ -101,7 +101,44 @@ def inside(job: dict) -> dict:
     trace = run_dir / trace_filename(package)
     text = trace.read_text(encoding="utf-8") if trace.is_file() else None
     shutil.rmtree("/tmp/work", ignore_errors=True)
+    if text is not None:
+        try:  # still in the container's tmpfs: nothing plain leaves it
+            text = encode_previews(text)
+        except (ValueError, TypeError):  # unreadable trace: drop it rather than send package text out
+            text = None
     return {"result": result, "trace": text}
+
+
+def encode_previews(text: str) -> str:
+    """Gate B0 2026-11-20: tool previews quote package code (read_file, deobfuscate, decode_literal, snippets).
+    Replace every `data_preview` with `data_preview_b64` (base64 of UTF-8) + `data_preview_encoding`, so no
+    package text reaches the Windows disk as plain text (Defender quarantined such files on 08/11)."""
+    lines = []
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        event = json.loads(line)
+        if event.get("type") == "tool_result" and "data_preview" in event:
+            preview = event.pop("data_preview")
+            event["data_preview_b64"] = (None if preview is None
+                                         else base64.b64encode(str(preview).encode("utf-8")).decode("ascii"))
+            event["data_preview_encoding"] = "base64"
+        lines.append(json.dumps(event, ensure_ascii=False))
+    return "".join(line + "\n" for line in lines)
+
+
+def has_plain_preview(text: str) -> bool:
+    """Host-side guard: True when any line still carries a plain `data_preview` (or cannot be checked)."""
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except ValueError:
+            return True
+        if isinstance(event, dict) and "data_preview" in event:
+            return True
+    return False
 
 
 def inside_prepare(job: dict) -> dict:
@@ -299,6 +336,8 @@ def _run_chunks(todo: list[dict], run_dir: Path, job, runner, counts: dict, peak
         for output in outputs:
             result = output["result"]
             if output["trace"] is not None and result.get("trace"):
+                if has_plain_preview(output["trace"]):  # never write package text to the host disk
+                    raise RuntimeError(f"trace of {result.get('package')} has a plain data_preview; not written")
                 (run_dir / result["trace"]).write_text(output["trace"], encoding="utf-8")
             (run_dir / batch.result_name(result["package"])).write_text(json.dumps(result, ensure_ascii=False, indent=2),
                                                                          encoding="utf-8")
