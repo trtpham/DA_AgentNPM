@@ -1,0 +1,8 @@
+{
+  "name": "sandbox-limit-dev-dependency",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Harmless: a devDependency that is never in the cache must not stop the install (2026-11-20).",
+  "scripts": {"postinstall": "node probe.js"},
+  "devDependencies": {"sandbox-fixture-never-published-dev-only": "1.0.0"}
+}

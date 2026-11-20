@@ -89,8 +89,8 @@ docker build -t agent-npm-runner:local experiments/runner
 
 ```bash
 cd ~/DA_AgentNPM
-RUN_SANDBOX_TESTS=1 .venv/bin/python -m pytest -q tests/test_sandbox_limits.py   # yêu cầu: 14 passed
-.venv/bin/python -m pytest -q tests/test_sandbox_batch.py                         # yêu cầu: 7 passed
+RUN_SANDBOX_TESTS=1 .venv/bin/python -m pytest -q tests/test_sandbox_limits.py   # yêu cầu: 18 passed (từ 20/11)
+.venv/bin/python -m pytest -q tests/test_sandbox_batch.py                         # yêu cầu: 10 passed (từ 20/11)
 ```
 
 Chạy thử pha A trên 2 gói **lành** (bảng nhãn cũ có sẵn trong mã):
@@ -101,7 +101,7 @@ head -3 data/labels.csv > /tmp/labels2.csv
 docker volume ls | grep agentnpm || echo "khong con volume"
 ```
 
-Kết quả đúng: 2 dòng `"ok": false, "outcome": "failed"` (hai gói này cần mạng lúc cài, sandbox tắt mạng nên thất bại là bình thường), và không còn volume nào. Nếu một bước không đạt: ghi FAIL vào nhật ký, **không** chạy mẫu độc.
+Kết quả đúng: 2 dòng kết quả (từ 20/11 có thể `ok` hoặc `failed`: hai gói này tải binary qua mạng lúc cài, sandbox tắt mạng nên thất bại vẫn là bình thường; dependency thì đã được tải sẵn ở bước cache), và không còn volume nào. Nếu một bước không đạt: ghi FAIL vào nhật ký, **không** chạy mẫu độc.
 
 ## 7. Chụp snapshot sạch
 
@@ -163,6 +163,41 @@ Tập test làm y hệt với `test-v1-…`, `--split test` và `reports/sbx-tes
 ## 11. Dọn sau khi chạy mẫu độc
 
 Tắt VM → **VM → Snapshot → Revert to Snapshot "sach"**. Không dùng VM đã chạy mẫu độc cho việc khác.
+
+## 12. Chạy lại pha A sau khi sửa sandbox (20/11)
+
+Lô `sbx-dev-v1` chạy trước 20/11 phần lớn ra `failed` vì lỗi phương pháp, không phải vì gói: `npm install --offline` chạy ngay trong thư mục gói nên đòi cả devDependency (ENOTCACHED), `/tmp` chỉ đọc (EROFS), trace dài mất đầu cây tiến trình. Bản sửa: bước chuẩn bị (có mạng) tải sẵn dependency vào npm cache trong volume bằng `--ignore-scripts` (không chạy mã gói); bước sandbox (tắt mạng) tạo dự án rỗng rồi `npm install --offline <tarball gói>` như người dùng thật; `/tmp` là tmpfs 64 MB `noexec`; trace bỏ dòng đọc file trong gói, vượt trần thì giữ đầu + cuối. Kết quả cũ **không dùng được**, phải chạy lại cả lô.
+
+1. Tắt VM → **VM → Snapshot → Revert to Snapshot "sach"** (bỏ trạng thái đã chạy mẫu độc). Bật VM, lấy IP (`ip -4 addr show | grep inet`).
+2. Trên Windows, đóng gói commit mới và chép sang (như mục 5):
+
+   ```powershell
+   cd D:\DACN\DA_AgentNPM
+   git archive --format=tar.gz -o $env:TEMPgentnpm.tgz HEAD
+   scp $env:TEMPgentnpm.tgz agent@<IP>:~/
+   ```
+
+3. Trong VM, thay mã cũ bằng mã mới và build lại image sandbox (có thêm `cache_deps.sh`):
+
+   ```bash
+   rm -rf ~/DA_AgentNPM && mkdir -p ~/DA_AgentNPM && tar xzf ~/agentnpm.tgz -C ~/DA_AgentNPM && cd ~/DA_AgentNPM
+   python3 -m venv .venv && .venv/bin/pip install pydantic==2.13.2 pytest
+   docker build -t agent-npm-sandbox:local sandbox
+   docker build -t agent-npm-runner:local experiments/runner
+   ```
+
+4. Kiểm tra như mục 6: `18 passed` và `10 passed`. Không đạt thì dừng, ghi FAIL.
+5. Chụp lại snapshot sạch (mục 7), đặt tên `sach-2011` để phân biệt.
+6. Chép `labels-v1.csv` sang (mục 8), rồi chạy lại lô dev với **run id mới** để không lẫn với kết quả lỗi (gói đã có kết quả bị bỏ qua khi chạy lại cùng id):
+
+   ```bash
+   cd ~/DA_AgentNPM && tmux new -s sbx
+   .venv/bin/python -m experiments.sandbox_batch sbx-dev-v1b --labels data/labels-v1.csv --split dev
+   ```
+
+   Mỗi gói giờ có thêm bước cache (cần mạng NAT của VM tới registry.npmjs.org), nên chậm hơn khoảng 10–60 giây/gói. Mỗi file kết quả có thêm `dependencies.ok`; `sandbox_meta.json` có thêm `cache_failed`.
+7. Đưa kết quả về Windows như mục 9, thay `sbx-dev-v1` bằng `sbx-dev-v1b`. Pha B (mục 10) dùng `--sandbox-results reports/sbx-dev-v1b/sandbox`.
+8. Xong: revert snapshot (mục 11).
 
 ## Lưu ý khi đọc kết quả
 

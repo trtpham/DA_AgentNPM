@@ -10,7 +10,8 @@ import tempfile
 from pathlib import Path
 
 IMAGE = "agent-npm-sandbox:local"
-CANARY = json.loads((Path(__file__).parent / "canary" / "manifest.json").read_text(encoding="utf-8"))
+ROOT_DIR = Path(__file__).parent
+CANARY = json.loads((ROOT_DIR / "canary" / "manifest.json").read_text(encoding="utf-8"))
 OPEN = re.compile(r'\bopen(?:at|at2)?\([^"\n]*"([^"\n]+)"[^\n]*\)\s+=\s+\d+')
 # strace -f prefixes every line with the PID (or thread id) that made the call.
 LINE = re.compile(r"^(\d+)\s+(.*)$")
@@ -184,11 +185,11 @@ def touched_canaries(opened: set[str], trace: str, stdout: str, stderr: str) -> 
     return touched
 
 
-# C6: extra ulimits, still opt-in. No tmpfs on /tmp: with --read-only, /tmp is already unwritable;
-# a tmpfs there loosened the sandbox and made npm's own trace overflow the 2 MB cap (2026-11-08).
+# C6: extra ulimits, still opt-in.
 HARDENING = ["--ulimit", "nofile=256:256", "--ulimit", "fsize=67108864:67108864"]
 
 
+TMP_SIZE = "64m"
 VOLUME = re.compile(r"agentnpm-[a-z0-9][a-z0-9-]{0,80}")
 
 
@@ -197,9 +198,11 @@ def docker_command(root: Path | None, hardening: bool = False, volume: str | Non
     extracted package (Gate B0 2026-11-09: real packages never touch the Windows disk)."""
     if (root is None) == (volume is None) or (volume is not None and not VOLUME.fullmatch(volume)):
         raise ValueError("exactly one of a package folder or an agentnpm-* volume is required")
-    # The volume holds the runner's home (copied by Docker on first mount); the package is in pkg/.
-    source = (f"type=volume,source={volume},target=/input,readonly,volume-subpath=pkg" if volume
-              else f"type=bind,source={root},target=/input,readonly")
+    # The volume holds the runner's home (copied by Docker on first mount); the package is in pkg/ and the
+    # dependencies cache_deps.sh fetched are in npm-cache/ (2026-11-20), both read-only here.
+    sources = ([f"type=volume,source={volume},target=/input,readonly,volume-subpath=pkg",
+                f"type=volume,source={volume},target=/cache,readonly,volume-subpath=npm-cache"] if volume
+               else [f"type=bind,source={root},target=/input,readonly"])
     environment = [f"CANARY_ENV={CANARY['environment']}"]
     environment += [f"{name}={value}" for name, value in CANARY.get("environment_vars", {}).items()]
     return [
@@ -211,11 +214,43 @@ def docker_command(root: Path | None, hardening: bool = False, volume: str | Non
         "--pids-limit", "64", "--memory", "256m", "--memory-swap", "256m", "--cpus", "1",
         "--user", "10001:10001", "--tmpfs", "/work:rw,exec,nosuid,size=64m,uid=10001,gid=10001",
         "--tmpfs", "/home/agent:rw,noexec,nosuid,size=1m,uid=10001,gid=10001",
-        "--mount", source,
+        # 2026-11-20: scripts that mkdtemp in /tmp stopped at EROFS. A small noexec tmpfs lets them run as on a
+        # real machine; it counts against the same 256 MB memory limit and nothing in it can be executed.
+        # (On 08/11 a /tmp tmpfs overflowed the 2 MB trace; run_install.sh now filters and keeps head + tail.)
+        "--tmpfs", f"/tmp:rw,noexec,nosuid,size={TMP_SIZE},uid=10001,gid=10001",
+        *[part for item in sources for part in ("--mount", item)],
         *[part for item in environment for part in ("--env", item)],
         *(HARDENING if hardening else []),
         IMAGE, "/usr/local/bin/run_install.sh",
     ]
+
+
+def cache_command(volume: str) -> list[str]:
+    """Prepare step with network (2026-11-20): `npm install --ignore-scripts` of the package in the volume, only
+    to fill volume/npm-cache with its production dependencies. No lifecycle script runs; no canaries here."""
+    if not VOLUME.fullmatch(volume):
+        raise ValueError("an agentnpm-* volume is required")
+    return [
+        "docker", "run", "--rm", "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+        "--pids-limit", "128", "--memory", "1g", "--cpus", "1", "--user", "10001:10001",
+        "--tmpfs", "/tmp:rw,noexec,nosuid,size=512m,uid=10001,gid=10001",
+        "--tmpfs", "/home/agent:rw,noexec,nosuid,size=16m,uid=10001,gid=10001",
+        "--mount", f"type=volume,source={volume},target=/vol",
+        IMAGE, "/usr/local/bin/cache_deps.sh",
+    ]
+
+
+def cache_dependencies(volume: str, runner=subprocess.run) -> dict:
+    """Run cache_command; a failure is reported, and the offline install then shows what was missing."""
+    try:
+        result = runner(cache_command(volume), capture_output=True, text=True, timeout=600, check=False)
+        if result.returncode:
+            raise RuntimeError(f"Docker failed: {(result.stderr or '')[-300:]}")
+        status = int(_field(result.stdout, "EXIT"))
+        output = _decode(result.stdout, "OUTPUT")
+    except (OSError, ValueError, RuntimeError, binascii.Error, subprocess.SubprocessError) as error:
+        return {"ok": False, "error": str(error)[:300]}
+    return {"ok": status == 0, "error": None if status == 0 else f"npm exit {status}: {output[-300:]}"}
 
 
 def _field(output: str, key: str) -> str:

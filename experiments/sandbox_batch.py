@@ -5,9 +5,11 @@ Per package:
 1. `docker volume create agentnpm-…` (lives inside Docker's Linux VM, never on the Windows disk);
 2. the disposable runner container downloads and safely extracts the source into the volume (pkg/), as
    run_isolated does in tmpfs; no package code runs here;
-3. sandbox/run.py installs it from the volume: --network none, read-only root, cap-drop ALL (+SYS_PTRACE),
-   256 MB without swap, 64 PIDs, 60 s, fake canaries;
-4. the volume is removed. Only a behaviour summary is written (no raw strace, stdout or stderr text).
+3. (2026-11-20) sandbox/cache_deps.sh, network on, `npm install --ignore-scripts` of the package only to fill
+   npm-cache/ in the volume with its production dependencies; no lifecycle script runs;
+4. sandbox/run.py installs it from the volume as a user would (empty project, `npm install --offline <tarball>`):
+   --network none, read-only root, cap-drop ALL (+SYS_PTRACE), 256 MB without swap, 64 PIDs, 60 s, fake canaries;
+5. the volume is removed. Only a behaviour summary is written (no raw strace, stdout or stderr text).
 
 Run malicious samples in the clean Ubuntu VM (docs: sandbox/VM_UBUNTU.md); Docker Desktop is for tests and
 benign packages. Same code on both.
@@ -50,16 +52,18 @@ def prepare(volume: str, row: dict, docker=subprocess.run) -> dict:
     return json.loads(lines[-1])
 
 
-def run(run_id: str, rows: list[dict], reports: Path = Path("reports"), docker=subprocess.run, sandbox=None) -> dict:
+def run(run_id: str, rows: list[dict], reports: Path = Path("reports"), docker=subprocess.run, sandbox=None,
+        cache=None) -> dict:
     from experiments import run_batch as batch
-    from sandbox.run import run_sandbox_volume
+    from sandbox.run import cache_dependencies, run_sandbox_volume
 
     if not batch.RUN_ID.fullmatch(run_id):
         raise ValueError("invalid run id")
     sandbox = sandbox or run_sandbox_volume
+    cache = cache or (lambda volume: cache_dependencies(volume, docker))
     out = reports / run_id / "sandbox"
     out.mkdir(parents=True, exist_ok=True)
-    counts = {"done": 0, "skipped": 0, "prepare_failed": 0, "sandbox_not_ok": 0, "canary": 0}
+    counts = {"done": 0, "skipped": 0, "prepare_failed": 0, "cache_failed": 0, "sandbox_not_ok": 0, "canary": 0}
     for row in rows:
         package = f"{row['name']}@{row['version']}"
         path = out / batch.result_name(package)
@@ -71,7 +75,11 @@ def run(run_id: str, rows: list[dict], reports: Path = Path("reports"), docker=s
         try:
             prepared = prepare(volume, row, docker)
             if prepared.get("ok"):
+                # A failed dependency fetch still runs the sandbox: the offline install then shows what was missing.
+                dependencies = cache(volume)
+                counts["cache_failed"] += not dependencies.get("ok")
                 result = compact(sandbox(volume))
+                result["dependencies"] = {"ok": bool(dependencies.get("ok")), "error": dependencies.get("error")}
             else:
                 counts["prepare_failed"] += 1
                 result = {"ok": False, "data": None, "error": prepared.get("error")}

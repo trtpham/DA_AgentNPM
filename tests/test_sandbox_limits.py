@@ -118,3 +118,37 @@ def test_hardening_removes_swap_so_memory_stays_under_the_limit():
     values = dict(re.findall(r"(\S+)=(\S+)", " ".join(line for line in result["data"]["stdout"]["content"].splitlines()
                                                      if line.startswith("W5RESULT "))))
     assert result["data"]["outcome"] == "oom" and int(values.get("allocated_mb", "0")) <= 256
+
+
+# 2026-11-20 (Gate B0): the three faults found on 15/11 with real benign packages.
+def test_missing_dev_dependency_no_longer_stops_the_install():
+    # Before: `npm install --offline` in the package folder wanted every devDependency (ENOTCACHED).
+    result, values = run("dev-dependency")
+    assert values.get("postinstall") == "ran", result["data"]["stderr"]["content"][-300:]
+    assert result["ok"] and result["data"]["outcome"] == "ok"
+    assert [p for p in result["data"]["behavior"]["process_tree"] if p["actor"] == "package"]
+
+
+def test_scripts_get_a_temp_folder_but_cannot_execute_from_it():
+    result, values = run("tmp-dir")
+    assert values["mkdtemp"] == "ok"  # was EROFS
+    assert values["exec"] in ("EACCES", "EPERM")  # /tmp is noexec
+    assert result["data"]["outcome"] == "ok"
+
+
+def test_big_trace_keeps_the_head_of_the_process_tree():
+    result, values = run("big-trace")
+    assert values["lookups"] == "40000"
+    data = result["data"]
+    assert data["strace"]["truncated"] and not data["trace_complete"] and not result["ok"]
+    # The head survives: npm is still the root, so the script is the package, not "unknown".
+    package = [p for p in data["behavior"]["process_tree"] if p["actor"] == "package"]
+    assert any(p["argv"][:2] == ["node", "probe.js"] for p in package)
+    assert len(data["strace"]["content"].encode()) <= 2_000_000
+
+
+def test_file_calls_inside_the_package_are_left_out_of_the_trace():
+    result = run_sandbox(Path(__file__).parent / "fixtures" / "packages" / "benign-package")
+    trace = result["data"]["strace"]["content"]
+    assert result["ok"] and 'openat(AT_FDCWD, "/work/' not in trace
+    assert 'execve("/usr/local/bin/npm"' in trace

@@ -59,7 +59,9 @@ def test_docker_command_keeps_core_flags_and_passes_fake_env():
 def test_hardening_adds_limits_only_when_asked():
     command = docker_command(Path("/pkg"), hardening=True)
     assert "nofile=256:256" in command and command.count("--memory-swap") == 1
-    assert not any(part.startswith("/tmp") for part in command)  # a /tmp tmpfs would loosen --read-only
+    # 2026-11-20: /tmp is a small noexec tmpfs (scripts failed at mkdtemp EROFS); root stays read-only.
+    assert "--read-only" in command
+    assert [part for part in command if part.startswith("/tmp")] == ["/tmp:rw,noexec,nosuid,size=64m,uid=10001,gid=10001"]
     assert command[-2:] == ["agent-npm-sandbox:local", "/usr/local/bin/run_install.sh"]
 
 
