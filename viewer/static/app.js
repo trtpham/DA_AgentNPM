@@ -3,7 +3,7 @@
 import {explainStep} from '/office/explain.mjs';
 import {roomFor} from '/office/events.mjs';
 import {ruleLadder, ruleSentence, TERMS} from '/office/rules.mjs';
-import {initPrefs} from '/ui.mjs';
+import {icon, iconLabel, initPrefs} from '/ui.mjs';
 
 const LABELS = {benign: 'Lành tính', suspicious: 'Đáng ngờ', malicious: 'Độc hại'};
 const ACTIONS = {approve: 'Cho phép', review: 'Chuyển kiểm tra thủ công', deny: 'Từ chối'};
@@ -18,7 +18,7 @@ const ERRORS = {
 // Package filter by outcome; "error" is a run that ran out of steps.
 const PACKAGE_FILTERS = [['all', 'Tất cả'], ['malicious', 'Độc hại'], ['suspicious', 'Đáng ngờ'], ['benign', 'Lành tính'], ['error', 'Hết bước']];
 // Event filter: which kinds of step to list.
-const EVENT_FILTERS = [['all', 'Tất cả'], ['key', '★ Bước quan trọng'], ['tool', 'Công cụ'], ['model', 'Mô hình'], ['problem', 'Lỗi']];
+const EVENT_FILTERS = [['all', 'Tất cả'], ['key', 'Bước quan trọng'], ['tool', 'Công cụ'], ['model', 'Mô hình'], ['problem', 'Lỗi']];
 // Cases worth a human look, computed from the package list (and labels.csv for the reference label).
 const ISSUE_FILTERS = [['disagree', 'Mô hình ≠ luật'], ['wrong', 'Sai nhãn chuẩn'], ['fake', 'Bằng chứng không có thật']];
 const ISSUE_FLAGS = {disagree: 'mô hình ≠ luật', wrong: 'sai nhãn chuẩn', fake: 'bằng chứng giả'};
@@ -140,6 +140,9 @@ function eventItem(event, index) {
   const step = explainStep(state.events, index);
   const kind = el('span', 'event-kind');
   kind.append(el('span', 'dot'), el('span', `who ${step.actor}`, WHO[step.actor] ?? step.who), document.createTextNode(step.title || info.name));
+  const keyTag = el('span', 'key-tag');
+  keyTag.append(icon('flag'), document.createTextNode('quan trọng'));
+  kind.append(keyTag);
   body.append(kind, el('p', `event-out${step.untrustedOutput ? ' untrusted' : ''}`, step.output || info.detail || ''));
   const flowWrap = el('div', 'flow-wrap');
   const flow = el('div', 'flow');
@@ -213,13 +216,15 @@ function renderResult() {
 
   const checks = decision.evidence_checks || [];
   if (checks.length) {
-    body.append(el('h3', null, `Bằng chứng mô hình trích (${checks.filter((check) => check.exists).length}/${checks.length} có thật trong gói)`));
+    const head = el('h3', null, 'Bằng chứng mô hình trích');
+    head.append(el('span', 'hint', `${checks.filter((check) => check.exists).length}/${checks.length} có thật trong gói`));
+    body.append(head);
     const list = el('ul', 'evidence');
     for (const check of checks) {
       const item = el('li', check.exists ? null : 'missing');
       const where = el('div', 'where');
       where.append(el('code', null, `${check.file ?? '?'}:${check.lines ?? '?'}`),
-        el('span', `check ${check.exists ? 'yes' : 'no'}`, check.exists ? '✓ có trong gói' : '✗ không tìm thấy'));
+        markLine(check.exists));
       addJump(where, check.file);
       item.append(where);
       list.append(item);
@@ -314,6 +319,13 @@ function whySummary(decision, verdict, fresh) {
   return box;
 }
 
+// "có trong gói" / "không tìm thấy" with a drawn check or cross.
+function markLine(ok) {
+  const span = el('span', `check ${ok ? 'yes' : 'no'}`);
+  span.append(icon(ok ? 'check' : 'x'), document.createTextNode(ok ? 'có trong gói' : 'không tìm thấy'));
+  return span;
+}
+
 // "Xem bước đọc": the first step where the agent opened that file, if the trace has one.
 function addJump(container, file) {
   if (!file) return;
@@ -352,6 +364,9 @@ function render(scroll = false) {
   $('current-action-text').textContent = info ? info.name : (state.pkg ? 'Chưa có sự kiện' : 'Chưa chọn gói');
   $('current-action-detail').textContent = info ? (info.detail || '') : 'Chọn một run và một gói để xem lại từng bước của agent.';
   $('replay-position').textContent = `${state.cursor + 1} / ${state.events.length}`;
+  // Empty and loading states say what is happening and what to do next.
+  $('timeline').dataset.empty = !state.pkg ? 'Chọn một gói ở cột trái để xem từng bước agent đã làm.'
+    : state.live ? 'Đang tải các bước của gói này…' : 'Trace của gói này chưa có bước nào.';
   renderPhaseTrack();
   const scrub = $('scrub');
   scrub.max = String(Math.max(0, state.events.length - 1));
@@ -464,6 +479,7 @@ function chip(group, value, text, count, pressed, onPick) {
   button.type = 'button';
   button.setAttribute('aria-pressed', String(pressed));
   if (value !== 'all' && group === 'label') button.append(el('span', `dot ${value}`));
+  if (value === 'key') button.append(icon('flag'));
   button.append(document.createTextNode(text));
   if (count != null) button.append(el('b', null, count));
   button.addEventListener('click', () => onPick(value));
@@ -620,7 +636,7 @@ async function loadPackages(selectFirst, wanted) {
     const seen = state.reviewed.has(reviewKey(item.package));
     if (issues.length || seen) {
       const flags = el('span', 'flags');
-      if (seen) flags.append(el('span', 'flag seen', '✓ đã xem'));
+      if (seen) { const tag = el('span', 'flag seen'); tag.append(icon('check'), document.createTextNode('đã xem')); flags.append(tag); }
       for (const issue of issues) flags.append(el('span', `flag${issue === 'disagree' ? '' : ' bad'}`, ISSUE_FLAGS[issue]));
       button.append(flags);
     }
@@ -864,7 +880,9 @@ async function renderSide(runs) {
       const key = ['verdict', 'decision', 'error', 'limit'].includes(event.type);
       const item = el('li', key ? 'key' : null);
       items.push({item, t: at(event)});
-      item.append(el('b', null, step.title), el('span', step.untrustedOutput ? 'untrusted' : null, step.output));
+      const title = el('b', null, step.title);
+      if (key) title.append(icon('flag', 'bước quan trọng'));
+      item.append(title, el('span', step.untrustedOutput ? 'untrusted' : null, step.output));
       steps.append(item);
     });
     column.append(steps);
@@ -902,7 +920,7 @@ function setSideClock(clock) {
     column.result.hidden = !decided;
     column.waiting.hidden = decided;
     const done = sidePlay.clock >= column.endAt;
-    column.status.textContent = done ? `✓ xong lúc ${column.endAt.toFixed(1)} s` : `đang chạy · bước ${column.items.filter(({t}) => t <= sidePlay.clock).length}`;
+    column.status.textContent = done ? `xong lúc ${column.endAt.toFixed(1)} s` : `đang chạy · bước ${column.items.filter(({t}) => t <= sidePlay.clock).length}`;
     column.status.classList.toggle('running', !done);
   }
   $('side-scrub').value = String(sidePlay.clock);
@@ -912,13 +930,13 @@ function setSideClock(clock) {
 function stopSide() {
   clearInterval(sidePlay.timer);
   sidePlay.timer = null;
-  $('side-play').textContent = '▶ Phát cùng lúc';
+  iconLabel($('side-play'), 'play', 'Phát cùng lúc');
 }
 
 function playSide() {
   if (sidePlay.timer) { stopSide(); return; }
   if (sidePlay.clock >= sidePlay.duration) setSideClock(0);
-  $('side-play').textContent = '⏸ Tạm dừng';
+  iconLabel($('side-play'), 'pause', 'Tạm dừng');
   let last = performance.now();
   sidePlay.timer = setInterval(() => {
     const now = performance.now();

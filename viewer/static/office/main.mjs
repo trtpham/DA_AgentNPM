@@ -12,7 +12,7 @@ import { argsText, explainStep, thinkingStep } from "./explain.mjs";
 import { buildTruck, currentParcel, parcelZone, tally, truckPhase } from "./truck.mjs";
 import { composeScenario, SCENARIOS, SOURCES } from "./scenarios.mjs";
 import { ruleLadder, ruleSentence } from "./rules.mjs";
-import { initPrefs } from "../ui.mjs";
+import { icon, iconLabel, initPrefs } from "../ui.mjs";
 
 const $ = (id) => document.getElementById(id);
 const PHASE = { reception: 0, code: 1, intel: 1, lab: 1, evidence: 2, decision: 3 };
@@ -328,7 +328,7 @@ function renderDetail(lane) {
   const decision = decisionOf(lane);
   const verdicts = lane.events.slice(0, lane.index + 1).filter((event) => event.type === "verdict");
   const proposal = (verdicts.reverse().find((event) => event.valid) || verdicts[0])?.verdict;
-  $("detail-title").textContent = `${lane.name}: QUYẾT ĐỊNH CUỐI (LUẬT CỨNG)`;
+  $("detail-title").textContent = `${lane.name}: quyết định cuối (luật cứng)`;
   $("decision").textContent = decision ? `${LABELS[decision.final_label] || decision.final_label} · ${ACTIONS[decision.final_action] || "—"} · luật ${decision.rule}` : "Chưa có quyết định";
   $("decision").dataset.action = decision?.final_action || "";
   // The decision block is tinted by the action and slides in once, when this decision first appears.
@@ -363,7 +363,7 @@ function renderDetail(lane) {
   const checks = decision?.evidence_checks || [];
   $("checks").replaceChildren(...(checks.length ? checks.map((check) => {
     const item = element("li", undefined, check.exists ? "ok" : "bad");
-    item.append(element("span", check.exists ? "✔ " : "✘ "), element("code", `${check.file}:${check.lines}`));
+    item.append(icon(check.exists ? "check" : "x", check.exists ? "có thật" : "không tìm thấy"), element("code", `${check.file}:${check.lines}`));
     return item;
   }) : [element("li", decision ? "Không có bằng chứng để kiểm" : "Chưa kiểm", "count")]));
   const log = $("event-log");
@@ -467,8 +467,8 @@ function reportCard(pkg) {
   const card = element("article", undefined, `report-card report-${pkg.action}`);
   const verdict = pkg.verdict || {};
   const decision = pkg.decision || {};
-  card.append(element("h3", pkg.action === "deny" ? "PHIẾU BÁO CÁO — GÓI BỊ TỪ CHỐI"
-    : pkg.action === "approve" ? "PHIẾU DUYỆT — NGƯỜI XEM CHO PHÉP" : "PHIẾU CHỜ DUYỆT"));
+  card.append(element("h3", pkg.action === "deny" ? "Phiếu báo cáo: gói bị từ chối"
+    : pkg.action === "approve" ? "Phiếu duyệt: người xem cho phép" : "Phiếu chờ duyệt"));
   card.append(element("span", SOURCE_BADGE[pkg.source] || pkg.source, `source-badge source-${pkg.source.replace("+", "-")}`));
   card.append(element("p", `${pkg.name} · ${LABELS[decision.final_label] || decision.final_label || "?"} · luật ${decision.rule || "?"}`, "report-title"));
   if (pkg.installedBefore) {
@@ -602,7 +602,7 @@ setInterval(() => {
 function stop() {
   clock.playing = false;
   office.setAnimating(false);
-  $("play").textContent = "▶ Phát lại";
+  iconLabel($("play"), "play", "Phát lại");
 }
 
 function play() {
@@ -611,7 +611,7 @@ function play() {
   clock.playing = true;
   clock.last = performance.now();
   office.setAnimating(true);
-  $("play").textContent = "⏸ Tạm dừng";
+  iconLabel($("play"), "pause", "Tạm dừng");
 }
 
 function seek(time) {
@@ -929,7 +929,7 @@ $("record").addEventListener("click", () => {
     $("record").classList.remove("recording");
   };
   recorder.start(500);
-  $("record").textContent = "■ Dừng quay và lưu";
+  iconLabel($("record"), "stop", "Dừng quay và lưu");
   $("record").classList.add("recording");
 });
 $("scenario").replaceChildren(...SCENARIOS.map((scenario) => { const option = element("option", scenario.title); option.value = scenario.id; return option; }));

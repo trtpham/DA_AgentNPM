@@ -40,19 +40,19 @@
       <span class="model-pick" id="model-pick" role="group" aria-label="Chọn model chạy (1 đến 3)" hidden></span>
     </div>
     <div class="office-transport">
-      <button type="button" id="previous" aria-label="Sự kiện trước (phím ←)">◀</button>
-      <button type="button" class="primary" id="play">▶ Phát lại</button>
-      <button type="button" id="next" aria-label="Sự kiện tiếp (phím →)">▶</button>
+      <button type="button" id="previous" aria-label="Sự kiện trước (phím ←)"><svg class="i" aria-hidden="true"><use href="#i-prev"/></svg></button>
+      <button type="button" class="primary" id="play"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Phát lại</button>
+      <button type="button" id="next" aria-label="Sự kiện tiếp (phím →)"><svg class="i" aria-hidden="true"><use href="#i-next"/></svg></button>
       <label for="rate">Tốc độ</label>
       <select id="rate"><option value="1">1× thật</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option><option value="16">16×</option><option value="32">32×</option><option value="64">64×</option></select>
       <label class="toggle"><input type="checkbox" id="director"> Máy quay tự động</label>
       <button type="button" id="reset-view">Góc nhìn chuẩn</button>
       <details class="menu" id="rooms-menu">
-        <summary>Tới phòng ▾</summary>
+        <summary>Tới phòng <svg class="i" aria-hidden="true"><use href="#i-chevdown"/></svg></summary>
         <div class="menu-body rooms" id="room-jump" role="group" aria-label="Đưa máy quay tới phòng"></div>
       </details>
       <details class="menu" id="view-menu">
-        <summary>Hiển thị ▾</summary>
+        <summary>Hiển thị <svg class="i" aria-hidden="true"><use href="#i-chevdown"/></svg></summary>
         <div class="menu-body">
           <label class="toggle"><input type="checkbox" id="labels-toggle" checked> Nhãn phòng, robot, nhân viên</label>
           <label class="toggle" title="Cây, khói cà phê, chim, xe chạy cả khi đang dừng (tối đa 30 khung hình/giây)"><input type="checkbox" id="ambient" checked> Cảnh sống động</label>
@@ -90,50 +90,49 @@
       <section id="caption" class="caption" aria-live="polite" aria-label="Bước đang diễn ra">
         <p id="caption-who" class="caption-who">Đang tải…</p>
         <div class="caption-flow">
-          <div class="caption-box"><small>ĐẦU VÀO</small><p id="caption-in">—</p></div>
+          <div class="caption-box"><small>Đầu vào</small><p id="caption-in">—</p></div>
           <span class="caption-arrow" aria-hidden="true">→</span>
-          <div class="caption-box"><small>XỬ LÝ</small><p id="caption-process">—</p></div>
+          <div class="caption-box"><small>Xử lý</small><p id="caption-process">—</p></div>
           <span class="caption-arrow" aria-hidden="true">→</span>
-          <div class="caption-box"><small>ĐẦU RA</small><p id="caption-out">—</p><em class="untrusted-note">dữ liệu từ gói/mô hình — không tin cậy, chỉ hiển thị</em></div>
+          <div class="caption-box"><small>Đầu ra</small><p id="caption-out">—</p><em class="untrusted-note">dữ liệu từ gói/mô hình — không tin cậy, chỉ hiển thị</em></div>
         </div>
       </section>
     </div>
 
     <aside class="office-panel">
       <section class="panel-block truck-block" id="truck-block" hidden>
-        <small>XE HÀNG — MỘT YÊU CẦU CÀI ĐẶT</small>
+        <h3>Xe hàng: một yêu cầu cài đặt</h3>
         <p id="scenario-what" class="scenario-what"></p>
         <div id="scenario-sources" class="truck-counts" title="THẬT: trace thật · MÔ PHỎNG: luật có trong code, chưa có trace · THIẾT KẾ: bước sản phẩm chưa có trong code"></div>
         <div id="truck-counts" class="truck-counts"></div>
         <p id="truck-final" class="truck-final"></p>
-        <small>CÁC THÙNG (bấm để tua tới)</small>
+        <h3>Các thùng <span class="hint">bấm để tua tới</span></h3>
         <ol id="truck-parcels" class="truck-parcels"></ol>
-        <small>PHIẾU GỬI NGƯỜI DÙNG</small>
+        <h3>Phiếu gửi người dùng</h3>
         <div id="truck-reports" class="truck-reports"></div>
       </section>
       <section class="panel-block">
-        <small>GÓI ĐANG XEM</small>
         <h2 id="package-name">—</h2>
         <p id="package-meta" class="count"></p>
-        <small>CÁC MODEL (bấm để xem chi tiết)</small>
+        <h3>Các model <span class="hint">bấm để xem chi tiết</span></h3>
         <ol id="board" class="board" aria-label="Tiến độ từng model"></ol>
       </section>
 
       <section class="panel-block">
-        <small id="detail-title">QUYẾT ĐỊNH CUỐI (LUẬT CỨNG)</small>
+        <h3 id="detail-title">Quyết định cuối (luật cứng)</h3>
         <p id="decision" class="office-decision">Chưa có quyết định</p>
         <ul id="reasons" class="plain-list"></ul>
         <ol id="ladder" class="office-ladder" hidden aria-label="Luật xét từ trên xuống, luật khớp đầu tiên quyết định"></ol>
-        <small>MÔ HÌNH ĐỀ XUẤT</small>
+        <h3>Mô hình đề xuất</h3>
         <p id="proposal" class="count">Chưa có đề xuất</p>
         <ul id="behaviors" class="plain-list behaviors"></ul>
-        <small>KIỂM CHỨNG BẰNG CHỨNG</small>
+        <h3>Kiểm chứng bằng chứng</h3>
         <ul id="checks" class="plain-list checks"><li class="count">Chưa kiểm</li></ul>
         <p class="result-note">Luật trong <code>agent/decide.py</code> quyết định, luôn dry-run. Chữ lấy từ trace là dữ liệu không tin cậy, chỉ hiển thị dạng văn bản.</p>
       </section>
 
       <section class="panel-block" id="log-block">
-        <small>NHẬT KÝ SỰ KIỆN</small>
+        <h3>Nhật ký sự kiện</h3>
         <ol id="event-log" class="event-log"></ol>
       </section>
     </aside>

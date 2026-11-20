@@ -22,7 +22,7 @@
       <section><h3>Làm thế nào</h3><p>Một mô hình ngôn ngữ chạy cục bộ (Ollama) tự điều tra bằng công cụ <b>chỉ đọc</b>: đọc manifest, đọc file, tìm chỉ báo (URL, <code>eval</code>, đọc secret…). <b>Không chạy mã của gói.</b> Bốn bước: nhận diện → phân tích nguồn–hành động–đích → kiểm chứng → quyết định.</p></section>
       <section><h3>Vì sao tin được</h3><p>Mô hình <b>chỉ đề xuất</b>. Luật cứng R1–R8 (<code>agent/decide.py</code>) mới chốt: bằng chứng <code>file:dòng</code> phải có thật trong gói; tin cậy ≥ 0,8 mới chặn/cho phép, còn lại chuyển người xem. Luôn chạy thử (dry-run).</p></section>
     </div>
-    <p class="about-howto">Trang này: chọn một <b>run</b> (một lần chạy agent trên nhiều gói) → chọn <b>gói</b> → xem từng bước bên giữa và lý do kết luận bên phải. Bước có <span class="key-mark">★</span> là bước quyết định kết quả.</p>
+    <p class="about-howto">Trang này: chọn một <b>run</b> (một lần chạy agent trên nhiều gói) → chọn <b>gói</b> → xem từng bước bên giữa và lý do kết luận bên phải. Bước có dấu <svg class="i" aria-hidden="true"><use href="#i-flag"/></svg> <b>quan trọng</b> là bước quyết định kết quả.</p>
   </details>
 
   <div class="viewer">
@@ -53,7 +53,7 @@
         <label class="toggle reviewed-toggle" title="Chỉ lưu trong trình duyệt này (phím M)"><input type="checkbox" id="reviewed-toggle"> Đã xem xong</label>
         <button type="button" class="ghost" id="present" aria-pressed="false" title="Ẩn cột trái, chữ to, toàn màn hình (phím P)">Trình chiếu</button>
         <details class="menu share-menu">
-          <summary>Chia sẻ ▾</summary>
+          <summary>Chia sẻ <svg class="i" aria-hidden="true"><use href="#i-chevdown"/></svg></summary>
           <div class="menu-body">
             <button type="button" id="copy-link" title="Chép đường dẫn tới gói này">Chép liên kết</button>
             <button type="button" id="export-md" title="Tải báo cáo Markdown của gói đang xem">Xuất báo cáo (.md)</button>
@@ -72,7 +72,7 @@
       <section class="compare" id="compare" hidden aria-label="So sánh các model trên cùng gói">
         <p class="compare-note" id="compare-note"></p>
         <div class="side-transport" aria-label="Phát các model cùng lúc">
-          <button type="button" class="primary" id="side-play" title="Các model chạy trên cùng một đồng hồ, theo thời gian thật của trace">▶ Phát cùng lúc</button>
+          <button type="button" class="primary" id="side-play" title="Các model chạy trên cùng một đồng hồ, theo thời gian thật của trace"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Phát cùng lúc</button>
           <select id="side-speed" aria-label="Tốc độ"><option value="1">1× thật</option><option value="4" selected>4×</option><option value="16">16×</option><option value="64">64×</option></select>
           <input type="range" id="side-scrub" min="0" max="0" step="0.1" value="0" aria-label="Tua đồng hồ chung">
           <span class="replay-position" id="side-clock">—</span>
@@ -82,9 +82,9 @@
       </section>
 
       <div class="transport" aria-label="Điều khiển phát lại">
-        <button type="button" id="previous" title="Bước trước (←)" aria-label="Bước trước">◀</button>
+        <button type="button" id="previous" title="Bước trước (←)" aria-label="Bước trước"><svg class="i" aria-hidden="true"><use href="#i-prev"/></svg></button>
         <button type="button" class="primary" id="play" title="Phát / tạm dừng (Space)">Phát lại</button>
-        <button type="button" id="next" title="Bước tiếp (→)" aria-label="Bước tiếp">▶</button>
+        <button type="button" id="next" title="Bước tiếp (→)" aria-label="Bước tiếp"><svg class="i" aria-hidden="true"><use href="#i-next"/></svg></button>
         <select id="speed" aria-label="Tốc độ"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
         <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Tua tới sự kiện">
         <span id="replay-position" class="replay-position">0 / 0</span>

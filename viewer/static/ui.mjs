@@ -1,6 +1,52 @@
 // Page preferences shared by the 2D trace viewer and the 3D office: light/dark theme, text size and a
 // keyboard-shortcut sheet. Choices live in this browser only (localStorage); nothing leaves the page.
 
+// One small icon set (24-unit grid, 1.75 stroke, round caps) instead of Unicode glyphs. The sprite is
+// added to the page once; icons reference it with <use>, so the page and JS draw the same shapes.
+const ICONS = {
+  play: '<path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none"/>',
+  pause: '<path d="M8.5 5.5v13M15.5 5.5v13"/>',
+  prev: '<path d="M14.5 6l-6 6 6 6"/>',
+  next: '<path d="M9.5 6l6 6-6 6"/>',
+  chevdown: '<path d="M6.5 9.5l5.5 5.5 5.5-5.5"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  x: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  flag: '<path d="M6 20.5V4.5M6 5h10.5l-2 4 2 4H6"/>',
+  stop: '<rect x="6.5" y="6.5" width="11" height="11" rx="1.5" fill="currentColor" stroke="none"/>',
+};
+const SVG = 'http://www.w3.org/2000/svg';
+
+export function installIcons() {
+  if (document.getElementById('icon-sprite')) return;
+  const sprite = document.createElementNS(SVG, 'svg');
+  sprite.id = 'icon-sprite';
+  sprite.setAttribute('aria-hidden', 'true');
+  sprite.style.display = 'none';
+  const parser = new DOMParser();
+  for (const [name, body] of Object.entries(ICONS)) {
+    // Parsed as SVG from the fixed table above (never from page data), so no HTML sink is involved.
+    const doc = parser.parseFromString(`<symbol xmlns="${SVG}" id="i-${name}" viewBox="0 0 24 24">${body}</symbol>`, 'image/svg+xml');
+    sprite.append(document.importNode(doc.documentElement, true));
+  }
+  document.body.prepend(sprite);
+}
+
+/** An inline icon element; decorative unless a label is given. */
+export function icon(name, label) {
+  const node = document.createElementNS(SVG, 'svg');
+  node.setAttribute('class', 'i');
+  if (label) { node.setAttribute('role', 'img'); node.setAttribute('aria-label', label); } else node.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS(SVG, 'use');
+  use.setAttribute('href', `#i-${name}`);
+  node.append(use);
+  return node;
+}
+
+/** Set a button to an icon plus a text label. */
+export function iconLabel(button, name, text) {
+  button.replaceChildren(icon(name), document.createTextNode(text));
+}
+
 const THEMES = [["auto", "Tự động", "Theo cài đặt sáng/tối của máy"], ["light", "Sáng", "Nền sáng"], ["dark", "Tối", "Nền tối"]];
 const SIZES = [90, 100, 112, 125, 140];
 
@@ -36,6 +82,7 @@ export function applyTextSize(percent) {
  * @param {[string, string][]} shortcuts key -> what it does, shown in the "?" sheet
  */
 export function initPrefs(host, shortcuts) {
+  installIcons();
   let theme = remember("theme") || "auto";
   let size = Number(remember("textSize")) || 100;
   if (!SIZES.includes(size)) size = 100;

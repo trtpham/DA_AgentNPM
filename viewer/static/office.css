@@ -85,7 +85,7 @@
 .lane-card{padding:10px 12px;border-radius:10px;background:var(--surface-2)}
 .lane-card p{margin:3px 0 0}
 .lane-head{display:flex;align-items:baseline;gap:8px}
-.lane-head strong{color:var(--worker)}
+.lane-head strong{color:var(--ink)}
 .lane-head strong::before{content:"";display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:var(--worker);vertical-align:middle}
 .lane-head .lane-clock,.lane-head .rank{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:700}
 .lane-head .rank{color:var(--bg);background:var(--worker);padding:0 8px;border-radius:99px}
@@ -149,10 +149,10 @@
 .parcel-item{display:flex;gap:8px;align-items:center;width:100%;text-align:left;padding:5px 9px;border-radius:8px;border:1px solid transparent;background:var(--surface-2);color:var(--muted);font:inherit;font-size:.82rem;cursor:pointer}
 .parcel-item .parcel-name{flex:1;font-family:ui-monospace,Consolas,monospace;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .parcel-item.current{border-color:#ffd08a}
-.parcel-item[data-action="deny"]{border-left:3px solid #ff4a3d}.parcel-item[data-action="review"]{border-left:3px solid #ffaa1a}.parcel-item[data-action="approve"]{border-left:3px solid #2fe0a8}
+
 .truck-reports{display:grid;gap:8px;margin-top:6px}
-.report-card{padding:10px 12px;border-radius:12px;background:#f4f1ea;color:#1a1f26;border-top:5px solid #ffaa1a}
-.report-card.report-deny{border-top-color:#ff4a3d}
+.report-card{padding:10px 12px;border-radius:12px;background:#f4f1ea;color:#1a1f26;border:1px solid #d9cdb4}
+.report-card.report-deny{border-color:#e9a29b}.report-card.report-deny h3{color:#a8322a}
 .report-card h3{margin:0 0 4px;font-size:.86rem;letter-spacing:.04em}
 .report-card small{display:block;margin-top:6px;color:#5c6b7a;font-weight:800;font-size:.68rem;letter-spacing:.06em}
 .report-card .plain-list{color:#1a1f26}
@@ -172,7 +172,7 @@
 .report-card .source-badge{float:right;margin-top:-2px}
 .report-card .source-real{background:#2fe0a8;color:#09111d}.report-card .source-rule{background:#ffaa1a;color:#09111d}
 .report-card .source-design{background:#b79cff;color:#09111d}.report-card .source-real-design{background:#7cc4ff;color:#09111d}
-.report-card.report-approve{border-top-color:#2fe0a8}
+.report-card.report-approve{border-color:#9fd9c3}
 .report-alert{margin:6px 0;padding:6px 8px;border-radius:8px;background:#ff4a3d;color:#fff;font-weight:800;font-size:.8rem}
 .report-osv{margin:6px 0;padding:6px 8px;border-radius:8px;background:#1a1f26;color:#ffd0cc;font-size:.78rem}
 .report-human{margin:6px 0;padding:6px 8px;border-radius:8px;background:#e8f4ff;color:#1a1f26;font-size:.78rem;font-weight:700}
@@ -262,3 +262,17 @@
 .phase-bar li{transition:background-color .25s var(--ease),border-color .25s var(--ease),color .25s var(--ease)}
 .lane-card{transition:border-color .2s var(--ease),background-color .2s var(--ease)}
 @media (prefers-reduced-motion:reduce){.caption.swap .caption-box,.panel-block.reveal{animation:none}.panel-block,.phase-bar li,.lane-card{transition:none}}
+
+/* craft pass for the page around the 3D view: headings not eyebrows, no side tabs, drawn icons */
+.panel-block h3{margin:14px 0 6px;font-size:.95rem;font-weight:650;letter-spacing:0;text-transform:none;color:var(--ink)}
+.panel-block > h3:first-child,.panel-block > h2:first-child{margin-top:0}
+.panel-block h3 .hint{font-weight:400;font-size:.8rem;color:var(--faint);margin-left:4px}
+.caption-box small{font-size:.75rem;font-weight:650;letter-spacing:0;text-transform:none}
+.checks li{display:flex;align-items:center;gap:6px}
+.checks .i{margin:0;width:1em;height:1em}
+.office-bar button.primary .i{margin-right:.35em}
+.office-transport button .i:only-child{margin:0}
+.report-card h3{letter-spacing:0;font-size:.92rem}
+.report-card small{font-size:.75rem;letter-spacing:0}.source-badge{font-size:.72rem;letter-spacing:.02em}
+.phase-bar li small{font-size:.75rem}.source-badge{font-size:.75rem}.caption-box small,.panel-block>small{font-size:.75rem}
+.sev{font-size:.75rem}
