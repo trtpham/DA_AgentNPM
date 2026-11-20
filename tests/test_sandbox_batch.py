@@ -164,5 +164,5 @@ def test_sandbox_installs_the_package_as_a_dependency_of_an_empty_project():
     from sandbox.run import ROOT_DIR
     script = (ROOT_DIR / "run_install.sh").read_text(encoding="utf-8")
     assert "npm install --offline --foreground-scripts" in script and "/work/package.tgz" in script
-    assert 'cd /work/project' in script and "--cache \"$cache\"" in script
+    assert 'cd /work/project' in script and "--cache \"$cache\"" in script and "cp -R /cache/." in script
     assert "head -c" in script and "tail -c" in script  # long traces keep head and tail

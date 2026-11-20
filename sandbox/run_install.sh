@@ -20,8 +20,11 @@ done
 
 # Tarball of the package as npm would fetch it (top folder "package/"); built with tar, no npm, no script.
 tar -czf /work/package.tgz -C /input --transform 's,^\.,package,' . || exit 97
-cache=/cache
-[ -d "$cache" ] || { cache=/work/empty-cache; mkdir -p "$cache"; }
+# npm writes temp files inside its cache even offline (EROFS on a read-only /cache, 2026-11-20), so the
+# read-only copy from the volume is copied into the /tmp tmpfs (noexec; the cache only holds data).
+cache=/tmp/npm-cache
+mkdir -p "$cache" || exit 97
+if [ -d /cache ]; then cp -R /cache/. "$cache/" || exit 97; fi
 mkdir -p /work/project && cd /work/project || exit 97
 printf '{"name":"sandbox-project","version":"1.0.0","private":true}\n' > package.json
 
