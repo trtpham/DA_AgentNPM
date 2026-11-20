@@ -266,6 +266,7 @@ function renderCaption() {
   const lane = lanes[focusLane] || lanes[0];
   const step = stepFor(lane);
   $("caption").style.setProperty("--worker", lane.color);
+  const before = $("caption-who").textContent;
   $("caption-who").textContent = step
     ? `${lane.name} · ${truck ? `thùng ${(lane.events[lane.index]?._pkg ?? 0) + 1}/${truck.packages.length} · ` : ""}sự kiện ${lane.index + 1}/${lane.events.length} · ${step.who}: ${step.title}`
     : `${lane.name} · chưa bắt đầu — nhấn Phát lại hoặc phím cách`;
@@ -288,6 +289,12 @@ function renderCaption() {
   $("caption-out").textContent = output;
   $("caption-out").parentElement.classList.toggle("untrusted", Boolean(step?.untrustedOutput));
   $("caption").dataset.actor = step?.actor || "system";
+  // A new step slides its three boxes in, so the eye notices the change without hunting for it.
+  if ($("caption-who").textContent !== before) {
+    $("caption").classList.remove("swap");
+    void $("caption").offsetWidth;
+    $("caption").classList.add("swap");
+  }
 }
 
 function renderBoard() {
@@ -324,10 +331,25 @@ function renderDetail(lane) {
   $("detail-title").textContent = `${lane.name}: QUYẾT ĐỊNH CUỐI (LUẬT CỨNG)`;
   $("decision").textContent = decision ? `${LABELS[decision.final_label] || decision.final_label} · ${ACTIONS[decision.final_action] || "—"} · luật ${decision.rule}` : "Chưa có quyết định";
   $("decision").dataset.action = decision?.final_action || "";
+  // The decision block is tinted by the action and slides in once, when this decision first appears.
+  const block = $("decision").closest(".panel-block");
+  block.dataset.action = decision?.final_action || "";
+  const key = decision ? `${lane.run}|${lane.pkg}|${decision.seq ?? decision.final_action}` : "";
+  if (key && key !== block.dataset.shown) {
+    block.classList.remove("reveal");
+    void block.offsetWidth;
+    block.classList.add("reveal");
+  }
+  block.dataset.shown = key;
   $("reasons").replaceChildren(...(decision ? [element("li", ruleSentence(decision.rule), "rule-sentence")] : []),
-    ...(decision?.reasons || []).map((reason) => element("li", reason)));
-  $("ladder").replaceChildren(...(decision ? ruleLadder(decision.rule) : []).map((rule) =>
-    element("li", `${rule.code} · ${rule.state === "fired" ? `KHỚP → ${rule.then}` : rule.state === "skipped" ? "không khớp" : "không xét"}`, rule.state)));
+    ...(decision?.reasons || []).map((reason) => element("li", reason, "raw-reason")));
+  // R1..R8 as one row; the deciding rule is filled, the hover text says what each rule checks.
+  $("ladder").className = "rule-row";
+  $("ladder").replaceChildren(...(decision ? ruleLadder(decision.rule) : []).map((rule) => {
+    const pill = element("li", rule.code, rule.state);
+    pill.title = `${rule.code}: ${rule.when} — ${rule.state === "fired" ? `KHỚP → ${rule.then}` : rule.state === "skipped" ? "không khớp" : "không xét tới"}`;
+    return pill;
+  }));
   $("ladder").hidden = !decision;
   $("proposal").textContent = proposal
     ? `${LABELS[proposal.label] || proposal.label} · tin cậy ${Math.round((proposal.confidence ?? 0) * 100)}% — ${proposal.description || ""}`

@@ -52,8 +52,13 @@
         <span id="package-name" class="package-name"></span>
         <label class="toggle reviewed-toggle" title="Chỉ lưu trong trình duyệt này (phím M)"><input type="checkbox" id="reviewed-toggle"> Đã xem xong</label>
         <button type="button" class="ghost" id="present" aria-pressed="false" title="Ẩn cột trái, chữ to, toàn màn hình (phím P)">Trình chiếu</button>
-        <button type="button" class="ghost" id="export-md" title="Tải báo cáo Markdown của gói đang xem">Xuất báo cáo</button>
-        <button type="button" class="ghost" id="copy-link" title="Chép đường dẫn tới gói này">Chép liên kết</button>
+        <details class="menu share-menu">
+          <summary>Chia sẻ ▾</summary>
+          <div class="menu-body">
+            <button type="button" id="copy-link" title="Chép đường dẫn tới gói này">Chép liên kết</button>
+            <button type="button" id="export-md" title="Tải báo cáo Markdown của gói đang xem">Xuất báo cáo (.md)</button>
+          </div>
+        </details>
       </div>
 
       <div class="view-row">

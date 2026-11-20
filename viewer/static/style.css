@@ -288,3 +288,55 @@ body[data-view="compare"] .viewer{grid-template-columns:300px minmax(0,1fr)}
 .model-pick{max-width:100%;min-width:0}
 .model-pick small{flex-basis:100%;white-space:normal}
 @media(max-width:820px){.side{grid-template-columns:1fr}.side-steps{max-height:40vh}}
+
+/* ---- 2D: calmer hierarchy and motion --------------------------------------------------------------
+   Short, purposeful motion: things that change get a 160-320 ms ease; nothing loops; all of it stops
+   under prefers-reduced-motion. */
+:root{--ease:cubic-bezier(.2,.7,.2,1);--tint-approve:color-mix(in srgb,var(--mint) 12%,var(--surface));
+  --tint-review:color-mix(in srgb,var(--amber) 12%,var(--surface));--tint-deny:color-mix(in srgb,var(--red) 12%,var(--surface))}
+
+/* verdict card: the one thing to read first */
+.verdict-card{display:grid;gap:8px;padding:14px 16px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface-2)}
+.verdict-card[data-action="approve"]{background:var(--tint-approve);border-color:color-mix(in srgb,var(--mint) 45%,var(--line))}
+.verdict-card[data-action="review"]{background:var(--tint-review);border-color:color-mix(in srgb,var(--amber) 45%,var(--line))}
+.verdict-card[data-action="deny"]{background:var(--tint-deny);border-color:color-mix(in srgb,var(--red) 45%,var(--line))}
+.verdict-card .outcome{font-size:1.7rem;letter-spacing:-.01em}
+.verdict-card .why-lead{font-weight:500;line-height:1.5;color:var(--ink)}
+.verdict-card .why-facts{padding-top:8px;border-top:1px solid color-mix(in srgb,var(--line-strong) 60%,transparent)}
+.dry-note{margin:0;font-size:.78rem;color:var(--faint)}
+.why{background:none;border:0;padding:0;gap:10px}
+.verdict-card.reveal{animation:card-in .42s var(--ease) both}
+@keyframes card-in{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+
+/* rules as one row of pills: the deciding rule stands out, the rest stay quiet */
+.rule-row{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.rule-row li{text-align:center;padding:4px 0;border-radius:6px;font:700 .74rem var(--mono);border:1px solid var(--line);color:var(--faint);cursor:help;transition:background-color .2s var(--ease),color .2s var(--ease)}
+.rule-row li.skipped{color:var(--muted);background:var(--surface-2)}
+.rule-row li.fired{color:var(--bg);background:var(--amber);border-color:var(--amber)}
+.rule-row li.unchecked{opacity:.45;border-style:dashed}
+.ladder-more summary{cursor:pointer;font-size:.82rem;color:var(--muted)}
+.ladder-more summary:hover{color:var(--ink)}
+.ladder-more[open] .ladder{margin-top:8px}
+.ladder-more .outcome-meta{margin-top:8px;font-size:.78rem}
+
+/* timeline: a quiet one-liner per step; the step being read opens its input -> processing -> output */
+.event-out{margin:2px 0 0;color:var(--muted);font-size:.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.event-out.untrusted{font-family:var(--mono);font-size:.8rem}
+.event.is-active .event-out{display:none}
+.flow-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s var(--ease)}
+.flow-wrap > .flow{min-height:0;overflow:hidden;margin-top:0}
+.event.is-active .flow-wrap{grid-template-rows:1fr}
+.event.is-active .flow-wrap > .flow{margin-top:6px}
+.event{transition:background-color .2s var(--ease),border-color .2s var(--ease),opacity .2s var(--ease)}
+.event.arrive{animation:step-in .3s var(--ease) both}
+@keyframes step-in{from{opacity:.3;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.current-action.swap > div{animation:fade-up .26s var(--ease) both}
+@keyframes fade-up{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.phase{transition:background-color .25s var(--ease),border-color .25s var(--ease),color .25s var(--ease)}
+.phase b{transition:background-color .25s var(--ease),color .25s var(--ease)}
+.share-menu .menu-body{min-width:200px}
+
+@media (prefers-reduced-motion:reduce){
+  .verdict-card.reveal,.event.arrive,.current-action.swap > div{animation:none}
+  .flow-wrap,.event,.phase,.phase b,.rule-row li{transition:none}
+}

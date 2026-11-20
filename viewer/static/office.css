@@ -246,3 +246,19 @@
 .parcel-item .parcel-name{min-width:0}
 /* the "being viewed" heading is a package name or a story title: readable text, wraps on words */
 .panel-block h2{font-family:inherit;font-size:1.05rem;line-height:1.35;overflow-wrap:break-word}
+
+/* ---- motion and emphasis around the 3D view (the scene itself is unchanged) ----------------------- */
+.caption.swap .caption-box{animation:fade-up .28s var(--ease) both}
+.caption.swap .caption-box:nth-of-type(2){animation-delay:.05s}
+.caption.swap .caption-box:nth-of-type(3){animation-delay:.1s}
+.panel-block{transition:background-color .3s var(--ease),border-color .3s var(--ease)}
+.panel-block[data-action="approve"]{background:var(--tint-approve);border-color:color-mix(in srgb,var(--mint) 45%,var(--line))}
+.panel-block[data-action="review"]{background:var(--tint-review);border-color:color-mix(in srgb,var(--amber) 45%,var(--line))}
+.panel-block[data-action="deny"]{background:var(--tint-deny);border-color:color-mix(in srgb,var(--red) 45%,var(--line))}
+.panel-block.reveal{animation:card-in .42s var(--ease) both}
+.panel-block .office-decision{font-size:1.25rem}
+.panel-block .rule-row{margin:8px 0 4px}
+.raw-reason{color:var(--faint);font-size:.78rem}
+.phase-bar li{transition:background-color .25s var(--ease),border-color .25s var(--ease),color .25s var(--ease)}
+.lane-card{transition:border-color .2s var(--ease),background-color .2s var(--ease)}
+@media (prefers-reduced-motion:reduce){.caption.swap .caption-box,.panel-block.reveal{animation:none}.panel-block,.phase-bar li,.lane-card{transition:none}}

@@ -140,14 +140,16 @@ function eventItem(event, index) {
   const step = explainStep(state.events, index);
   const kind = el('span', 'event-kind');
   kind.append(el('span', 'dot'), el('span', `who ${step.actor}`, WHO[step.actor] ?? step.who), document.createTextNode(step.title || info.name));
-  body.append(kind);
+  body.append(kind, el('p', `event-out${step.untrustedOutput ? ' untrusted' : ''}`, step.output || info.detail || ''));
+  const flowWrap = el('div', 'flow-wrap');
   const flow = el('div', 'flow');
   for (const [label, text, untrusted] of [['Vào', step.input], ['Xử lý', step.process], ['Ra', step.output, step.untrustedOutput]]) {
     const part = el('div', untrusted ? 'untrusted' : null);
     part.append(el('small', null, label), el('span', null, text || '—'));
     flow.append(part);
   }
-  body.append(flow);
+  flowWrap.append(flow);
+  body.append(flowWrap);
   if (info.preview) {
     const block = el('details', 'source-block');
     const lines = String(info.preview).split('\n').length;
@@ -203,15 +205,15 @@ function renderResult() {
     return;
   }
   result.className = 'result';
-  const label = ['benign', 'suspicious', 'malicious'].includes(decision.final_label) ? decision.final_label : '';
-  const head = el('div', 'verdict-head');
-  head.append(el('p', `outcome ${label}`, LABELS[decision.final_label] ?? decision.final_label),
-    el('span', `badge ${decision.final_action ?? ''}`, ACTIONS[decision.final_action] ?? decision.final_action));
-  body.append(head, whySummary(decision, verdict));
+  // The card animates in only when this decision is new, not on every replay step.
+  const key = `${state.run}|${state.pkg}|${decision.seq}`;
+  const fresh = key !== state.shownDecision;
+  state.shownDecision = key;
+  body.append(whySummary(decision, verdict, fresh));
 
   const checks = decision.evidence_checks || [];
   if (checks.length) {
-    body.append(el('h3', null, `Kiểm chứng bằng chứng (${checks.filter((check) => check.exists).length}/${checks.length} có thật)`));
+    body.append(el('h3', null, `Bằng chứng mô hình trích (${checks.filter((check) => check.exists).length}/${checks.length} có thật trong gói)`));
     const list = el('ul', 'evidence');
     for (const check of checks) {
       const item = el('li', check.exists ? null : 'missing');
@@ -255,27 +257,46 @@ function renderResult() {
   }
 }
 
-// The answer to "why this outcome", in one sentence and four facts a reader can check.
-function whySummary(decision, verdict) {
+// The answer to "why this outcome": a card with the outcome and one sentence, three checks a reader
+// can verify, then the rule row (R1..R8, the deciding rule highlighted); the long text opens on demand.
+function whySummary(decision, verdict, fresh) {
   const box = el('div', 'why');
   const proposal = verdict?.verdict;
   const checks = decision.evidence_checks || [];
   const real = checks.filter((check) => check.exists).length;
   const truth = state.truth[state.pkg];
-  const action = ACTIONS[decision.final_action] ?? decision.final_action ?? 'không gọi lệnh';
-  box.append(el('p', 'why-lead', `Kết luận: ${LABELS[decision.final_label] ?? decision.final_label} → ${action}.`),
-    el('p', null, ruleSentence(decision.rule)));
-  if ((decision.reasons || []).length) box.append(el('p', 'outcome-meta', `Chi tiết luật ghi lại: ${decision.reasons.join('; ')}`));
-  const ladder = el('ol', 'ladder');
-  ladder.setAttribute('aria-label', 'Các luật xét từ trên xuống, luật khớp đầu tiên quyết định');
-  for (const rule of ruleLadder(decision.rule)) {
-    const row = el('li', rule.state);
-    const mark = rule.state === 'fired' ? 'KHỚP' : rule.state === 'skipped' ? 'không khớp' : 'không xét';
-    row.append(el('b', null, rule.code), el('span', null, rule.variant ? `${rule.when}. Bị giữ vì: ${rule.variant}` : rule.when),
-      el('em', null, rule.state === 'fired' ? `${mark} → ${rule.then}` : mark));
-    ladder.append(row);
+  const label = ['benign', 'suspicious', 'malicious'].includes(decision.final_label) ? decision.final_label : '';
+  const card = el('div', `verdict-card${fresh ? ' reveal' : ''}`);
+  card.dataset.action = decision.final_action || '';
+  const head = el('div', 'verdict-head');
+  head.append(el('p', `outcome ${label}`, LABELS[decision.final_label] ?? decision.final_label),
+    el('span', `badge ${decision.final_action ?? ''}`, ACTIONS[decision.final_action] ?? decision.final_action ?? 'không gọi lệnh'));
+  card.append(head, el('p', 'why-lead', ruleSentence(decision.rule)));
+  box.append(card);
+
+  const rules = ruleLadder(decision.rule);
+  const row = el('ol', 'rule-row');
+  row.setAttribute('aria-label', 'Tám luật xét từ trái sang phải; luật khớp đầu tiên quyết định');
+  for (const rule of rules) {
+    const pill = el('li', rule.state, rule.code);
+    pill.title = `${rule.code}: ${rule.when} — ${rule.state === 'fired' ? `KHỚP → ${rule.then}` : rule.state === 'skipped' ? 'không khớp' : 'không xét tới'}`;
+    row.append(pill);
   }
-  box.append(el('p', 'ladder-title', 'Luật xét lần lượt từ trên xuống; luật đầu tiên khớp quyết định:'), ladder);
+  box.append(el('p', 'ladder-title', 'Luật xét lần lượt, luật đầu tiên khớp quyết định'), row);
+  const more = el('details', 'ladder-more');
+  more.open = Boolean(state.ladderOpen);
+  more.addEventListener('toggle', () => { state.ladderOpen = more.open; });
+  const ladder = el('ol', 'ladder');
+  for (const rule of rules) {
+    const item = el('li', rule.state);
+    const mark = rule.state === 'fired' ? 'KHỚP' : rule.state === 'skipped' ? 'không khớp' : 'không xét';
+    item.append(el('b', null, rule.code), el('span', null, rule.variant ? `${rule.when}. Bị giữ vì: ${rule.variant}` : rule.when),
+      el('em', null, rule.state === 'fired' ? `${mark} → ${rule.then}` : mark));
+    ladder.append(item);
+  }
+  more.append(el('summary', null, 'Xem 8 luật bằng lời'), ladder);
+  if ((decision.reasons || []).length) more.append(el('p', 'outcome-meta', `Chi tiết code ghi lại (tiếng Anh): ${decision.reasons.join('; ')}`));
+  box.append(more);
   const facts = el('dl', 'why-facts');
   const fact = (term, text, tone) => facts.append(el('dt', null, term), el('dd', tone, text));
   if (proposal) {
@@ -288,8 +309,8 @@ function whySummary(decision, verdict) {
   else fact('Bằng chứng', 'mô hình không nêu vị trí nào', 'warn');
   if (truth) fact('Nhãn chuẩn', `${LABELS[truth] ?? truth} — ${truth === decision.final_label ? 'kết luận đúng' : 'kết luận lệch nhãn chuẩn'}`, truth === decision.final_label ? 'ok' : 'bad');
   else fact('Nhãn chuẩn', 'gói chưa có trong data/labels.csv', null);
-  fact('Chế độ', decision.dry_run ? 'dry-run: chỉ in lệnh, không đổi package.json' : 'không ghi rõ dry-run', null);
-  box.append(facts);
+  card.append(facts);
+  card.append(el('p', 'dry-note', decision.dry_run ? 'Dry-run: chỉ in lệnh sẽ chạy, không đổi package.json.' : 'Trace không ghi rõ dry-run.'));
   return box;
 }
 
@@ -306,6 +327,19 @@ function addJump(container, file) {
 
 function render(scroll = false) {
   const items = $('timeline').children;
+  const forward = state.cursor > (state.lastCursor ?? -1);
+  if (forward && items[state.cursor]) {
+    items[state.cursor].classList.remove('arrive');
+    void items[state.cursor].offsetWidth;
+    items[state.cursor].classList.add('arrive');
+  }
+  if (state.lastCursor !== state.cursor) {
+    const card = document.querySelector('.current-action');
+    card.classList.remove('swap');
+    void card.offsetWidth;
+    card.classList.add('swap');
+  }
+  state.lastCursor = state.cursor;
   for (let index = 0; index < items.length; index += 1) {
     items[index].classList.toggle('is-future', index > state.cursor);
     const active = index === state.cursor;
@@ -992,7 +1026,10 @@ async function init() {
   setView(params.get('view') === 'compare' ? 'compare' : 'single');
   $('side-play').addEventListener('click', playSide);
   $('side-scrub').addEventListener('input', (event) => { stopSide(); setSideClock(Number(event.target.value)); });
-  $('export-md').addEventListener('click', exportReport);
+  $('export-md').addEventListener('click', () => { exportReport(); document.querySelector('.share-menu').open = false; });
+  document.addEventListener('click', (event) => {
+    for (const menu of document.querySelectorAll('details.menu[open]')) if (!menu.contains(event.target)) menu.open = false;
+  });
   // A link pasted into the address bar of an open page changes only the hash: follow it.
   window.addEventListener('hashchange', () => {
     const next = new URLSearchParams(location.hash.slice(1));
