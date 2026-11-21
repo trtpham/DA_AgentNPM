@@ -1,4 +1,5 @@
 # A-TLM: two map tools only, and a lower repeat limit (it repeated one wrong verdict until the step limit, E6).
+# 2026-11-21: no threshold met the rule on dev (1 malicious approved at every value); not run on the test split.
 name: A-TLM-X
 model: qwen3.5:0.8b
 max_steps: 15
