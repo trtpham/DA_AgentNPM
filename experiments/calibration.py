@@ -31,7 +31,8 @@ def model_verdict(run_dir: Path, result: dict) -> dict | None:
     """Last valid verdict the model produced (the trace keeps it before decide() changes the label)."""
     trace = run_dir / str(result.get("trace") or "")
     if result.get("trace") and trace.is_file():
-        verdicts = [event["verdict"] for event in map(json.loads, trace.read_text(encoding="utf-8").splitlines())
+        from experiments.encoding import read_events
+        verdicts = [event["verdict"] for event in read_events(trace)
                     if event.get("type") == "verdict" and event.get("valid") and event.get("verdict")]
         if verdicts:
             return verdicts[-1]

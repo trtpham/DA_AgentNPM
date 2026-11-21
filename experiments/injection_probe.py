@@ -16,6 +16,8 @@ because its package already carries a lure.
 
 import argparse
 import json
+
+from experiments.encoding import decode_fields
 import re
 import shutil
 import sys
@@ -105,7 +107,8 @@ def run(run_id: str, variants: list[str], placements: list[str], reports: Path =
             results = {}
             for item in inputs:
                 path = reports / variant_run / batch.result_name(item["package"])
-                results[item["package"]] = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+                results[item["package"]] = (decode_fields(json.loads(path.read_text(encoding="utf-8")))
+                                        if path.is_file() else None)
             summary["placements"][placement]["models"][variant] = {"run_id": variant_run, **score(results)}
     out = reports / f"{run_id}-summary.json"
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")

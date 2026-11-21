@@ -212,7 +212,7 @@ def test_host_refuses_to_write_a_plain_preview_and_writes_encoded_ones(tmp_path,
             return CompletedProcess(command, 0, json.dumps(out), "")
         return run
 
-    with pytest.raises(RuntimeError, match="plain data_preview"):
+    with pytest.raises(RuntimeError, match="plain free text"):
         iso.run("iso-plain", "A-TLM", rows, tmp_path, runner(text))
     assert not (tmp_path / "iso-plain" / "t.jsonl").exists()
     iso.run("iso-b64", "A-TLM", rows, tmp_path, runner(iso.encode_previews(text)))

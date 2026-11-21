@@ -27,7 +27,8 @@ THRESHOLDS = [round(0.50 + 0.05 * step, 2) for step in range(10)]
 
 def recorded(trace: Path) -> tuple[dict, list[dict], dict] | None:
     """(verdict, evidence checks, decide inputs) of one trace, or None if they were not all recorded."""
-    events = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines() if line.strip()]
+    from experiments.encoding import read_events
+    events = read_events(trace)  # base64 fields (Gate 2026-11-21) decoded in memory
     verdicts = [event["verdict"] for event in events if event["type"] == "verdict" and event.get("valid")]
     decisions = [event for event in events if event["type"] == "decision"]
     if not verdicts or not decisions or not decisions[-1].get("inputs"):

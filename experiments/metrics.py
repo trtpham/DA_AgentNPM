@@ -88,7 +88,8 @@ def load_results(directory: Path, unreadable: list[str] | None = None) -> list[d
         if path.name in ("run_meta.json", "guarddog_meta.json"):
             continue
         try:
-            results.append(json.loads(path.read_text(encoding="utf-8")))
+            from experiments.encoding import decode_fields
+            results.append(decode_fields(json.loads(path.read_text(encoding="utf-8"))))
         except OSError:
             if unreadable is None:
                 raise

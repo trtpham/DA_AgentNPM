@@ -89,8 +89,10 @@ def inside(job: dict) -> dict:
     try:
         directory = materialize(row, Path("/tmp/work"))
     except Exception as error:  # the source could not be prepared; recorded like a failed fetch
-        return {"result": {"package": package, "variant": config["name"], "model": config["model"],
-                           "status": "error", "error": f"source: {type(error).__name__}: {str(error)[:200]}"},
+        from experiments.encoding import encode_result
+        return {"result": encode_result({"package": package, "variant": config["name"], "model": config["model"],
+                                         "status": "error",
+                                         "error": f"source: {type(error).__name__}: {str(error)[:200]}"}),
                 "trace": None}
     item = {"package": package, "dir": directory, "context": job.get("context")}
     if "sandbox" in job:  # recorded by experiments.sandbox_batch; the agent does not start Docker itself
@@ -106,39 +108,19 @@ def inside(job: dict) -> dict:
             text = encode_previews(text)
         except (ValueError, TypeError):  # unreadable trace: drop it rather than send package text out
             text = None
-    return {"result": result, "trace": text}
+    from experiments.encoding import encode_result
+    return {"result": encode_result(result), "trace": text}  # verdict text can quote the package (Gate 2026-11-21)
 
 
 def encode_previews(text: str) -> str:
-    """Gate B0 2026-11-20: tool previews quote package code (read_file, deobfuscate, decode_literal, snippets).
-    Replace every `data_preview` with `data_preview_b64` (base64 of UTF-8) + `data_preview_encoding`, so no
-    package text reaches the Windows disk as plain text (Defender quarantined such files on 08/11)."""
-    lines = []
-    for line in text.splitlines():
-        if not line.strip():
-            continue
-        event = json.loads(line)
-        if event.get("type") == "tool_result" and "data_preview" in event:
-            preview = event.pop("data_preview")
-            event["data_preview_b64"] = (None if preview is None
-                                         else base64.b64encode(str(preview).encode("utf-8")).decode("ascii"))
-            event["data_preview_encoding"] = "base64"
-        lines.append(json.dumps(event, ensure_ascii=False))
-    return "".join(line + "\n" for line in lines)
+    """Kept name (Gate 2026-11-20); since 2026-11-21 every free-text field is encoded (experiments.encoding)."""
+    from experiments.encoding import encode_trace
+    return encode_trace(text)
 
 
 def has_plain_preview(text: str) -> bool:
-    """Host-side guard: True when any line still carries a plain `data_preview` (or cannot be checked)."""
-    for line in text.splitlines():
-        if not line.strip():
-            continue
-        try:
-            event = json.loads(line)
-        except ValueError:
-            return True
-        if isinstance(event, dict) and "data_preview" in event:
-            return True
-    return False
+    from experiments.encoding import trace_has_plain_text
+    return trace_has_plain_text(text)
 
 
 def inside_prepare(job: dict) -> dict:
@@ -335,9 +317,12 @@ def _run_chunks(todo: list[dict], run_dir: Path, job, runner, counts: dict, peak
             raise RuntimeError(f"container failed ({len(outputs)}/{len(chunk)}): {(completed.stderr or '')[-300:]}")
         for output in outputs:
             result = output["result"]
+            from experiments.encoding import result_has_plain_text
+            if result_has_plain_text(result):  # never write package or model text to the host disk
+                raise RuntimeError(f"result of {result.get('package')} has plain free text; not written")
             if output["trace"] is not None and result.get("trace"):
-                if has_plain_preview(output["trace"]):  # never write package text to the host disk
-                    raise RuntimeError(f"trace of {result.get('package')} has a plain data_preview; not written")
+                if has_plain_preview(output["trace"]):
+                    raise RuntimeError(f"trace of {result.get('package')} has plain free text; not written")
                 (run_dir / result["trace"]).write_text(output["trace"], encoding="utf-8")
             (run_dir / batch.result_name(result["package"])).write_text(json.dumps(result, ensure_ascii=False, indent=2),
                                                                          encoding="utf-8")
