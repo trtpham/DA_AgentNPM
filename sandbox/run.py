@@ -7,6 +7,7 @@ import json
 import re
 import subprocess
 import tempfile
+import uuid
 from pathlib import Path
 
 IMAGE = "agent-npm-sandbox:local"
@@ -225,6 +226,51 @@ def docker_command(root: Path | None, hardening: bool = False, volume: str | Non
     ]
 
 
+CONTAINER_PREFIX = "agentnpm-sbx-"
+
+
+def run_named(command: list[str], timeout: int, runner=None, **kwargs):
+    """Gate B0 2026-11-21: give the container a name so a client timeout can `docker kill` it; with only
+    `--rm`, killing the docker client leaves the container running in the background."""
+    runner = runner or subprocess.run
+    name = CONTAINER_PREFIX + uuid.uuid4().hex[:12]
+    named = [*command[:3], "--name", name, *command[3:]] if command[:3] == ["docker", "run", "--rm"] else command
+    try:
+        return runner(named, capture_output=True, text=True, timeout=timeout, check=False, **kwargs)
+    except subprocess.TimeoutExpired:
+        runner(["docker", "kill", name], capture_output=True, text=True, timeout=60, check=False)
+        raise
+
+
+# Why a failed run failed (Gate B0 2026-11-21), from what the trace and npm's stderr show.
+NETWORK_ERROR = re.compile(r"EAI_AGAIN|ENOTFOUND|ENETUNREACH|ECONNREFUSED|ETIMEDOUT|getaddrinfo|network is unreachable",
+                           re.IGNORECASE)
+MISSING_TOOL = re.compile(r"command not found|: not found|gyp ERR! find Python|spawn \S+ ENOENT"
+                          r"|must have \S+.{0,60}installed|is not installed", re.IGNORECASE)
+FAIL_REASONS = ("network", "missing_tool", "resource", "not_started", "script", "infra")
+
+
+def classify_failure(outcome: str, behavior: dict, stderr: str) -> dict:
+    """`script_ran`: a lifecycle script of the package (or a dependency) started. `fail_reason` names why a
+    failed install stopped: resource limit, never reached a script (`not_started`, a sandbox or dependency
+    problem), the script needed the network or a missing tool, or the script itself failed."""
+    script_ran = any(item.get("actor") == "package" for item in behavior.get("process_tree") or [])
+    if outcome == "ok":
+        reason = None
+    elif outcome in ("timeout", "oom", "pids_limit"):
+        reason = "resource"
+    elif not script_ran:
+        reason = "not_started"
+    elif NETWORK_ERROR.search(stderr) or any(item.get("actor") == "package" and item.get("result") == "ENETUNREACH"
+                                             for item in behavior.get("connects") or []):
+        reason = "network"
+    elif MISSING_TOOL.search(stderr):
+        reason = "missing_tool"
+    else:
+        reason = "script"
+    return {"script_ran": script_ran, "fail_reason": reason}
+
+
 def cache_command(volume: str) -> list[str]:
     """Prepare step with network (2026-11-20): `npm install --ignore-scripts` of the package in the volume, only
     to fill volume/npm-cache with its production dependencies. No lifecycle script runs; no canaries here."""
@@ -243,7 +289,7 @@ def cache_command(volume: str) -> list[str]:
 def cache_dependencies(volume: str, runner=subprocess.run) -> dict:
     """Run cache_command; a failure is reported, and the offline install then shows what was missing."""
     try:
-        result = runner(cache_command(volume), capture_output=True, text=True, timeout=600, check=False)
+        result = run_named(cache_command(volume), 600, runner)
         if result.returncode:
             raise RuntimeError(f"Docker failed: {(result.stderr or '')[-300:]}")
         status = int(_field(result.stdout, "EXIT"))
@@ -289,7 +335,7 @@ def run_sandbox_volume(volume: str, hardening: bool = False) -> dict:
 
 def _execute(command: list[str]) -> dict:
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=120, check=False)
+        result = run_named(command, 120)
         if result.returncode:
             raise RuntimeError(f"Docker failed: {result.stderr[-300:]}")
         status = int(_field(result.stdout, "EXIT"))
@@ -322,7 +368,8 @@ def _execute(command: list[str]) -> dict:
             "network_attempts": [line[:300] for line in lines if "connect(" in line][:20],
             "canary_touched": touched,
             "by_actor": attribute_events(trace),
-            "behavior": behavior_events(trace),
+            "behavior": (behavior := behavior_events(trace)),
+            **classify_failure(outcome, behavior, stderr),
         }, "error": error}
     except (OSError, ValueError, KeyError, RuntimeError, binascii.Error,
             subprocess.SubprocessError) as error:

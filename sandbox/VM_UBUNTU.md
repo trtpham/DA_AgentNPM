@@ -90,7 +90,7 @@ docker build -t agent-npm-runner:local experiments/runner
 ```bash
 cd ~/DA_AgentNPM
 RUN_SANDBOX_TESTS=1 .venv/bin/python -m pytest -q tests/test_sandbox_limits.py   # yêu cầu: 18 passed (từ 20/11)
-.venv/bin/python -m pytest -q tests/test_sandbox_batch.py                         # yêu cầu: 10 passed (từ 20/11)
+.venv/bin/python -m pytest -q tests/test_sandbox_batch.py                         # yêu cầu: 15 passed (từ 21/11)
 ```
 
 Chạy thử pha A trên 2 gói **lành** (bảng nhãn cũ có sẵn trong mã):
@@ -129,7 +129,9 @@ cd ~/DA_AgentNPM && tmux new -s sbx
 
 - Thoát tmux mà lô vẫn chạy: `Ctrl+B` rồi `D`. Vào lại: `tmux attach -t sbx`.
 - Mỗi gói: tạo volume `agentnpm-…` → container chuẩn bị tải và giải nén vào volume → sandbox cài thử (tắt mạng, tối đa 60 giây) → xóa volume. Ước tính 30–90 giây/gói.
-- Bị ngắt thì chạy lại đúng lệnh; gói đã có kết quả được bỏ qua.
+- Bị ngắt thì chạy lại đúng lệnh; gói đã có kết quả được bỏ qua. Đầu mỗi lô tự dọn volume `agentnpm-*` và container `agentnpm-sbx-*` còn sót (từ 21/11).
+- Trước khi chạy, lô tự kiểm tra: có đủ 2 image, đĩa trống ≥ 5 GB; thiếu thì dừng với thông báo `preflight: …`. `sandbox_meta.json` ghi digest image, sha256 bảng nhãn và số đếm theo `fail_reason`.
+- Mỗi kết quả có `script_ran` (install script đã chạy chưa) và `fail_reason`: `network` (script cần mạng), `missing_tool` (thiếu công cụ như Python, `vercel`), `resource` (timeout/RAM/PID), `script` (script tự lỗi) là hành vi của gói, giữ nguyên; `not_started`, `prepare`, `infra` là lỗi hạ tầng, đã tự thử lại 1 lần. Còn sót thì chạy lại riêng chúng bằng cùng lệnh thêm `--retry-failed`.
 - Xong mỗi lô: `cat reports/sbx-dev-v1/sandbox/sandbox_meta.json` xem số đếm; `docker volume ls | grep agentnpm` phải rỗng.
 
 ## 9. Đưa kết quả về Windows
