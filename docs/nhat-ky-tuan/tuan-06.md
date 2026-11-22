@@ -100,3 +100,4 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 - Kiểm chéo nhãn: đã chuẩn bị phiếu mù 60 gói (`data/review_rounds/blind-v1`, seed 20261122, 3 phiếu), chưa có kết quả.
 - Kiểm chứng: `py -3.14 -m pytest -q` → 356 passed, 18 skipped, 0 failed.
 - Hình mới: `tuan-06-ket-qua-test.png`, `tuan-06-osv-co-khong.png`, `tuan-06-sandbox-do-phu.png`, `tuan-06-trinh-xem-trace-mau.png` (trace mẫu `sample_traces`; lượt `test-v1-*` chưa mở được trong trình xem do lỗi `run_id`).
+- Tối 22/11: tập test đủ 5 cấu hình (`reports/test-v1-summary/metrics-*.json`): A-SLM F1 0,771 · FPR 0,645; A-SLM-X F1 0,770 · FPR 0,652; A-TLM F1 0,710 · FPR 0,894. Không cấu hình nào cho phép gói độc; `nono-postinstall-test@1.0.2` (đáng ngờ) được cho phép ở cả 5 cấu hình. OSV trên test đổi 0–3 gói mỗi cấu hình (`reports/osv-ablation-v1/test-*.json`). Báo cáo tuần 6 trình bày lại, thêm góp ý của thầy và lịch tuần 7–9; vẽ lại `tuan-06-ket-qua-test.png`, `tuan-06-osv-co-khong.png`.
