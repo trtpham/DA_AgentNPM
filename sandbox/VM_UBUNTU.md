@@ -175,8 +175,8 @@ Lô `sbx-dev-v1` chạy trước 20/11 phần lớn ra `failed` vì lỗi phươ
 
    ```powershell
    cd D:\DACN\DA_AgentNPM
-   git archive --format=tar.gz -o $env:TEMPgentnpm.tgz HEAD
-   scp $env:TEMPgentnpm.tgz agent@<IP>:~/
+   git archive --format=tar.gz -o $env:TEMP\agentnpm.tgz HEAD
+   scp $env:TEMP\agentnpm.tgz agent@<IP>:~/
    ```
 
 3. Trong VM, thay mã cũ bằng mã mới và build lại image sandbox (có thêm `cache_deps.sh`):
