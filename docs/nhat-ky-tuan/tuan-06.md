@@ -90,3 +90,13 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 - 20/11: đo FPS văn phòng 3D, 12 tình huống đều trên 30 FPS (`f15cb50`).
 - 22/11: GuardDog trên tập test: P 0,970 · R 0,811 · F1 0,884 · FPR 0,028; agent A-LLM trên tập test đang chạy.
 - Kiểm chứng 22/11: `py -3.14 -m pytest -q` → 339 passed, 18 skipped, 1 failed (`tests/test_trace.py::test_synthetic_samples_are_valid_and_bounded`: `assert 4 == 3`, do `f1f5a88` thêm trace mẫu thứ 4). Chưa sửa.
+
+### Cập nhật cuối ngày 22/11/2026 (chi tiết: mục 6.4–6.11 báo cáo tuần 6)
+
+- Tập test, ngưỡng 0,95: A-LLM P 0,720 · R 0,969 · F1 0,826 · FPR 0,426; A-LLM-X P 0,726 · R 0,969 · F1 0,830 · FPR 0,411 (`reports/test-v1-summary`). 0 gói độc được cho phép; mỗi cấu hình cho phép 3 gói đáng ngờ. A-SLM, A-SLM-X, A-TLM đang chạy.
+- Có / không OSV (`reports/osv-ablation-v1`): OSV đổi 0–3 gói mỗi cấu hình đã khóa; test A-LLM-X F1 0,830 → 0,829. Mốc chỉ OSV: F1 0,921 dev, 0,909 test, đo gói đã bị biết là độc.
+- Sandbox pha A chạy lại trong máy ảo cho 500 gói (`reports/sbx-v1b-summary`): độ phủ 433/500 (86,6%), 11 gói chạm dữ liệu mồi, 67 gói không có kết quả (A 22, B 14, C 15, D 4, E 1, F 11). Chưa đưa vào agent.
+- Mã hóa chữ trong kết quả trước khi lưu về máy: 0 file bị Defender chặn.
+- Kiểm chéo nhãn: đã chuẩn bị phiếu mù 60 gói (`data/review_rounds/blind-v1`, seed 20261122, 3 phiếu), chưa có kết quả.
+- Kiểm chứng: `py -3.14 -m pytest -q` → 356 passed, 18 skipped, 0 failed.
+- Hình mới: `tuan-06-ket-qua-test.png`, `tuan-06-osv-co-khong.png`, `tuan-06-sandbox-do-phu.png`, `tuan-06-trinh-xem-trace-mau.png` (trace mẫu `sample_traces`; lượt `test-v1-*` chưa mở được trong trình xem do lỗi `run_id`).
