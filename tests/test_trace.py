@@ -1,3 +1,4 @@
+import base64
 import json
 import sqlite3
 from pathlib import Path
@@ -64,17 +65,50 @@ def test_agent_writes_read_only_trace_for_fixture(tmp_path):
     assert any(event["type"] == "tool_result" and event["untrusted"] for event in events)
 
 
+# Package text in a trace: plain `data_preview` (older traces) or, from 20/11/2026, `data_preview_b64`
+# (base64 of the UTF-8 text) with `data_preview_encoding: "base64"`. Returns (text, format) or None.
+def _preview(event):
+    if "data_preview_b64" in event:
+        assert event.get("data_preview_encoding") == "base64", event
+        assert "data_preview" not in event, "a base64 event must not also carry the plain text"
+        return base64.b64decode(event["data_preview_b64"], validate=True).decode("utf-8"), "base64"
+    if event.get("data_preview") is not None:
+        return event["data_preview"], "plain"
+    return None
+
+
+SAMPLE_PACKAGES = {"@demo/native-addon@1.0.0", "comment-injection-demo@1.0.0",
+                   "remote-loader-demo@1.0.0", "base64-preview-demo@1.0.0"}
+
+
 def test_synthetic_samples_are_valid_and_bounded():
     samples = sorted((Path(__file__).parents[1] / "viewer" / "sample_traces").glob("*.jsonl"))
-    assert len(samples) == 3
+    seen, formats, decoded = set(), set(), {}
     for sample in samples:
-        events = [json.loads(line) for line in sample.read_text(encoding="utf-8").splitlines()]
-        assert sample.name == trace_filename(events[0]["package"])
+        raw = sample.read_text(encoding="utf-8")
+        events = [json.loads(line) for line in raw.splitlines()]
+        package = events[0]["package"]
+        seen.add(package)
+        assert sample.name == trace_filename(package)
         assert [event["seq"] for event in events] == list(range(len(events)))
-        assert all(event["package"] == events[0]["package"] for event in events)
-        assert all(len(event.get("data_preview") or "") <= 2000 for event in events)
+        assert all(event["package"] == package for event in events)
+        for event in events:
+            preview = _preview(event)
+            if preview is None:
+                continue
+            text, kind = preview
+            formats.add(kind)
+            assert len(text) <= 2000, f"{sample.name}: preview over the 2000-character bound"
+            assert event.get("untrusted") is True, "package text must be marked untrusted"
+            if kind == "base64":
+                decoded.setdefault(package, []).append(text)
         Verdict.model_validate(next(event for event in events if event["type"] == "verdict")["verdict"])
-    assert any("<img src=x onerror=alert(1)>" in sample.read_text(encoding="utf-8") for sample in samples)
+    assert seen == SAMPLE_PACKAGES  # an extra or missing sample fails here, not silently
+    assert formats == {"plain", "base64"}  # both formats stay covered
+    plain_xss = [s for s in samples if "<img src=x onerror=alert(1)>" in s.read_text(encoding="utf-8")]
+    assert plain_xss, "a plain-text sample keeps the markup test string"
+    assert any("<img src=x onerror=alert(1)>" in text for texts in decoded.values() for text in texts)
+    assert "base64-preview-demo@1.0.0" not in {json.loads(s.read_text(encoding="utf-8").splitlines()[0])["package"] for s in plain_xss}
 
 
 def test_step_limit_closes_trace(tmp_path):
