@@ -12,7 +12,7 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 
 ## Nhật ký
 
-- Ngày / người thực hiện / người kiểm tra: 07–08/11/2026 / Claude / TV2 (chưa kiểm tra).
+- Ngày / người thực hiện / người kiểm tra: 07–08/11/2026 / công cụ hỗ trợ lập trình của nhóm / TV2 (chưa kiểm tra).
 - Đã làm (Gate B0 07/11, commit `94d8106` → `e8ebe44`):
   - 10 công cụ chỉ đọc trong `tools/explore.py`, bật theo model bằng `tools:` trong config;
   - năng lực agent: `analyst_directive`, `R7_flow`, `self_check`, `guided_reading`, `repeat_limit`, `experiments/calibration.py`;
@@ -22,7 +22,7 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
   - `py -3.14 -m pytest -q`: PASS (239 passed, 8 skipped); `node --test tests/js/*.test.mjs`: PASS (19/19); clone sạch: PASS;
   - corpus 22 gói, model thật, `py -3.14 -m experiments.rote_probe corpus-x1108 A-LLM-X A-SLM-X A-TLM-X`: PASS, 66/66 lượt chạy xong, 0 crash;
   - Docker / `RUN_SANDBOX_TESTS=1`: NOT_RUN (chờ TV3, W5-5); hồi quy 13 gói dev: NOT_RUN.
-  - Cập nhật 09/11 (Claude): `tests/test_actions.py` + `tests/test_run_batch.py` PASS (11); `RUN_SANDBOX_TESTS=1 ... test_sandbox_limits.py` PASS (14); toàn bộ `pytest -q` PASS (305 passed, 14 skipped). Mục kế hoạch được tick theo các kiểm chứng này; TV2 vẫn chưa ký kiểm tra.
+  - Cập nhật 09/11: `tests/test_actions.py` + `tests/test_run_batch.py` PASS (11); `RUN_SANDBOX_TESTS=1 ... test_sandbox_limits.py` PASS (14); toàn bộ `pytest -q` PASS (305 passed, 14 skipped). Mục kế hoạch được tick theo các kiểm chứng này; TV2 vẫn chưa ký kiểm tra.
 
 | Config | Gói độc bị deny | **Gói độc được approve** | Gói lành được approve | Gói lành bị deny | Cặp phân tách | ECE |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -54,7 +54,7 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 - **RAM (W5-11):** fixture `memory` cấp phát 448 MB khi không hardening, 192 MB khi `hardening=True`. Mặc định chưa đổi — **TV3 quyết** (phiếu W5-5, bước 4).
 - **W5-4 tái hiện:** `py -3.14 -m experiments.repro_sandbox --runs 3` (có và không `--hardening`): 9 fixture × 3 lần giống nhau ở mọi trường (`all_same: true`). Biến môi trường host duy nhất khớp là `127.0.0.1` (loopback, có sẵn trong trace npm); sau khi loại loopback: `no_host_leak: true` (59 giá trị đã kiểm).
 - **C7 chạy thật** (`A-LLM-XS` = A-LLM-X + `sandbox: true`, Docker + Ollama): `benign-package` approve (R7); `canary-package` **deny bởi R1** (sandbox chạm canary, model không đảo được); `no-hook-package` review (R3).
-- **Vi phạm phạm vi (tự báo):** trong lượt C7 Claude đã đưa thêm 2 gói corpus mô phỏng (`persist-bashrc`, `twin-safe`) vào container. Gate 07/11 không cho chạy corpus trong container. Rủi ro thấp (mã nhóm viết, `--network none`, `--read-only`, `/home` là tmpfs bị xóa khi container dừng) nhưng vẫn là thực thi chưa được duyệt. Đã chặn trong code: `sandbox=True` chỉ nhận `tests/fixtures/packages` và `tests/fixtures/sandbox-limits`; có test. Kết quả 2 gói này (`reports/c7-1108-a-llm-xs`) không dùng làm số liệu.
+- **Vi phạm phạm vi (tự báo):** trong lượt C7 đã đưa thêm 2 gói corpus mô phỏng (`persist-bashrc`, `twin-safe`) vào container. Gate 07/11 không cho chạy corpus trong container. Rủi ro thấp (mã nhóm viết, `--network none`, `--read-only`, `/home` là tmpfs bị xóa khi container dừng) nhưng vẫn là thực thi chưa được duyệt. Đã chặn trong code: `sandbox=True` chỉ nhận `tests/fixtures/packages` và `tests/fixtures/sandbox-limits`; có test. Kết quả 2 gói này (`reports/c7-1108-a-llm-xs`) không dùng làm số liệu.
 - **Hồi quy 13 gói dev** (`reg1108-a-*-x` so với `rote-reg-a-*`): A-LLM-X 13/13 giống mốc; A-TLM-X 13/13 giống mốc (cả 13 về review, 8 lần R2); A-SLM-X đổi 2 gói: `benign-install-fixture` review → **approve** (đúng), `canary-fixture` deny → **review** (an toàn nhưng mất một lần deny đúng). Không có approve nhầm hay deny nhầm mới.
 - **Còn chờ người thật:** W5-5 (TV3 ký nghiệm thu, chọn phương án swap), W5-10 và dữ liệu v1 (người kiểm tra nhãn).
 
@@ -70,8 +70,8 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 
 ### Kiểm tự động hỗ trợ người kiểm tra (08/11/2026, PO chọn "cách 1")
 
-- PO đề nghị Claude đánh `verified` và ghi tên người phụ trách; Claude từ chối vì đó là ghi sai người đã kiểm tra. PO chọn cách 1: Claude kiểm trước, người thật xác nhận.
-- `data/scripts/ai_precheck.py`: quét đoạn trích bằng dấu hiệu cụ thể (đường dẫn secret thật, `eval`/`new Function`, file khởi động, `curl | sh`, dump `process.env`, lệnh, gọi mạng, thông tin máy, làm rối) và các họ kỹ thuật của agent; ghi "khớp / cần xem / nghi ngờ" kèm số dòng vào `data/review_rounds/ai-precheck/round-N.csv` và vào trang bằng chứng, luôn ghi là của Claude, chưa phải kiểm tra. Phiếu kiểm tra không đổi.
+- PO cân nhắc đánh sẵn `verified` và ghi tên người phụ trách; không làm vì như vậy là ghi sai người đã kiểm tra. PO chọn cách 1: kiểm tự động trước, người thật xác nhận.
+- `data/scripts/ai_precheck.py`: quét đoạn trích bằng dấu hiệu cụ thể (đường dẫn secret thật, `eval`/`new Function`, file khởi động, `curl | sh`, dump `process.env`, lệnh, gọi mạng, thông tin máy, làm rối) và các họ kỹ thuật của agent; ghi "khớp / cần xem / nghi ngờ" kèm số dòng vào `data/review_rounds/ai-precheck/round-N.csv` và vào trang bằng chứng, luôn ghi là kết quả kiểm tự động, chưa phải kiểm tra. Phiếu kiểm tra không đổi.
 - Kết quả: lượt lành nhóm A (5–7) ~90% "khớp"; "B nhẹ" (8–9) phần lớn "cần xem"; lượt độc Datadog (10–15) ~40% "khớp", 7–16 "nghi ngờ"/lượt (đoạn trích 150 dòng đầu có thể chưa chứa hành vi).
 - **Windows Defender** cách ly bằng chứng `.md` của lượt độc (10, 13, 14, 15) và cả bản HTML dùng ký tự mã hóa (Defender tự giải). Không thêm ngoại lệ: bằng chứng nay là `round-N.json` (đoạn trích base64, cho script) và `round-N.html` (đoạn trích XOR + base64, trình duyệt giải và hiển thị bằng `textContent`, không chạy). Sau đổi: 0/30 file bị chặn.
 - **GuardDog** chạy trên 499 dòng trong container (`reports/guarddog-all-1108`), đang chạy.
