@@ -81,3 +81,12 @@ Bằng chứng sai hoặc kết luận thiếu chắc chắn không tự approve
 - `py -3.14 -m experiments.run_isolated guarddog-all-1108 --guarddog --labels reports/all-candidates-499.csv` (container dùng một lần, GuardDog 2.6.0): 499/499 lượt xong, 2 lỗi quét.
 - Defender cách ly 16/500 file kết quả vì GuardDog trích nguyên văn đoạn mã khớp luật (trường `code`). Đã sửa: kết quả chỉ giữ luật, vị trí, thông báo; 483 file được làm sạch, 16 gói quét lại; `metrics` liệt kê file không đọc được thay vì dừng. Sau sửa: 0 file bị chặn.
 - **Điểm TẠM theo nhãn chưa kiểm tra** (220 lành, 277 độc, 2 nghi vấn; KHÔNG dùng trong báo cáo cuối): Precision 0,960 · Recall 0,771 · F1 0,855 · FPR 0,041 (9/220 gói lành bị báo) · 62 gói độc không bị báo. Chấm lại bằng `experiments.metrics` khi có `data/labels-v1.csv` (19/11), không cần quét lại.
+
+### Tiến độ 16–22/11/2026 (chi tiết: mục 6 báo cáo tuần 6)
+
+- 20–21/11: 6 cấu hình agent và GuardDog trên 200 gói dev labels-v1 (`reports/dev-v1-summary`, `reports/guarddog-dev-v1`). A-LLM: P 0,750 · R 0,991 · F1 0,854 · FPR 0,372. GuardDog: P 0,989 · R 0,868 · F1 0,925 · FPR 0,011.
+- 21/11: khóa ngưỡng 0,95 (Gate B0, `8398f4c`); A-TLM-X không khóa, không chạy tập test.
+- 20–21/11: mã hóa base64 chữ tự do trước khi ghi về máy (`8ccca9c`, `5d2b7c6`); sửa sandbox (`e96b9b0`, `df34fee`, `19c7359`); pha A chưa chạy lại.
+- 20/11: đo FPS văn phòng 3D, 12 tình huống đều trên 30 FPS (`f15cb50`).
+- 22/11: GuardDog trên tập test: P 0,970 · R 0,811 · F1 0,884 · FPR 0,028; agent A-LLM trên tập test đang chạy.
+- Kiểm chứng 22/11: `py -3.14 -m pytest -q` → 339 passed, 18 skipped, 1 failed (`tests/test_trace.py::test_synthetic_samples_are_valid_and_bounded`: `assert 4 == 3`, do `f1f5a88` thêm trace mẫu thứ 4). Chưa sửa.
