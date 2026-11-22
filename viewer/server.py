@@ -8,6 +8,9 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
 from agent.trace import trace_filename
+# Gate B0 2026-11-21: free text in traces is stored as `<field>_b64` + `<field>_encoding`. The viewer decodes
+# with the one shared reader, in memory only; nothing decoded is written to disk.
+from experiments.encoding import decode_fields
 
 
 RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
@@ -62,8 +65,10 @@ def _events(path: Path) -> tuple[list[dict], bool]:
                 event = json.loads(line)
                 if not isinstance(event, dict):
                     raise ValueError("trace event is not an object")
-                events.append(event)
-            except (json.JSONDecodeError, ValueError):
+                # Old plain traces pass through unchanged; a field that cannot be decoded drops its line,
+                # like any other malformed line, instead of breaking the whole trace.
+                events.append(decode_fields(event))
+            except (json.JSONDecodeError, ValueError, TypeError):
                 valid = False
     return events, valid
 
