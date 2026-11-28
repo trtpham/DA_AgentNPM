@@ -133,12 +133,13 @@ def test_samples_directory_cannot_be_used_as_reports_root():
 
 def test_ui_assets_are_served_and_never_parse_trace_as_html(viewer):
     server, _ = viewer
-    status, headers, body = request(server, "GET", "/app.js")
-    assert status == 200 and headers["Content-Type"].startswith("text/javascript")
-    source = body.decode("utf-8")
-    for sink in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "new Function"):
-        assert sink not in source
-    assert "textContent" in source
+    for js_path in ("/app.js", "/summary.mjs", "/ui.mjs"):
+        status, headers, body = request(server, "GET", js_path)
+        assert status == 200 and headers["Content-Type"].startswith("text/javascript"), js_path
+        source = body.decode("utf-8")
+        for sink in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "new Function"):
+            assert sink not in source, f"{js_path} uses {sink}"
+    assert "textContent" in request(server, "GET", "/app.js")[2].decode("utf-8")
     status, headers, _ = request(server, "GET", "/style.css")
     assert status == 200 and headers["Content-Type"].startswith("text/css")
     _, _, page = request(server, "GET", "/")
@@ -297,6 +298,124 @@ def test_undecodable_field_drops_only_its_line(tmp_path):
     try:
         status, _, body = request(server, "GET", f"/api/trace?run=run-bad&pkg={quote(package, safe='')}&after=-1")
         assert status == 200 and [event["seq"] for event in json.loads(body)] == [0]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_isolated_run_id_is_accepted_while_foreign_run_id_is_rejected(tmp_path):
+    """T1 step 1: isolated container traces carry run_id='run'; foreign run_ids must still be ignored."""
+    run_dir = tmp_path / "reports" / "test-v1-a-llm-x"
+    run_dir.mkdir(parents=True)
+    iso_pkg = "esbuild@0.24.0"
+    foreign_pkg = "left-pad@1.3.0"
+    for pkg, trace_run_id in ((iso_pkg, "run"), (foreign_pkg, "some-other-run")):
+        events = [
+            {"type": "run_start", "model": "qwen3.5:9b", "max_steps": 15, "run_id": trace_run_id, "package": pkg, "seq": 0},
+            {"type": "decision", "final_label": "benign", "final_action": "approve", "rule": "R7",
+             "reasons": ["Verified"], "evidence_checks": [{"file": "install.js", "lines": "1", "exists": True}],
+             "run_id": trace_run_id, "package": pkg, "seq": 1},
+            {"type": "run_end", "elapsed_s": 1.2, "steps": 2, "run_id": trace_run_id, "package": pkg, "seq": 2},
+        ]
+        (run_dir / trace_filename(pkg)).write_text("".join(json.dumps(e) + "\n" for e in events), encoding="utf-8")
+
+    server = make_server(tmp_path / "reports", 0)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        status, _, body = request(server, "GET", "/api/runs/test-v1-a-llm-x/packages")
+        assert status == 200
+        pkgs = json.loads(body)
+        assert [item["package"] for item in pkgs] == [iso_pkg]
+
+        status, _, body = request(server, "GET", f"/api/trace?run=test-v1-a-llm-x&pkg={quote(iso_pkg, safe='')}&after=-1")
+        assert status == 200 and len(json.loads(body)) == 3
+
+        status, _, body = request(server, "GET", f"/api/trace?run=test-v1-a-llm-x&pkg={quote(foreign_pkg, safe='')}&after=-1")
+        assert status == 200 and json.loads(body) == []
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_run_summary_uses_metrics_score_and_compares_guarddog(tmp_path):
+    labels = tmp_path / "labels.csv"
+    labels.write_text(
+        "id,name,version,label,behavior_main,technique,file,lines,source,split,cluster\n"
+        "1,good-pkg,1.0.0,benign,none,print-output,index.js,1,https://registry.npmjs.org/x,test,c1\n"
+        "2,evil-pkg,1.0.0,malicious,exfil,network-request,setup.js,2,https://raw.githubusercontent.com/x,test,c2\n"
+        "3,dev-only,1.0.0,benign,none,print-output,index.js,1,https://registry.npmjs.org/y,dev,c3\n",
+        encoding="utf-8",
+    )
+    reports = tmp_path / "reports"
+    run_dir = reports / "test-run"
+    run_dir.mkdir(parents=True)
+    (run_dir / "run_meta.json").write_text(
+        json.dumps({"model": "qwen3.5:9b", "config": {"name": "A-LLM-X", "deny_threshold": 0.95, "approve_threshold": 0.95}}),
+        encoding="utf-8",
+    )
+    (run_dir / "good-pkg@1.0.0.json").write_text(json.dumps({
+        "package": "good-pkg@1.0.0", "status": "ok", "steps": 2, "elapsed_s": 4.0,
+        "decision": {"label": "suspicious", "action": "review", "rule": "R7_risk", "reasons": ["Unexplained line"]},
+        "verdict_summary": {"label": "benign", "confidence": 0.95, "action": "approve"},
+    }), encoding="utf-8")
+    (run_dir / "evil-pkg@1.0.0.json").write_text(json.dumps({
+        "package": "evil-pkg@1.0.0", "status": "ok", "steps": 3, "elapsed_s": 6.0,
+        "decision": {"label": "malicious", "action": "deny", "rule": "R6", "reasons": ["Verified malicious"]},
+        "verdict_summary": {"label": "malicious", "confidence": 0.95, "action": "deny"},
+    }), encoding="utf-8")
+    gd_dir = reports / "guarddog-v1" / "guarddog"
+    gd_dir.mkdir(parents=True)
+    (gd_dir / "good-pkg@1.0.0.json").write_text(json.dumps({"package": "good-pkg@1.0.0", "ok": True, "data": {"issues": 0}}), encoding="utf-8")
+    (gd_dir / "evil-pkg@1.0.0.json").write_text(json.dumps({"package": "evil-pkg@1.0.0", "ok": True, "data": {"issues": 1}}), encoding="utf-8")
+
+    server = make_server(reports, 0, labels_file=labels)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        status, _, body = request(server, "GET", "/api/runs/test-run/summary")
+        assert status == 200
+        data = json.loads(body)
+        assert data["split"] == "test"
+        assert data["metrics"]["scored"] == 2
+        assert data["metrics"]["binary"] == {"tp": 1, "fp": 1, "tn": 0, "fn": 0}
+        assert data["guarddog"]["binary"] == {"tp": 1, "fp": 0, "tn": 1, "fn": 0}
+        assert [r["rule"] for r in data["rules"]] == ["R6", "R7_risk"]
+        fp_case = next(c for c in data["cases"] if c["package"] == "good-pkg@1.0.0")
+        assert "false_positive" in fp_case["kinds"] and "disagree" in fp_case["kinds"]
+        assert request(server, "GET", "/api/runs/test-run/summary?split=bogus")[0] == 400
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_package_extra_reads_osv_and_sandbox_safely(tmp_path):
+    reports = tmp_path / "reports"
+    run_dir = reports / "run-x"
+    ctx_dir = reports / "contexts-v1"
+    sbx_dir = reports / "sbx-test-v1b" / "sandbox"
+    for d in (run_dir, ctx_dir, sbx_dir):
+        d.mkdir(parents=True)
+    pkg = "@scope/demo@1.0.0"
+    fname = "@scope__demo@1.0.0.json"
+    (run_dir / "run_meta.json").write_text(json.dumps({"contexts": "reports/contexts-v1"}), encoding="utf-8")
+    (run_dir / fname).write_text(json.dumps({"package": pkg, "status": "ok", "steps": 4, "elapsed_s": 5.0}), encoding="utf-8")
+    (ctx_dir / fname).write_text(json.dumps({"package": pkg, "osv": {"ok": True, "data": {"malicious": True, "vulns": [{"id": "MAL-1", "summary": "bad"}]}}}), encoding="utf-8")
+    (sbx_dir / fname).write_text(json.dumps({"package": pkg, "ok": True, "data": {"outcome": "ok", "canary_touched": ["ssh"], "behavior": {"connects": [], "persistence_writes": [], "process_tree": []}}}), encoding="utf-8")
+
+    server = make_server(reports, 0)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        status, _, body = request(server, "GET", f"/api/package-extra?run=run-x&pkg={quote(pkg, safe='')}")
+        assert status == 200
+        extra = json.loads(body)
+        assert extra["osv"]["used_in_run"] is True and extra["osv"]["malicious"] is True
+        assert extra["sandbox"]["used_in_run"] is False and extra["sandbox"]["canary_touched"] == ["ssh"]
+        assert request(server, "GET", "/api/package-extra?run=..&pkg=demo@1.0.0")[0] == 400
     finally:
         server.shutdown()
         server.server_close()

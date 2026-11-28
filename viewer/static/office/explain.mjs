@@ -131,9 +131,10 @@ function explainEvent(events, index) {
       const good = checks.filter((check) => check.exists).length;
       const command = event.final_action === "approve" ? `npm approve-scripts ${event.package || ""}`
         : event.final_action === "deny" ? `npm deny-scripts ${event.package || ""}` : "không chạy lệnh, chờ người xem";
-      return { ...step, actor: "rules", who: "Thẩm phán luật", title: `Luật ${event.rule} ra quyết định`,
+      const ruleLabel = event.rule ? `Luật ${event.rule}` : "Luật cứng";
+      return { ...step, actor: "rules", who: "Thẩm phán luật", title: `${ruleLabel} ra quyết định`,
                input: `Kết luận của mô hình + ${checks.length} bằng chứng (✔ ${good} · ✘ ${checks.length - good})`,
-               process: `Luật ${event.rule}: ${clip((event.reasons || [])[0] || "", 90)}`,
+               process: `${ruleLabel}: ${clip((event.reasons || [])[0] || "áp dụng quy tắc quyết định", 90)}`,
                output: `${LABELS[event.final_label] || event.final_label} → ${ACTIONS[event.final_action] || "—"} · ${command} (dry-run)` };
     }
     case "sandbox_result":

@@ -48,3 +48,10 @@ test("previews summarise indicators and hooks", () => {
   assert.equal(argsText({ file: "a.js" }), "a.js (từ đầu file)");
   assert.ok(Object.keys(TOOL_INFO).includes("deobfuscate"));
 });
+
+test("decision without rule never renders 'undefined'", () => {
+  const step = explainStep([{ type: "decision", final_label: "malicious", final_action: "deny", evidence_checks: [] }], 0);
+  assert.ok(!step.title.includes("undefined"));
+  assert.ok(!step.process.includes("undefined"));
+  assert.ok(!step.output.includes("undefined"));
+});

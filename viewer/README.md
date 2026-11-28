@@ -10,11 +10,11 @@ Mở `http://127.0.0.1:8765/`, chọn run rồi chọn gói. Lọc run/gói theo
 
 | File | Việc |
 | --- | --- |
-| `server.py` | Server chỉ nghe `127.0.0.1`, chỉ nhận GET/HEAD |
-| `static/index.html`, `app.js`, `style.css` | Trang xem trace |
+| `server.py` | Server chỉ nghe `127.0.0.1`, chỉ nhận GET/HEAD; thêm `/api/runs/<run>/summary` (dùng `experiments.metrics`) và `/api/package-extra` |
+| `static/index.html`, `app.js`, `summary.mjs`, `style.css` | Trang kết quả 2D: trang một gói (kết luận 10 giây, luật chốt, hành vi nguồn–hành động–đích kèm tô dòng mã, sandbox/OSV, nhật ký thu gọn), trang tổng hợp lượt chạy (ma trận nhầm lẫn, so GuardDog, phân bố luật, lọc ca sai) và so sánh model |
 | `static/office.html`, `office/` | Văn phòng 3D: cùng trace, hiển thị dạng mô phỏng |
 | `static/office/rules.mjs` | Luật R1–R8 của `agent/decide.py` bằng lời, theo đúng thứ tự xét; cả 2D và 3D dùng để vẽ "bậc thang luật" |
-| `GET /api/labels` | Nhãn chuẩn từ `data/labels.csv` (chỉ đọc) để lọc ca "sai nhãn chuẩn" |
+| `GET /api/labels` | Nhãn chuẩn từ `data/labels-v1.csv` (mặc định nếu có, fallback `data/labels.csv`, chỉ đọc) để lọc ca "sai nhãn chuẩn" và chấm điểm |
 | `static/vendor/` | Three.js 0.170.0 tải sẵn, không gọi mạng |
 | `sample_traces/` | 3 trace mẫu vô hại để demo (một trace có chuỗi XSS thử nghiệm) |
 

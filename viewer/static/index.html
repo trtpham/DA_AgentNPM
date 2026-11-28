@@ -8,26 +8,29 @@
 <body>
 <main class="shell viewer-shell">
   <header class="masthead">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>NPM AGENT <small>/ trình xem trace</small></span></div>
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>NPM AGENT <small>/ kết quả kiểm tra</small></span></div>
     <nav class="top-nav" aria-label="Trang khác">
       <a href="/office" id="office-link">Mở trong văn phòng 3D</a>
     </nav>
     <div class="session-status" id="session-status"><span class="status-dot" aria-hidden="true"></span><span id="run-status" aria-live="polite">Đang tải danh sách run</span></div>
   </header>
 
-  <details class="about" id="about" open>
+  <details class="about" id="about">
     <summary>Dự án này làm gì, làm thế nào, vì sao tin được</summary>
     <div class="about-grid">
       <section><h3>Làm gì</h3><p>Kiểm tra gói npm có script chạy lúc cài (<code>preinstall</code>, <code>install</code>, <code>postinstall</code>) <b>trước khi</b> cho script chạy. Kết luận gói <b>độc hại / đáng ngờ / lành tính</b>, rồi <b>chặn</b>, <b>chuyển người xem</b> hoặc <b>cho phép</b> script.</p></section>
       <section><h3>Làm thế nào</h3><p>Một mô hình ngôn ngữ chạy cục bộ (Ollama) tự điều tra bằng công cụ <b>chỉ đọc</b>: đọc manifest, đọc file, tìm chỉ báo (URL, <code>eval</code>, đọc secret…). <b>Không chạy mã của gói.</b> Bốn bước: nhận diện → phân tích nguồn–hành động–đích → kiểm chứng → quyết định.</p></section>
-      <section><h3>Vì sao tin được</h3><p>Mô hình <b>chỉ đề xuất</b>. Luật cứng R1–R8 (<code>agent/decide.py</code>) mới chốt: bằng chứng <code>file:dòng</code> phải có thật trong gói; tin cậy ≥ 0,8 mới chặn/cho phép, còn lại chuyển người xem. Luôn chạy thử (dry-run).</p></section>
+      <section><h3>Vì sao tin được</h3><p>Mô hình <b>chỉ đề xuất</b>. Luật cứng R1–R8 (<code>agent/decide.py</code>) mới chốt: bằng chứng <code>file:dòng</code> phải có thật trong gói; tin cậy ≥ ngưỡng mới chặn/cho phép, còn lại chuyển người xem. Luôn chạy thử (dry-run).</p></section>
     </div>
-    <p class="about-howto">Trang này: chọn một <b>run</b> (một lần chạy agent trên nhiều gói) → chọn <b>gói</b> → xem từng bước bên giữa và lý do kết luận bên phải. Bước có dấu <svg class="i" aria-hidden="true"><use href="#i-flag"/></svg> <b>quan trọng</b> là bước quyết định kết quả.</p>
+    <p class="about-howto">Chọn một <b>run</b> bên trái → xem <b>Chi tiết một gói</b> (kết luận, luật chốt, hành vi nguồn–hành động–đích, dòng mã được trích), chuyển sang <b>Tổng hợp lượt chạy</b> để xem ma trận nhầm lẫn, so GuardDog và ca sai, hoặc <b>So sánh model</b>.</p>
   </details>
 
   <div class="viewer">
     <aside class="sidebar" aria-labelledby="picker-title">
-      <h2 id="picker-title" class="pane-title">Lượt chạy</h2>
+      <div class="sidebar-head">
+        <h2 id="picker-title" class="pane-title">Lượt chạy</h2>
+        <button type="button" class="ghost small-btn" id="open-summary-btn" title="Mở trang tổng hợp số liệu của lượt chạy này">Tổng hợp lượt</button>
+      </div>
       <div class="field">
         <label for="run-filter">Run <span class="count" id="run-count"></span></label>
         <input type="search" id="run-filter" placeholder="Lọc tên run…" autocomplete="off">
@@ -46,29 +49,100 @@
       <ul class="packages" id="packages" aria-label="Các gói trong run"></ul>
     </aside>
 
-    <section class="activity" aria-labelledby="flow-title">
-      <div class="pane-head">
-        <h2 id="flow-title" class="pane-title">Nhật ký điều tra</h2>
-        <span id="package-name" class="package-name"></span>
-        <label class="toggle reviewed-toggle" title="Chỉ lưu trong trình duyệt này (phím M)"><input type="checkbox" id="reviewed-toggle"> Đã xem xong</label>
-        <button type="button" class="ghost" id="present" aria-pressed="false" title="Ẩn cột trái, chữ to, toàn màn hình (phím P)">Trình chiếu</button>
-        <details class="menu share-menu">
-          <summary>Chia sẻ <svg class="i" aria-hidden="true"><use href="#i-chevdown"/></svg></summary>
-          <div class="menu-body">
-            <button type="button" id="copy-link" title="Chép đường dẫn tới gói này">Chép liên kết</button>
-            <button type="button" id="export-md" title="Tải báo cáo Markdown của gói đang xem">Xuất báo cáo (.md)</button>
-          </div>
-        </details>
-      </div>
-
+    <section class="workspace" aria-label="Nội dung kết quả">
       <div class="view-row">
-        <div class="seg view-mode" role="radiogroup" aria-label="Cách xem">
-          <button type="button" role="radio" data-view="single">Một model</button>
+        <div class="seg view-mode" role="radiogroup" aria-label="Chế độ xem">
+          <button type="button" role="radio" data-view="single">Chi tiết một gói</button>
+          <button type="button" role="radio" data-view="summary">Tổng hợp lượt chạy</button>
           <button type="button" role="radio" data-view="compare">So sánh model</button>
         </div>
         <span class="model-pick" id="model-pick" role="group" aria-label="Chọn model (1 đến 3)" hidden></span>
       </div>
 
+      <!-- 1. Single package 10-second result view -->
+      <section class="single-view" id="single-view" aria-labelledby="package-name">
+        <div class="pane-head">
+          <div class="pkg-title-wrap">
+            <h1 id="package-name" class="package-name">Chưa chọn gói</h1>
+            <p id="package-subtitle" class="package-subtitle"></p>
+          </div>
+          <div class="pane-actions">
+            <label class="toggle reviewed-toggle" title="Chỉ lưu trong trình duyệt này (phím M)"><input type="checkbox" id="reviewed-toggle"> Đã xem xong</label>
+            <button type="button" class="ghost" id="present" aria-pressed="false" title="Ẩn cột trái, chữ to, toàn màn hình (phím P)">Trình chiếu</button>
+            <details class="menu share-menu">
+              <summary>Chia sẻ <svg class="i" aria-hidden="true"><use href="#i-chevdown"/></svg></summary>
+              <div class="menu-body">
+                <button type="button" id="copy-link" title="Chép đường dẫn tới gói này">Chép liên kết</button>
+                <button type="button" id="export-md" title="Tải báo cáo Markdown của gói đang xem">Xuất báo cáo (.md)</button>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div id="verdict-hero" class="verdict-hero pending" aria-live="polite">
+          <p class="pending-copy">Chọn một lượt chạy và một gói ở cột trái để xem kết luận, bằng chứng và luật quyết định.</p>
+        </div>
+
+        <div id="decision-grid" class="decision-grid" hidden>
+          <section class="panel-card" id="rule-card" aria-label="Luật quyết định cuối cùng"></section>
+          <section class="panel-card" id="diff-card" aria-label="Đề xuất mô hình và quyết định của luật"></section>
+        </div>
+
+        <section class="panel-card" id="behaviors-section" hidden aria-label="Hành vi và bằng chứng"></section>
+        <section class="panel-card" id="signals-section" hidden aria-label="Kết quả sandbox và OSV"></section>
+
+        <details class="trace-collapse" id="trace-collapse">
+          <summary id="trace-collapse-summary">Nhật ký điều tra từng bước (thu gọn)</summary>
+          <div class="trace-collapse-body">
+            <div class="transport" aria-label="Điều khiển phát lại">
+              <button type="button" id="previous" title="Bước trước (←)" aria-label="Bước trước"><svg class="i" aria-hidden="true"><use href="#i-prev"/></svg></button>
+              <button type="button" class="primary" id="play" title="Phát / tạm dừng (Space)">Phát lại</button>
+              <button type="button" id="next" title="Bước tiếp (→)" aria-label="Bước tiếp"><svg class="i" aria-hidden="true"><use href="#i-next"/></svg></button>
+              <select id="speed" aria-label="Tốc độ"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
+              <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Tua tới sự kiện">
+              <span id="replay-position" class="replay-position">0 / 0</span>
+            </div>
+
+            <ol class="phase-track" id="phase-track" aria-label="Bốn giai đoạn của agent (bấm để tua tới)"></ol>
+
+            <div class="timeline-tools">
+              <div class="chips" id="kind-filter" role="group" aria-label="Lọc sự kiện"></div>
+              <label class="toggle"><input type="checkbox" id="show-all" checked> Hiện cả bước sau</label>
+            </div>
+
+            <div class="current-action" aria-live="polite">
+              <span class="current-index" id="current-index">—</span>
+              <div><strong id="current-action-text">Chưa chọn gói</strong><p id="current-action-detail">Chọn một run và một gói để xem lại từng bước của agent.</p></div>
+            </div>
+            <ol class="timeline" id="timeline"></ol>
+            <p class="keys"><kbd>←</kbd><kbd>→</kbd> từng bước · <kbd>Space</kbd> phát/dừng · <kbd>Home</kbd><kbd>End</kbd> đầu/cuối · bấm một sự kiện để nhảy tới</p>
+          </div>
+        </details>
+
+        <details class="terms" id="terms"><summary>Thuật ngữ trên trang</summary><dl id="terms-list"></dl></details>
+      </section>
+
+      <!-- 2. Run summary view -->
+      <section class="summary-view" id="summary-view" hidden aria-label="Tổng hợp kết quả một lượt chạy">
+        <div class="summary-head">
+          <div>
+            <h1 id="summary-title" class="package-name">Tổng hợp lượt chạy</h1>
+            <p id="summary-meta" class="package-subtitle"></p>
+          </div>
+          <div class="summary-controls">
+            <label for="summary-split">Tập nhãn</label>
+            <select id="summary-split" aria-label="Chọn tập nhãn chấm điểm">
+              <option value="auto">Tự động theo lượt</option>
+              <option value="dev">dev</option>
+              <option value="test">test</option>
+              <option value="all">Toàn bộ nhãn</option>
+            </select>
+          </div>
+        </div>
+        <div id="summary-body" class="summary-body"></div>
+      </section>
+
+      <!-- 3. Model comparison view -->
       <section class="compare" id="compare" hidden aria-label="So sánh các model trên cùng gói">
         <p class="compare-note" id="compare-note"></p>
         <div class="side-transport" aria-label="Phát các model cùng lúc">
@@ -80,40 +154,10 @@
         <div class="side" id="side"></div>
         <table class="compare-table"><thead><tr><th>Run</th><th>Model</th><th>Mô hình đề xuất</th><th>Luật chốt</th><th>Bằng chứng</th><th>Bước · giây</th><th></th></tr></thead><tbody id="compare-body"></tbody></table>
       </section>
-
-      <div class="transport" aria-label="Điều khiển phát lại">
-        <button type="button" id="previous" title="Bước trước (←)" aria-label="Bước trước"><svg class="i" aria-hidden="true"><use href="#i-prev"/></svg></button>
-        <button type="button" class="primary" id="play" title="Phát / tạm dừng (Space)">Phát lại</button>
-        <button type="button" id="next" title="Bước tiếp (→)" aria-label="Bước tiếp"><svg class="i" aria-hidden="true"><use href="#i-next"/></svg></button>
-        <select id="speed" aria-label="Tốc độ"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
-        <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Tua tới sự kiện">
-        <span id="replay-position" class="replay-position">0 / 0</span>
-      </div>
-
-      <ol class="phase-track" id="phase-track" aria-label="Bốn giai đoạn của agent (bấm để tua tới)"></ol>
-
-      <div class="timeline-tools">
-        <div class="chips" id="kind-filter" role="group" aria-label="Lọc sự kiện"></div>
-        <label class="toggle"><input type="checkbox" id="show-all" checked> Hiện cả bước sau</label>
-      </div>
-
-      <div class="current-action" aria-live="polite">
-        <span class="current-index" id="current-index">—</span>
-        <div><strong id="current-action-text">Chưa chọn gói</strong><p id="current-action-detail">Chọn một run và một gói để xem lại từng bước của agent.</p></div>
-      </div>
-      <ol class="timeline" id="timeline"></ol>
-      <p class="keys"><kbd>←</kbd><kbd>→</kbd> từng bước · <kbd>Space</kbd> phát/dừng · <kbd>Home</kbd><kbd>End</kbd> đầu/cuối · bấm một sự kiện để nhảy tới</p>
     </section>
-
-    <aside class="result pending" id="result" aria-labelledby="result-title">
-      <h2 id="result-title" class="pane-title">Vì sao ra kết luận này</h2>
-      <div id="result-body"><p class="pending-copy">Chưa có quyết định</p></div>
-      <details class="terms" id="terms"><summary>Thuật ngữ trên trang</summary><dl id="terms-list"></dl></details>
-      <p class="result-note">Quyết định cuối do luật trong <code>agent/decide.py</code> đưa ra, luôn dry-run; chưa phải nhãn dữ liệu chuẩn.</p>
-    </aside>
   </div>
 
-  <footer class="footnote">Trình xem chỉ đọc trace JSONL trên máy này. Nội dung lấy từ gói và lời mô hình là dữ liệu không tin cậy, chỉ hiển thị dạng văn bản; trang không chạy mã npm. Kết luận vẫn cần người kiểm tra.</footer>
+  <footer class="footnote">Trình xem chỉ đọc trace JSONL và kết quả JSON trên máy này. Nội dung lấy từ gói và lời mô hình là dữ liệu không tin cậy, chỉ hiển thị dạng văn bản; trang không chạy mã npm. Quyết định luôn ở chế độ dry-run.</footer>
 </main>
 </body>
 </html>

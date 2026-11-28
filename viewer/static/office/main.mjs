@@ -101,8 +101,9 @@ function thinking(lane) {
 }
 
 function stampFor(lane, decision, animate) {
+  const rule = decision?.rule ? `${lanes.length > 1 ? " " : " · "}${decision.rule}` : "";
   const text = !decision ? "" : lanes.length > 1
-    ? `${STAMP_ICONS[decision.final_action] || "?"} ${decision.rule}` : `${STAMPS[decision.final_action] || "?"} · ${decision.rule}`;
+    ? `${STAMP_ICONS[decision.final_action] || "?"}${rule}` : `${STAMPS[decision.final_action] || "?"}${rule}`;
   lane.actor.stamp(decision?.final_action, text, animate);
 }
 
@@ -315,7 +316,7 @@ function renderBoard() {
     const step = stepFor(lane);
     const calls = lane.events.slice(0, lane.index + 1).filter((item) => item.type === "tool_call").length;
     const now = element("p", step ? `${clip(step.title, 60)}` : "chờ bắt đầu", "lane-now");
-    const verdict = element("p", decision ? `${LABELS[decision.final_label] || decision.final_label} · ${ACTIONS[decision.final_action] || "—"} · ${decision.rule}`
+    const verdict = element("p", decision ? `${LABELS[decision.final_label] || decision.final_label || "?"} · ${ACTIONS[decision.final_action] || "—"}${decision.rule ? ` · ${decision.rule}` : ""}`
                                           : `${calls} lần gọi công cụ`, "lane-decision");
     verdict.dataset.action = decision?.final_action || "";
     button.append(head, now, verdict);
@@ -329,7 +330,7 @@ function renderDetail(lane) {
   const verdicts = lane.events.slice(0, lane.index + 1).filter((event) => event.type === "verdict");
   const proposal = (verdicts.reverse().find((event) => event.valid) || verdicts[0])?.verdict;
   $("detail-title").textContent = `${lane.name}: quyết định cuối (luật cứng)`;
-  $("decision").textContent = decision ? `${LABELS[decision.final_label] || decision.final_label} · ${ACTIONS[decision.final_action] || "—"} · luật ${decision.rule}` : "Chưa có quyết định";
+  $("decision").textContent = decision ? `${LABELS[decision.final_label] || decision.final_label || "?"} · ${ACTIONS[decision.final_action] || "—"}${decision.rule ? ` · luật ${decision.rule}` : ""}` : "Chưa có quyết định";
   $("decision").dataset.action = decision?.final_action || "";
   // The decision block is tinted by the action and slides in once, when this decision first appears.
   const block = $("decision").closest(".panel-block");
@@ -470,7 +471,7 @@ function reportCard(pkg) {
   card.append(element("h3", pkg.action === "deny" ? "Phiếu báo cáo: gói bị từ chối"
     : pkg.action === "approve" ? "Phiếu duyệt: người xem cho phép" : "Phiếu chờ duyệt"));
   card.append(element("span", SOURCE_BADGE[pkg.source] || pkg.source, `source-badge source-${pkg.source.replace("+", "-")}`));
-  card.append(element("p", `${pkg.name} · ${LABELS[decision.final_label] || decision.final_label || "?"} · luật ${decision.rule || "?"}`, "report-title"));
+  card.append(element("p", `${pkg.name} · ${LABELS[decision.final_label] || decision.final_label || "?"}${decision.rule ? ` · luật ${decision.rule}` : ""}`, "report-title"));
   if (pkg.installedBefore) {
     card.append(element("p", "Phiên bản này ĐÃ TỪNG được cài trên máy: script có thể đã chạy. Đổi ngay token npm, khóa SSH, khóa cloud; kiểm tra lịch sử truy cập.", "report-alert"));
   }
