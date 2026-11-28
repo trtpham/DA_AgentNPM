@@ -48,6 +48,11 @@ def test_labels_reject_wrong_contract(tmp_path):
     with pytest.raises(ValueError, match="row"):
         load_labels(source)
 
+    from experiments.dataset import V2_FIELDS
+    v2_row = ",".join(["x"] * len(V2_FIELDS))
+    source.write_text(",".join(V2_FIELDS) + "\n" + v2_row + "\n", encoding="utf-8")
+    assert len(load_labels(source)) == 1
+
 
 def test_prepare_labels_rejects_empty_review_table(tmp_path):
     source = tmp_path / "source.csv"

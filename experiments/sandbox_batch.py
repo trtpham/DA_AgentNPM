@@ -30,7 +30,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-SUMMARY_KEYS = ("returncode", "outcome", "trace_complete", "canary_touched", "behavior", "script_ran", "fail_reason")
+SUMMARY_KEYS = ("returncode", "outcome", "trace_complete", "canary_touched", "behavior", "script_ran", "fail_reason",
+                "npm_error_codes", "tar_ok")
 # Failures that say nothing about the package: retried, and rerun by --retry-failed.
 RETRYABLE = ("infra", "prepare", "not_started")
 ATTEMPTS = 2

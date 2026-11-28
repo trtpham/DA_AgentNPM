@@ -253,3 +253,16 @@ def test_retry_failed_reruns_only_infrastructure_failures(tmp_path):
     counts = sb.run("sbx-r", rows, tmp_path, docker, sandbox=run, cache=lambda v: {"ok": True}, retry_failed=True)
     assert counts["done"] == 1 and counts["skipped"] == 1 and len(sandboxed) == 1
     assert json.loads((out / "a@1.0.0.json").read_text())["ok"] is True
+
+
+def test_group_a_cache_tmpfs_and_group_f_error_codes():
+    from sandbox.run import extract_npm_error_codes
+    vol_cmd = docker_command(None, volume="agentnpm-abc123")
+    assert any("/npm-cache:rw,noexec,nosuid,size=512m" in part for part in vol_cmd)
+    assert vol_cmd[vol_cmd.index("--memory") + 1] == "768m"
+    pkg_cmd = docker_command(Path("/pkg"))
+    assert not any("/npm-cache" in part for part in pkg_cmd)
+    assert pkg_cmd[pkg_cmd.index("--memory") + 1] == "256m"
+    assert extract_npm_error_codes("npm error code ENOSPC\nsome untrusted text\nnpm error code ETARGET\n") == ["ENOSPC", "ETARGET"]
+    compacted = sb.compact({**FULL, "data": {**FULL["data"], "tar_ok": True, "npm_error_codes": ["ETARGET"]}})
+    assert compacted["data"]["npm_error_codes"] == ["ETARGET"] and compacted["data"]["tar_ok"] is True

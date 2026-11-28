@@ -191,7 +191,20 @@ HARDENING = ["--ulimit", "nofile=256:256", "--ulimit", "fsize=67108864:67108864"
 
 
 TMP_SIZE = "64m"
+NPM_CACHE_SIZE = "512m"
 VOLUME = re.compile(r"agentnpm-[a-z0-9][a-z0-9-]{0,80}")
+NPM_ERROR_CODE = re.compile(r"^npm (?:ERR!|error) code ([A-Z][A-Z0-9_]{1,31})\b", re.M)
+
+
+def extract_npm_error_codes(stderr: str) -> list[str]:
+    """Extract sanitized `npm error code E...` tokens without retaining untrusted text."""
+    seen: list[str] = []
+    for code in NPM_ERROR_CODE.findall(stderr or ""):
+        if code not in seen:
+            seen.append(code)
+        if len(seen) >= 10:
+            break
+    return seen
 
 
 def docker_command(root: Path | None, hardening: bool = False, volume: str | None = None) -> list[str]:
@@ -204,6 +217,9 @@ def docker_command(root: Path | None, hardening: bool = False, volume: str | Non
     sources = ([f"type=volume,source={volume},target=/input,readonly,volume-subpath=pkg",
                 f"type=volume,source={volume},target=/cache,readonly,volume-subpath=npm-cache"] if volume
                else [f"type=bind,source={root},target=/input,readonly"])
+    cache_tmpfs = (["--tmpfs", f"/npm-cache:rw,noexec,nosuid,size={NPM_CACHE_SIZE},uid=10001,gid=10001"]
+                   if volume else [])
+    mem_limit = "768m" if volume else "256m"
     environment = [f"CANARY_ENV={CANARY['environment']}"]
     environment += [f"{name}={value}" for name, value in CANARY.get("environment_vars", {}).items()]
     return [
@@ -211,13 +227,13 @@ def docker_command(root: Path | None, hardening: bool = False, volume: str | Non
         "--cap-drop", "ALL", "--cap-add", "SYS_PTRACE",
         "--security-opt", "no-new-privileges",
         # --memory-swap equal to --memory removes swap (C1, W5-5 option 1, PO 08/11): without it the
-        # `memory` fixture reached 448 MB under a 256 MB limit.
-        "--pids-limit", "64", "--memory", "256m", "--memory-swap", "256m", "--cpus", "1",
+        # `memory` fixture reached 448 MB under a 256 MB limit. With volume, +512 MB covers /npm-cache tmpfs.
+        "--pids-limit", "64", "--memory", mem_limit, "--memory-swap", mem_limit, "--cpus", "1",
         "--user", "10001:10001", "--tmpfs", "/work:rw,exec,nosuid,size=64m,uid=10001,gid=10001",
         "--tmpfs", "/home/agent:rw,noexec,nosuid,size=1m,uid=10001,gid=10001",
+        *cache_tmpfs,
         # 2026-11-20: scripts that mkdtemp in /tmp stopped at EROFS. A small noexec tmpfs lets them run as on a
-        # real machine; it counts against the same 256 MB memory limit and nothing in it can be executed.
-        # (On 08/11 a /tmp tmpfs overflowed the 2 MB trace; run_install.sh now filters and keeps head + tail.)
+        # real machine; it counts against the memory limit and nothing in it can be executed.
         "--tmpfs", f"/tmp:rw,noexec,nosuid,size={TMP_SIZE},uid=10001,gid=10001",
         *[part for item in sources for part in ("--mount", item)],
         *[part for item in environment for part in ("--env", item)],
@@ -345,6 +361,8 @@ def _execute(command: list[str]) -> dict:
         trace = _decode(result.stdout, "TRACE")
         stdout = _decode(result.stdout, "STDOUT")
         stderr = _decode(result.stdout, "STDERR")
+        tar_flags = [line.split("=", 1)[1] for line in result.stdout.splitlines() if line.startswith("TAR_OK=")]
+        tar_ok = tar_flags[-1] == "1" if tar_flags else True
         trace_complete = trace_truncated == "0" and bool(trace.strip())
         opened = set(OPEN.findall(trace))
         touched = touched_canaries(opened, trace, stdout, stderr)
@@ -357,7 +375,9 @@ def _execute(command: list[str]) -> dict:
         return {"ok": error is None, "data": {
             "returncode": status,
             "outcome": outcome,
+            "tar_ok": tar_ok,
             "trace_complete": trace_complete,
+            "npm_error_codes": extract_npm_error_codes(stderr),
             "stdout": {"untrusted": True, "content": stdout},
             "stderr": {"untrusted": True, "content": stderr},
             "strace": {"untrusted": True, "content": trace,

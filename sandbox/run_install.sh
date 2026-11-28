@@ -19,11 +19,16 @@ for item in .git-credentials .docker/config.json .kube/config .config/gh/hosts.y
 done
 
 # Tarball of the package as npm would fetch it (top folder "package/"); built with tar, no npm, no script.
-tar -czf /work/package.tgz -C /input --transform 's,^\.,package,' . || exit 97
-# npm writes temp files inside its cache even offline (EROFS on a read-only /cache, 2026-11-20), so the
-# read-only copy from the volume is copied into the /tmp tmpfs (noexec; the cache only holds data).
-cache=/tmp/npm-cache
-mkdir -p "$cache" || exit 97
+tar -czf /work/package.tgz -C /input --transform 's,^\.,package,' . || { printf 'TAR_OK=0\n'; exit 97; }
+printf 'TAR_OK=1\n'
+# npm writes temp files inside its cache even offline (EROFS on a read-only /cache, 2026-11-20).
+# Gate B0 2026-11-28 (Group A): prefer dedicated /npm-cache tmpfs (512 MB noexec) when mounted.
+if [ -d /npm-cache ]; then
+  cache=/npm-cache
+else
+  cache=/tmp/npm-cache
+  mkdir -p "$cache" || exit 97
+fi
 if [ -d /cache ]; then cp -R /cache/. "$cache/" || exit 97; fi
 mkdir -p /work/project && cd /work/project || exit 97
 printf '{"name":"sandbox-project","version":"1.0.0","private":true}\n' > package.json
@@ -35,9 +40,8 @@ status=$?
 printf 'EXIT=%s\n' "$status"
 
 # Trace size (2026-11-20): node reads thousands of its own and the package's files. Drop single-path
-# file calls under /work (the package and the project) or npm's own install folder: they never count as
-# outside files, canaries or persistence. execve, clone, connect, rename/link and everything else stay.
-NOISE='^[0-9]+ +(<\.\.\. )?(open|openat|openat2|stat|lstat|newfstatat|statx|access|faccessat|faccessat2|readlink|readlinkat|mkdir|mkdirat|unlink|unlinkat|rmdir|chmod|fchmodat|chown|fchownat|lchown|utimensat|getxattr|lgetxattr|statfs)\((AT_FDCWD, )?"(/work/|/usr/local/lib/node_modules/npm/)'
+# file calls under /work (the package and the project), /npm-cache or npm's own install folder.
+NOISE='^[0-9]+ +(<\.\.\. )?(open|openat|openat2|stat|lstat|newfstatat|statx|access|faccessat|faccessat2|readlink|readlinkat|mkdir|mkdirat|unlink|unlinkat|rmdir|chmod|fchmodat|chown|fchownat|lchown|utimensat|getxattr|lgetxattr|statfs)\((AT_FDCWD, )?"(/work/|/npm-cache/|/usr/local/lib/node_modules/npm/)'
 touch /work/strace.log
 grep -avE "$NOISE" /work/strace.log > /work/trace.txt
 # Still over the cap: keep the head (the root of the process tree) and the tail, never only the tail.
