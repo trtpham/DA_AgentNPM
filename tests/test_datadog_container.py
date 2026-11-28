@@ -86,3 +86,28 @@ def test_zip_with_package_files_directly(monkeypatch, tmp_path):
     assert "unsafe zip path" in dd.inspect("demo/1.0.0/x.zip", tmp_path / "work")["error"]
     monkeypatch.setattr(dd, "_get", lambda url, limit=0: plain_zip({"readme.txt": b"x"}))
     assert "no package.json" in dd.inspect("demo/1.0.0/x.zip", tmp_path / "work")["error"]
+
+
+def test_sample_since_skip_and_tagged_batches(tmp_path):
+    assert dd.sample_date("pkg/1.0.0/2025-02-14-pkg-v1.0.0.zip") == "2025-02-14"
+    assert dd.sample_date("pkg/1.0.0/no-date.zip") == ""
+
+    paths = [
+        "old/1.0.0/2024-12-31-old-v1.0.0.zip",
+        "seen/1.0.0/2025-03-01-seen-v1.0.0.zip",
+        "new1/1.0.0/2025-01-01-new1-v1.0.0.zip",
+        "new2/1.0.0/2026-02-12-new2-v1.0.0.zip",
+        "nodate/1.0.0/nodate.zip",
+    ]
+    picked = dd.sample(paths, count=10, seed=1, since="2025-01-01", skip=frozenset({paths[1]}))
+    assert set(picked) == {paths[2], paths[3]}
+
+    def runner(command, input, **_kwargs):
+        return CompletedProcess(command, 0, "\n".join(json.dumps({"path": line}) for line in input.splitlines()), "")
+
+    out = dd.run_batch(1, [paths[2], paths[3]], out_dir=tmp_path, runner=runner, tag="v2")
+    assert out == tmp_path / "candidates-v2-batch-001.jsonl"
+    assert dd.run_batch(1, [paths[2], paths[3]], out_dir=tmp_path, runner=runner, tag="v2") is None
+    (tmp_path / "candidates-batch-001.jsonl").write_text(json.dumps({"path": paths[1]}) + "\n", encoding="utf-8")
+    assert dd.inspected_tag("v2", tmp_path) == frozenset({paths[2], paths[3]})
+    assert dd.inspected(tmp_path) == frozenset({paths[1], paths[2], paths[3]})

@@ -59,8 +59,15 @@ def zip_paths() -> list[str]:
     return sorted(item["path"] for item in tree["tree"] if item["path"].endswith(".zip"))
 
 
-def sample(paths: list[str], count: int, seed: int = SEED) -> list[str]:
-    chosen = list(paths)
+def sample_date(path: str) -> str:
+    """ZIP files are named YYYY-MM-DD-<name>-v<version>.zip: the date the dataset collected the sample."""
+    stem = path.rsplit("/", 1)[-1]
+    return stem[:10] if len(stem) > 10 and stem[4] == "-" and stem[7] == "-" else ""
+
+
+def sample(paths: list[str], count: int, seed: int = SEED, since: str = "", skip: frozenset = frozenset()) -> list[str]:
+    """Seeded sample; `since` keeps ZIPs dated on/after it, `skip` drops paths already inspected."""
+    chosen = [path for path in paths if path not in skip and (not since or sample_date(path) >= since)]
     random.Random(seed).shuffle(chosen)
     return chosen[:count]
 
@@ -146,8 +153,23 @@ def container_command() -> list[str]:
             IMAGE, "python", "-I", "/app/data/scripts/datadog_container.py", "--inside"]
 
 
-def run_batch(number: int, paths: list[str], out_dir: Path = OUT_DIR, runner=subprocess.run) -> Path | None:
-    output = out_dir / f"candidates-batch-{number:03}.jsonl"
+def inspected(out_dir: Path = OUT_DIR) -> frozenset:
+    """ZIP paths already in any candidates-*.jsonl (so a new sample does not read them again)."""
+    found = set()
+    for path in out_dir.glob("candidates-*.jsonl"):
+        found |= {json.loads(line)["path"] for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
+    return frozenset(found)
+
+
+def inspected_tag(tag: str, out_dir: Path = OUT_DIR) -> frozenset:
+    found = set()
+    for path in out_dir.glob(f"candidates-{tag}-batch-*.jsonl"):
+        found |= {json.loads(line)["path"] for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
+    return frozenset(found)
+
+
+def run_batch(number: int, paths: list[str], out_dir: Path = OUT_DIR, runner=subprocess.run, tag: str = "") -> Path | None:
+    output = out_dir / f"candidates-{tag + '-' if tag else ''}batch-{number:03}.jsonl"
     if output.is_file() and len(output.read_text(encoding="utf-8").splitlines()) == len(paths):
         return None
     completed = runner(container_command(), input="\n".join(paths), capture_output=True, text=True,
@@ -164,6 +186,9 @@ def main() -> None:
     sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description="Sample Datadog npm malware metadata in a disposable container")
     parser.add_argument("--zips", type=int, default=2400, help="how many ZIPs to inspect (seeded sample)")
+    parser.add_argument("--since", default="", help="only ZIPs dated on/after YYYY-MM-DD (labels-v2: 2025-01-01)")
+    parser.add_argument("--tag", default="", help="output name tag, e.g. v2 -> candidates-v2-batch-XXX.jsonl")
+    parser.add_argument("--seed", type=int, default=SEED)
     parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.inside:
@@ -172,9 +197,11 @@ def main() -> None:
             if line.strip():
                 print(json.dumps(inspect(line.strip(), Path("/tmp/work")), ensure_ascii=False), flush=True)
         return
-    chosen = sample(zip_paths(), args.zips)
+    # A tagged run skips ZIPs read by earlier runs; its sample is fixed by (commit, seed, since, earlier files).
+    skip = inspected() - inspected_tag(args.tag) if args.tag else frozenset()
+    chosen = sample(zip_paths(), args.zips, args.seed, args.since, skip)
     for number, start in enumerate(range(0, len(chosen), BATCH), 1):
-        written = run_batch(number, chosen[start:start + BATCH])
+        written = run_batch(number, chosen[start:start + BATCH], tag=args.tag)
         print(json.dumps({"batch": number, "status": "done" if written else "skipped"}), flush=True)
 
 

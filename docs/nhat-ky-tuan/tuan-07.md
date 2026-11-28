@@ -27,7 +27,11 @@ Có bảng ngưỡng, lý do chọn ngưỡng và script tái hiện; không dù
   - `py -3.14 -m pytest -q`: **359 passed, 18 skipped, 0 failed** (18 test Docker giữ skip khi chưa đặt `RUN_SANDBOX_TESTS=1`).
   - `node --test tests/js/*.test.mjs`: **34 passed, 0 failed**.
   - Kiểm tra trình duyệt (`playwright-cli`): XSS trên `comment-injection-demo@1.0.0` hiện `<img src=x onerror=alert(1)>` dạng chữ (0 `<img>`, 0 dialog); WCAG 2.2 chế độ sáng/tối/375px có 0 nút nhỏ hơn 24 px, 0 lỗi tương phản < 4,5, `scrollWidth == clientWidth == 375`; văn phòng 3D không còn chữ `"undefined"`.
-- **Vướng mắc / bước tiếp:** chờ PO nghiệm thu T1 và chốt thứ tự làm tiếp T2–T5 (ưu tiên dễ trước).
+- **28/11/2026 — Hoàn thiện phần dở T2 (bước 1–2) và khảo sát khả thi QLoRA (T5 bước 1):**
+  - Kiểm lại commit mới nhất của kho Datadog (`DataDog/malicious-software-packages-dataset`, `main`): vẫn là `72c723be547033c558244520524b117c8d71663b`.
+  - Rà soát phần sửa dở trong `data/scripts/datadog_container.py` (`--since`, `--tag`, `sample_date`, `inspected_tag`) và `data/scripts/collect_public_candidates.py` (`--popular`, `--include-seen`, `popular_candidates`, `collect_popular`); kiểm định dạng `data/datadog/candidates-v2-batch-001.jsonl` (100 dòng, cùng lược đồ metadata triage như `candidates-batch-001..008.jsonl`, không chứa mã nguồn thô). Viết thêm unit test trong `tests/test_datadog_container.py` và `tests/test_collect_public_candidates.py` (11/11 test PASS).
+  - Đo hiện trạng phục vụ khảo sát khả thi QLoRA `Qwen3.5-4B` trên RTX 3050 6 GB (`docs/ke-hoach/KHA_THI_QLORA_4B.md`, chưa cài thư viện): GPU trống `6001/6144 MiB`, RAM `16 GB`, `D:` trống `109,5 GB`, máy mới có Python `3.14`/`3.13` (chưa có `3.11`/`3.12`), WSL2 đã bật; đo từ 289 trace `test-v1-a-llm-x` cho thấy trung vị `1.973` token/bước (p95 `3.367`). Kết luận khả thi có điều kiện ở ngữ cảnh `2.048–3.072` (tối đa `4.096` với Unsloth/WSL2), cần Gate riêng để chọn môi trường và đo thật 10 bước.
+- **Vướng mắc / bước tiếp:** chờ PO nghiệm thu T1 và chốt Gate cho T3 (`sandbox/`), T4 (`-XS`), T5 (cài venv/WSL2 đo 10 bước), hoặc chạy tiếp thu thập ứng viên T2.
 
 ## Ảnh kết quả
 

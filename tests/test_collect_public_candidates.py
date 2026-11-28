@@ -62,3 +62,42 @@ def test_metadata_review_reports_changed_or_unavailable_manifest():
         raise ValueError("registry HTTP 404")
 
     assert review_row(row, missing)["metadata_status"] == "unavailable"
+
+
+def test_popular_candidates_filters_sorts_and_writes_downloads(monkeypatch, tmp_path):
+    def fake_search(path):
+        if "text=a" in path:
+            return {"objects": [
+                {"package": {"name": "seen-pkg", "version": "1.0.0"}, "downloads": {"monthly": 999999}},
+                {"package": {"name": "pre-pkg", "version": "1.0.0-rc.1"}, "downloads": {"monthly": 50000}},
+                {"package": {"name": "small-pkg", "version": "1.0.0"}, "downloads": {"monthly": 500}},
+                {"package": {"name": "sharp", "version": "0.33.5"}, "downloads": {"monthly": 200000}},
+                {"package": {"name": "esbuild", "version": "0.24.0"}, "downloads": {"monthly": 500000}},
+            ]}
+        return {"objects": [
+            {"package": {"name": "esbuild", "version": "0.24.0"}, "downloads": {"monthly": 500000}},
+            {"package": {"name": "@scope/native", "version": "2.1.0"}, "downloads": {"monthly": 300000}},
+        ]}
+
+    found = collector.popular_candidates(fake_search, ("a", "b"), min_monthly=20000, seen={"seen-pkg"}, pages=1)
+    assert [(p, m) for p, _, _, m in found] == [("esbuild", 500000), ("@scope/native", 300000), ("sharp", 200000)]
+
+    def fake_get_json(path):
+        if path.startswith("/-/v1/search"):
+            return fake_search(path)
+        if path == "/esbuild/0.24.0":
+            return {"name": "esbuild", "version": "0.24.0", "scripts": {"postinstall": "node install.js"}}
+        if path == "/%40scope%2Fnative/2.1.0":
+            return {"name": "@scope/native", "version": "2.1.0", "scripts": {}}  # no install hook -> skipped
+        if path == "/sharp/0.33.5":
+            return {"name": "sharp", "version": "0.33.5", "scripts": {"install": "node install/check.js"}}
+        raise ValueError(f"unexpected {path}")
+
+    monkeypatch.setattr(collector, "get_json", fake_get_json)
+    out = tmp_path / "review_v2" / "public_candidates_v2.csv"
+    collector.collect_popular(out, target=2, terms=("a", "b"), min_monthly=20000, seen={"seen-pkg"})
+    assert out.is_file()
+    dl = tmp_path / "review_v2" / "downloads_v2.csv"
+    assert dl.is_file()
+    lines = dl.read_text(encoding="utf-8").splitlines()
+    assert lines == ["package,version,monthly_downloads", "esbuild,0.24.0,500000", "sharp,0.33.5,200000"]

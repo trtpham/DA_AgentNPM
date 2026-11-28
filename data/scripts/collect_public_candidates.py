@@ -81,17 +81,81 @@ def already_seen(data_dir: Path) -> set[str]:
     return seen
 
 
+POPULAR_TERMS = TERMS + ("napi", "prebuild", "prebuilt binary", "binding", "native", "electron", "esbuild",
+                         "sharp", "sqlite", "bcrypt", "canvas", "compiler", "bundler", "wasm", "ffi", "cmake",
+                         "rust", "swc", "git hooks", "browser download", "protobuf", "grpc", "keychain",
+                         "serialport", "usb", "cli", "build tool", "database driver", "image", "crypto")
+
+
+def popular_candidates(search, terms, min_monthly: int, seen: set[str], pages: int = 12) -> list[tuple]:
+    """(package, version, term, monthly) from npm search, most downloaded first (labels-v2, Gate B0 22/11).
+
+    Only the latest stable version npm search reports (no prerelease tag) and at least min_monthly
+    downloads in the last month. The install hook is checked later from the manifest."""
+    found: dict[str, tuple] = {}
+    for term in terms:
+        for offset in range(0, pages * 250, 250):
+            results = search("/-/v1/search?" + urlencode({"text": term, "size": 250, "from": offset})).get("objects", [])
+            for item in results:
+                info = item.get("package", {})
+                package, version = info.get("name", ""), info.get("version", "")
+                monthly = int((item.get("downloads") or {}).get("monthly") or 0)
+                if (not NAME.fullmatch(package) or not VERSION.fullmatch(version) or "-" in version
+                        or package in seen or package in found or monthly < min_monthly):
+                    continue
+                found[package] = (package, version, term, monthly)
+            if len(results) < 250:
+                break
+    return sorted(found.values(), key=lambda item: (-item[3], item[0]))
+
+
+def collect_popular(output: Path, target: int, terms, min_monthly: int, seen: set[str]) -> None:
+    candidates = popular_candidates(get_json, terms, min_monthly, seen)
+    print(f"{len(candidates)} popular names with >= {min_monthly} downloads/month", flush=True)
+    rows, downloads = [], {}
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for start in range(0, len(candidates), 64):
+            chunk = candidates[start:start + 64]
+            for (package, _, _, monthly), row in zip(chunk, pool.map(manifest, [item[:3] for item in chunk])):
+                if row is not None and len(rows) < target:
+                    rows.append(row)
+                    downloads[package] = monthly
+            print(f"popular {start + len(chunk)}/{len(candidates)}: {len(rows)}/{target}", flush=True)
+            if len(rows) == target:
+                break
+    if not rows:
+        raise SystemExit("no candidates; no CSV written")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("x", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=rows[0])
+        writer.writeheader()
+        writer.writerows(rows)
+    with output.with_name(output.name.replace("public_candidates", "downloads")).open("x", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow(["package", "version", "monthly_downloads"])
+        writer.writerows((row["package"], row["version"], downloads[row["package"]]) for row in rows)
+    print(f"Wrote {len(rows)} popular metadata candidates to {output}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=f"Collect npm manifests with install hooks (metadata only; "
                                      f"refuses to replace an existing set)")
     parser.add_argument("--set", default="450", help="set name; files go to data/review_<set>/")
     parser.add_argument("--target", type=int, default=TARGET)
     parser.add_argument("--terms", nargs="+", default=list(TERMS), help="npm search terms")
+    parser.add_argument("--popular", type=int, metavar="MIN_MONTHLY",
+                        help="labels-v2: rank by monthly downloads (>= MIN_MONTHLY), latest stable version")
+    parser.add_argument("--include-seen", action="store_true",
+                        help="allow names from earlier sets (duplicates with labels-v1 are removed later)")
     args = parser.parse_args()
     output, target, terms = set_paths(args.set), args.target, tuple(args.terms)
     if output.exists():
         raise SystemExit(f"Refusing to replace {output}")
-    rows, seen = [], already_seen(output.parents[1])
+    seen = set() if args.include_seen else already_seen(output.parents[1])
+    if args.popular is not None:
+        collect_popular(output, target, POPULAR_TERMS if args.terms == list(TERMS) else terms, args.popular, seen)
+        return
+    rows = []
     with ThreadPoolExecutor(max_workers=8) as pool:
         for term in terms:
             for offset in range(0, 3000, 250):
