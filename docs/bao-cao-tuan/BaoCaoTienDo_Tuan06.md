@@ -2,9 +2,9 @@
 
 **Thành viên:** Lê Đặng Thiên Phước · Phạm Minh Triết · Nguyễn Đình Thiên
 
-**Giai đoạn:** Chạy thực nghiệm trên dữ liệu thật · **Thời gian:** 07–22/11/2026 · **Ngày cập nhật:** 22/11/2026 · **Nghiệm thu:** TV2 Phạm Minh Triết (PO)
+**Giai đoạn:** Chạy thực nghiệm trên dữ liệu thật · **Thời gian:** 07–22/11/2026 · **Ngày cập nhật:** 28/11/2026 · **Nghiệm thu:** TV2 Phạm Minh Triết (PO)
 
-> Mọi số trong báo cáo lấy từ lần chạy thật, lưu trong `reports/` và `data/` của repo. Lệnh và PASS/FAIL chi tiết ở [nhật ký tuần 6](../nhat-ky-tuan/tuan-06.md).
+> Mọi số trong báo cáo lấy từ lần chạy thật, lưu trong `reports/` và `data/` của repo. Lệnh và PASS/FAIL chi tiết ở [nhật ký tuần 6](../nhat-ky-tuan/tuan-06.md). Phần xử lý các vướng mắc và góp ý được tiếp tục trong [báo cáo tuần 7](BaoCaoTienDo_Tuan07.md).
 
 ## 1. Nội dung buổi báo cáo tuần
 
@@ -95,12 +95,12 @@ Lớp dương = độc hoặc đáng ngờ. Nguồn: `reports/dev-v1-summary`, `
 | A-LLM (9B) | 0,720 | 0,969 | 0,826 | 0,426 | 35% | 3,7% | 35,4 | **0** | 3 |
 | A-LLM-X (9B) | 0,726 | 0,969 | 0,830 | 0,411 | 36% | 6,3% | 28,8 | **0** | 3 |
 | A-SLM (4B) | 0,633 | 0,987 | 0,771 | 0,645 | 64% | 3,7% | 14,2 | **0** | 1 |
-| A-SLM-X (4B) | 0,631 | 0,987 | 0,770 | 0,652 | 64% | 5,3% | 14,7 | **0** | 1 |
+| A-SLM-X (4B) | 0,630 | 0,987 | 0,770 | 0,652 | 64% | 5,3% | 14,7 | **0** | 1 |
 | A-TLM (0.8B) | 0,555 | 0,987 | 0,710 | 0,894 | 95% | 17,3% | 13,8 | **0** | 1 |
 | GuardDog 2.6.0 | 0,970 | 0,811 | 0,884 | 0,028 | — | 4,3% | — | — | — |
 
 - **Không cấu hình nào cho phép gói độc** (0/141 ở cả 5 cấu hình).
-- Gói đáng ngờ `nono-postinstall-test@1.0.2` được cho phép ở cả 5 cấu hình.
+- Gói đáng ngờ được cho phép: `nono-postinstall-test@1.0.2` ở cả 5 cấu hình; riêng `A-LLM` và `A-LLM-X` còn cho phép `@simplysm/claude@13.0.29` và `csv-handler-totally-safe@1.4.0`.
 - GuardDog có F1 cao nhất nhờ FPR rất thấp; agent có Recall cao hơn (0,969–0,987 so với 0,811).
 - Mô hình càng nhỏ càng chuyển nhiều gói cho người xem: 35–36% (9B), 64% (4B), 95% (0.8B).
 - Gói lành được tự động cho phép: 48/141 (9B), 19/141 (4B), 1/141 (0.8B).
@@ -118,10 +118,10 @@ Không chạy lại mô hình: "Agent + OSV" được tái tạo bằng cách á
 
 | Cấu hình | Không OSV: P / R / F1 / FPR | Có OSV: P / R / F1 / FPR | Gói đổi quyết định |
 | --- | --- | --- | ---: |
-| A-LLM | 0,720 / 0,969 / 0,826 / 0,426 | 0,714 / 0,975 / 0,824 / 0,440 | 3 |
-| A-LLM-X | 0,726 / 0,969 / 0,830 / 0,411 | 0,721 / 0,975 / 0,829 / 0,426 | 3 |
-| A-SLM | 0,633 / 0,987 / 0,771 / 0,645 | 0,631 / 0,987 / 0,770 / 0,652 | 1 |
-| A-SLM-X | 0,631 / 0,987 / 0,770 / 0,652 | 0,631 / 0,987 / 0,770 / 0,652 | 0 |
+| A-LLM | 0,720 / 0,969 / 0,826 / 0,426 | 0,714 / 0,975 / 0,825 / 0,440 | 3 |
+| A-LLM-X | 0,726 / 0,969 / 0,830 / 0,411 | 0,721 / 0,975 / 0,829 / 0,425 | 3 |
+| A-SLM | 0,633 / 0,987 / 0,771 / 0,645 | 0,630 / 0,987 / 0,770 / 0,652 | 1 |
+| A-SLM-X | 0,630 / 0,987 / 0,770 / 0,652 | 0,630 / 0,987 / 0,770 / 0,652 | 0 |
 | A-TLM | 0,555 / 0,987 / 0,710 / 0,894 | 0,555 / 0,987 / 0,710 / 0,894 | 0 |
 | Chỉ OSV (mốc) | — | 0,978 / 0,849 / 0,909 / 0,021 | — |
 

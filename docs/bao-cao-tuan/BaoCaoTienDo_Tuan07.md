@@ -13,11 +13,12 @@
 | Việc | Làm thế nào | Kết quả |
 | --- | --- | --- |
 | Thiết kế lại giao diện 2D (góp ý 1) | Làm trang kết quả một gói (trả lời trong 10 giây) và trang tổng hợp lượt chạy dùng lại `experiments.metrics` (`score`, `load_results`) qua `GET /api/runs/<run>/summary` và `/api/package-extra` | Mở được mọi lượt `test-v1-*`; trang một gói 393 ms, trang tổng hợp 230 ms trên 300 gói (mục 4.1) |
-| Sửa lỗi trình xem và văn phòng 3D | Sửa kiểm tra `run_id = "run"` trong `viewer/server.py` (`_same_run`); sửa nhãn `"undefined"` ở `viewer/static/office/` khi trace cũ thiếu `rule` | Trace cũ `test-v1-*` mở bình thường; 3D hết lỗi `"undefined"` (Hình 3–4) |
+| Sửa lỗi trình xem và văn phòng 3D | Sửa kiểm tra `run_id = "run"` trong `viewer/server.py` (`_same_run`); sửa nhãn `"undefined"` ở `viewer/static/office/` khi trace cũ thiếu `rule` | Trace cũ `test-v1-*` mở bình thường; 3D hết lỗi `"undefined"` (Hình 5–6) |
+| Chế độ chạy live từ Terminal | Thêm cờ `--package <tên@phiên_bản>` vào `experiments/run_isolated.py` để phân giải từ `registry.npmjs.org`, kiểm `sha512` và phân tích tĩnh trong container dùng một lần `agent-npm-runner:local` | Chạy thử live thành công 2 gói fixture (`demo-live-tuan07`) và gói npm công khai `@abc54d/postinstall-hello-world@1.0.0` (`10,7s`, `approve` luật R7) |
 | An toàn và tiếp cận trình xem (WCAG 2.2) | Kiểm tự động bằng trình duyệt với trace bẫy XSS, chế độ sáng/tối và màn hình 375 px | 0 phần tử HTML thực thi XSS; 0 nút < 24 px; 0 lỗi tương phản < 4,5; không tràn ngang ở 375 px |
 | Nháp bộ dữ liệu `labels-v2` (góp ý 2, pha 1) | Kiểm lại commit Datadog (`72c723be…`), đọc 1.300 ZIP năm 2025–2026 trong container (`datadog_container.py`), thu thập hai lượt gói lành phổ biến (`collect_public_candidates.py` + `triage_candidates.py`, `>= 20.000` và `>= 3.000` lượt tải/tháng), đối chiếu OSV theo `name@version`, giữ 30 mẫu đáng ngờ v1, chia cụm `train/dev/test` và gắn `time_split` (mốc `2026-03-02`) | Đã dựng `data/labels-v2-draft.csv`: **1.411** gói (600 độc / 781 lành / 30 đáng ngờ; `train` 702 / `dev` 281 / `test` 428; 0 rò rỉ cụm; tập `test` sau mốc: 50) (mục 4.2) |
 | Khảo sát khả thi QLoRA `Qwen3.5-4B` (góp ý 2) | Đo VRAM trống, RAM, dung lượng đĩa, phiên bản Python/WSL2 và phân bố token trên 289 trace `test-v1-a-llm-x`; viết sẵn script trích mẫu huấn luyện từ tập `train` (`experiments/extract_sft.py`) | Kết luận khả thi có điều kiện ở ngữ cảnh `2.048–3.072` (tối đa `4.096` qua WSL2/Unsloth); script trích mẫu qua 4/4 test đơn vị, chặn tuyệt đối `dev`/`test` (mục 4.3) |
-| Kiểm thử toàn repo | `py -3.14 -m pytest -q` và `node --test tests/js/*.test.mjs` | **370 passed, 18 skipped** (Docker giữ skip khi chưa bật cờ); JS **34/34 passed** |
+| Kiểm thử toàn repo | `py -3.14 -m pytest -q` và `node --test tests/js/*.test.mjs` | **372 passed, 18 skipped** (Docker giữ skip khi chưa bật cờ); JS **34/34 passed** |
 
 ### 1.2. Đối chiếu hai góp ý trọng tâm của thầy sau tuần 6
 
@@ -30,7 +31,7 @@
 
 | Hạng mục tuần 7 (theo kế hoạch) | Trạng thái | Kết quả / Ghi chú |
 | --- | --- | --- |
-| Thiết kế lại frontend 2D (trang một gói, trang tổng hợp, sửa `run_id`, `"undefined"`) | **Hoàn thành** | Commit `a394079`; mở được `test-v1-*`, có ảnh trước/sau và kết quả kiểm thử |
+| Thiết kế lại frontend 2D (trang một gói, trang tổng hợp, sửa `run_id`, `"undefined"`) | **Hoàn thành** | Commit `a394079`; mở được `test-v1-*`, có ảnh trước/sau và kết quả kiểm thử; bổ sung `--package` quét live gói công khai trong container (commit `6132679`) |
 | `labels-v2`: thu thập ứng viên (Datadog mới nhất, gói lành phổ biến), kiểm tĩnh trong container, chia `train/dev/test` | **Hoàn thành bản nháp** | Đã có `data/labels-v2-draft.csv` (**1.411** dòng: 600 độc / 781 lành / 30 đáng ngờ) và `README-v2-draft.md`; chờ PO mở Gate đóng băng |
 | Thử khả thi QLoRA 4B trên GPU 6 GB | **Hoàn thành bước khảo sát đo máy** | Có `docs/ke-hoach/KHA_THI_QLORA_4B.md` và script trích mẫu `experiments/extract_sft.py`; chưa cài thư viện huấn luyện (chờ Gate môi trường) |
 | Chạy `-XS` trên `dev` v1, sửa sandbox nhóm A/F | **Chưa chạy** | Đã ghi rõ nguyên nhân nhóm A/F từ tuần 6; chờ mở Gate riêng cho `sandbox/` và xác nhận chạy lô GPU |
