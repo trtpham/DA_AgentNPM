@@ -3,7 +3,7 @@
 import {explainStep, previewOf} from '/office/explain.mjs';
 import {roomFor} from '/office/events.mjs';
 import {ruleLadder, ruleSentence, TERMS} from '/office/rules.mjs';
-import {behaviorTriplet, extractSnippet, filterSummaryCases, fmtMetric, sandboxFromEvents} from '/summary.mjs';
+import {behaviorTriplet, extractSnippet, filterSummaryCases, fmtMetric, partitionRuns, pickDefaultRun, sandboxFromEvents} from '/summary.mjs';
 import {icon, iconLabel, initPrefs} from '/ui.mjs';
 
 const LABELS = {benign: 'Lành tính', suspicious: 'Đáng ngờ', malicious: 'Độc hại'};
@@ -782,16 +782,17 @@ function renderRunOverview() {
   const review = items.filter((item) => item.action === 'review').length;
   const times = items.map((item) => Number(item.elapsed_s)).filter((value) => Number.isFinite(value));
   const average = times.length ? times.reduce((a, b) => a + b, 0) / times.length : null;
-  const row = (term, value, hint) => {
-    const dt = el('dt', null, term);
-    if (hint) dt.title = hint;
-    list.append(dt, el('dd', null, value));
+  const cell = (term, value, hint) => {
+    const box = el('div', 'overview-cell');
+    if (hint) box.title = hint;
+    box.append(el('dt', null, term), el('dd', null, value));
+    list.append(box);
   };
-  row('Đúng nhãn chuẩn', judged.length ? `${right}/${judged.length} (${Math.round(right / judged.length * 100)}%)` : 'chưa có nhãn chuẩn',
+  cell('Đúng nhãn', judged.length ? `${Math.round(right / judged.length * 100)}% (${right}/${judged.length})` : '—',
     'So kết luận cuối với bộ nhãn chuẩn');
-  row('Bằng chứng có thật', evidenceAll ? `${evidenceOk}/${evidenceAll}` : '—', 'Vị trí file:dòng mô hình trích có tồn tại trong gói');
-  row('Chuyển người xem', `${review}/${items.length} gói`, 'Luật không đủ chắc để tự chặn hay cho phép');
-  row('Thời gian trung bình', average == null ? '—' : `${average.toFixed(1)} s/gói`);
+  cell('Bằng chứng thật', evidenceAll ? `${evidenceOk}/${evidenceAll}` : '—', 'Vị trí file:dòng mô hình trích có tồn tại trong gói');
+  cell('Chuyển duyệt', `${review}/${items.length}`, 'Luật không đủ chắc để tự chặn hay cho phép');
+  cell('TB tốc độ', average == null ? '—' : `${average.toFixed(1)} s/gói`);
 }
 
 function renderPhaseTrack() {
@@ -845,18 +846,16 @@ function renderIssueFilters() {
   for (const item of state.packages) for (const issue of issuesOf(item)) counts[issue] = (counts[issue] || 0) + 1;
   if (state.issueFilter && !counts[state.issueFilter]) state.issueFilter = null;
   counts.unreviewed = state.packages.filter((item) => !state.reviewed.has(reviewKey(item.package))).length;
-  const chips = [...ISSUE_FILTERS, ['unreviewed', 'Chưa xem']].map(([value, text]) => {
-    const button = chip('issue', value, text, counts[value] || 0, state.issueFilter === value, (picked) => {
-      state.issueFilter = state.issueFilter === picked ? null : picked;
-      renderIssueFilters();
-      applyPackageFilter();
-    });
-    button.classList.add('issue');
-    button.disabled = !counts[value];
-    if (value === 'wrong' && !Object.keys(state.truth).length) button.title = 'Chưa đọc được file nhãn chuẩn';
-    return button;
-  });
-  $('issue-filter').replaceChildren(...chips);
+  const select = $('issue-select');
+  const opts = [new Option('Mọi trạng thái', '')];
+  for (const [value, text] of [...ISSUE_FILTERS, ['unreviewed', 'Chưa xem']]) {
+    const n = counts[value] || 0;
+    const opt = new Option(`${text} (${n})`, value);
+    opt.disabled = n === 0;
+    opts.push(opt);
+  }
+  select.replaceChildren(...opts);
+  select.value = state.issueFilter || '';
 }
 
 function applyPackageFilter() {
@@ -944,7 +943,21 @@ function renderRunOptions() {
   const text = $('run-filter').value.trim().toLowerCase();
   const select = $('run-select');
   const matches = state.runs.filter((run) => !text || run.toLowerCase().includes(text) || run === state.run);
-  select.replaceChildren(...matches.map((run) => new Option(run, run)));
+  const {featured, other} = partitionRuns(matches);
+  select.replaceChildren();
+  const appendGroup = (label, names) => {
+    if (!names.length) return;
+    const group = document.createElement('optgroup');
+    group.label = label;
+    for (const run of names) group.append(new Option(run, run));
+    select.append(group);
+  };
+  if (featured.length && other.length) {
+    appendGroup('Lượt chính trình bày', featured);
+    appendGroup('Thử nghiệm khác', other);
+  } else {
+    for (const run of [...featured, ...other]) select.append(new Option(run, run));
+  }
   select.value = state.run;
   $('run-count').textContent = matches.length === state.runs.length ? `${state.runs.length}` : `${matches.length - (text && !state.run.toLowerCase().includes(text) ? 1 : 0)} / ${state.runs.length}`;
 }
@@ -986,6 +999,16 @@ async function renderSummary() {
 
   body.replaceChildren();
   const m = data.metrics || {};
+
+  if ((m.scored ?? 0) > 0) {
+    const malApp = data.malicious_approved ?? 0;
+    const gdNote = data.guarddog ? ` · So GuardDog Recall ${fmtMetric(data.guarddog.recall)} (Agent ${fmtMetric(m.recall)})` : '';
+    const proof = el('p', `summary-proof ${malApp === 0 ? 'ok' : 'bad'}`,
+      malApp === 0
+        ? `Chứng minh an toàn: 0 gói độc hại được tự động cho phép trên ${m.scored} gói chấm điểm · Recall ${fmtMetric(m.recall)} · F1 ${fmtMetric(m.f1)}${gdNote} · Luật R1–R8 (dry-run)`
+        : `Cảnh báo: có ${malApp} gói độc hại bị cho phép trên ${m.scored} gói chấm điểm · Recall ${fmtMetric(m.recall)} · F1 ${fmtMetric(m.f1)}${gdNote}`);
+    body.append(proof);
+  }
 
   // 1. KPI cards
   const kpis = el('div', 'kpi-grid');
@@ -1521,7 +1544,7 @@ async function init() {
     setStatus('Chưa có run nào');
     return;
   }
-  state.run = runs.includes(params.get('run')) ? params.get('run') : runs[0];
+  state.run = runs.includes(params.get('run')) ? params.get('run') : pickDefaultRun(runs);
   renderRunOptions();
   setStatus('Sẵn sàng');
   $('run-select').addEventListener('change', (event) => switchRun(event.target.value));
@@ -1532,12 +1555,15 @@ async function init() {
     if (first) switchRun(first.value);
   });
   $('package-filter').addEventListener('input', applyPackageFilter);
+  $('issue-select').addEventListener('change', (event) => {
+    state.issueFilter = event.target.value || null;
+    applyPackageFilter();
+  });
   $('previous').addEventListener('click', () => jump(state.cursor - 1));
   $('next').addEventListener('click', () => jump(state.cursor + 1));
   $('scrub').addEventListener('input', (event) => jump(Number(event.target.value)));
   $('play').addEventListener('click', () => { if (state.timer) stopReplay(); else startReplay(); });
   $('speed').addEventListener('change', () => { if (state.timer) { stopReplay(); startReplay(); } });
-  $('open-summary-btn').addEventListener('click', () => setView('summary'));
   $('summary-split').addEventListener('change', (event) => { state.summarySplit = event.target.value; renderSummary(); });
   $('copy-link').addEventListener('click', async () => {
     const button = $('copy-link');

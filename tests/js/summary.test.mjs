@@ -6,6 +6,8 @@ import {
   filterSummaryCases,
   fmtMetric,
   parseLineRange,
+  partitionRuns,
+  pickDefaultRun,
   sandboxFromEvents,
 } from "../../viewer/static/summary.mjs";
 
@@ -74,4 +76,13 @@ test("filterSummaryCases filters by error category and text query", () => {
   assert.equal(filterSummaryCases(cases, "all", "evil").length, 1);
   assert.equal(fmtMetric(0.8302), "0,830");
   assert.equal(fmtMetric(null), "—");
+});
+
+test("pickDefaultRun prefers real benchmark runs over alphabetical ablation runs", () => {
+  const runs = ["abl-no-alias-a-slm", "demo-live-npm", "test-v1-a-slm-x", "test-v1-a-llm-x", "smoke1"];
+  assert.equal(pickDefaultRun(runs), "test-v1-a-llm-x");
+  assert.equal(pickDefaultRun(["abl-1", "smoke-2"]), "abl-1");
+  const groups = partitionRuns(runs);
+  assert.deepEqual(groups.featured, ["test-v1-a-llm-x", "test-v1-a-slm-x", "demo-live-npm"]);
+  assert.deepEqual(groups.other, ["abl-no-alias-a-slm", "smoke1"]);
 });

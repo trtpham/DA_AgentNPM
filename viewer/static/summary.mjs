@@ -220,3 +220,47 @@ export function fmtMetric(value, digits = 3) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
   return Number(value).toFixed(digits).replace(".", ",");
 }
+
+export const FEATURED_RUNS = [
+  "test-v1-a-llm-x",
+  "test-v1-a-slm-x",
+  "test-v1-a-llm",
+  "test-v1-a-slm",
+  "test-v1-a-tlm",
+  "dev-v1-a-llm-x",
+  "dev-v1-a-slm-x",
+  "demo-live-npm",
+  "demo-live-tuan07",
+];
+
+function isFeaturedRun(name) {
+  return FEATURED_RUNS.includes(name) || /^(?:test|dev)-v\d+-|^demo-|^sbx-/i.test(name);
+}
+
+/** Prefer real benchmark / live runs when opening the viewer with no #run= hash. */
+export function pickDefaultRun(runs) {
+  const list = runs || [];
+  for (const preferred of FEATURED_RUNS) {
+    if (list.includes(preferred)) return preferred;
+  }
+  const real = list.find((name) => isFeaturedRun(name));
+  return real || list[0] || null;
+}
+
+/** Partition runs into `{ featured, other }` so the dropdown puts key runs on top. */
+export function partitionRuns(runs) {
+  const list = [...(runs || [])];
+  const rank = new Map(FEATURED_RUNS.map((name, idx) => [name, idx]));
+  const featured = [];
+  const other = [];
+  for (const name of list) {
+    if (isFeaturedRun(name)) featured.push(name);
+    else other.push(name);
+  }
+  featured.sort((a, b) => {
+    const ra = rank.has(a) ? rank.get(a) : 999;
+    const rb = rank.has(b) ? rank.get(b) : 999;
+    return ra !== rb ? ra - rb : a.localeCompare(b);
+  });
+  return { featured, other };
+}

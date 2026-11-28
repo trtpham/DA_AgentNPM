@@ -16,7 +16,7 @@
   </header>
 
   <details class="about" id="about">
-    <summary>Dự án này làm gì, làm thế nào, vì sao tin được</summary>
+    <summary>Cách hoạt động: đọc tĩnh container + Ollama cục bộ · luật cứng R1–R8 chốt (dry-run)</summary>
     <div class="about-grid">
       <section><h3>Làm gì</h3><p>Kiểm tra gói npm có script chạy lúc cài (<code>preinstall</code>, <code>install</code>, <code>postinstall</code>) <b>trước khi</b> cho script chạy. Kết luận gói <b>độc hại / đáng ngờ / lành tính</b>, rồi <b>chặn</b>, <b>chuyển người xem</b> hoặc <b>cho phép</b> script.</p></section>
       <section><h3>Làm thế nào</h3><p>Một mô hình ngôn ngữ chạy cục bộ (Ollama) tự điều tra bằng công cụ <b>chỉ đọc</b>: đọc manifest, đọc file, tìm chỉ báo (URL, <code>eval</code>, đọc secret…). <b>Không chạy mã của gói.</b> Bốn bước: nhận diện → phân tích nguồn–hành động–đích → kiểm chứng → quyết định.</p></section>
@@ -29,7 +29,6 @@
     <aside class="sidebar" aria-labelledby="picker-title">
       <div class="sidebar-head">
         <h2 id="picker-title" class="pane-title">Lượt chạy</h2>
-        <button type="button" class="ghost small-btn" id="open-summary-btn" title="Mở trang tổng hợp số liệu của lượt chạy này">Tổng hợp lượt</button>
       </div>
       <div class="field">
         <label for="run-filter">Run <span class="count" id="run-count"></span></label>
@@ -39,12 +38,11 @@
       <dl class="run-overview" id="run-overview" aria-label="Tổng quan run"></dl>
       <div class="chips" id="label-filter" role="group" aria-label="Lọc gói theo nhãn"></div>
       <div class="field">
-        <span class="field-label">Ca cần chú ý</span>
-        <div class="chips" id="issue-filter" role="group" aria-label="Lọc ca cần chú ý"></div>
-      </div>
-      <div class="field">
         <label for="package-filter">Gói <span class="count" id="package-count"></span></label>
-        <input type="search" id="package-filter" placeholder="Lọc tên gói…" autocomplete="off">
+        <div class="pkg-controls">
+          <input type="search" id="package-filter" placeholder="Tìm gói…" autocomplete="off">
+          <select id="issue-select" aria-label="Lọc ca cần chú ý"></select>
+        </div>
       </div>
       <ul class="packages" id="packages" aria-label="Các gói trong run"></ul>
     </aside>
