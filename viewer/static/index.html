@@ -53,6 +53,7 @@
           <button type="button" role="radio" data-view="single">Chi tiết một gói</button>
           <button type="button" role="radio" data-view="summary">Tổng hợp lượt chạy</button>
           <button type="button" role="radio" data-view="compare">So sánh model</button>
+          <button type="button" role="radio" data-view="benchmarks">Bảng &amp; Ma trận</button>
         </div>
         <span class="model-pick" id="model-pick" role="group" aria-label="Chọn model (1 đến 3)" hidden></span>
       </div>
@@ -151,6 +152,25 @@
         </div>
         <div class="side" id="side"></div>
         <table class="compare-table"><thead><tr><th>Run</th><th>Model</th><th>Mô hình đề xuất</th><th>Luật chốt</th><th>Bằng chứng</th><th>Bước · giây</th><th></th></tr></thead><tbody id="compare-body"></tbody></table>
+      </section>
+
+      <!-- 4. Project-wide benchmarks, OSV ablation, sandbox coverage, sweeps & datasets -->
+      <section class="benchmarks-view" id="benchmarks-view" hidden aria-label="Bảng so sánh cấu hình, OSV, sandbox, quét ngưỡng và dữ liệu">
+        <div class="summary-head">
+          <div>
+            <h1 class="package-name">Bảng &amp; Ma trận toàn dự án</h1>
+            <p class="package-subtitle">Tổng hợp trực tiếp từ <code>reports/</code> và <code>data/</code>: so sánh 6 cấu hình &amp; GuardDog, đối chiếu OSV, độ phủ sandbox VM, quét ngưỡng và bộ nhãn.</p>
+          </div>
+          <div class="summary-controls">
+            <label for="bench-split">Tập so sánh</label>
+            <select id="bench-split" aria-label="Chọn tập chấm điểm so sánh cấu hình và OSV">
+              <option value="test" selected>Tập test (300 gói)</option>
+              <option value="dev">Tập dev (200 gói)</option>
+            </select>
+          </div>
+        </div>
+        <div class="bench-toolbar" id="bench-toolbar" role="tablist" aria-label="Chọn nhóm bảng cần xem"></div>
+        <div id="benchmarks-body" class="benchmarks-body"></div>
       </section>
     </section>
   </div>

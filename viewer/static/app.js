@@ -51,6 +51,7 @@ const state = {
   phases: [], runs: [], packages: [], packageFilter: 'all', reviewed: new Set(), view: 'single',
   models: new Set(), eventFilter: 'all', issueFilter: null, truth: {},
   summarySplit: 'auto', summaryCache: new Map(), caseFilter: 'all_errors', caseQuery: '',
+  benchmarksData: null, benchSplit: 'test', sweepConfig: 'A-LLM-X',
 };
 
 function el(tag, className, text) {
@@ -1231,7 +1232,7 @@ async function renderCompare() {
   renderSide(siblings);
   const group = state.run.replace(VARIANT, '$1a-*');
   $('compare-note').textContent = siblings.length > 1
-    ? `Cùng gói ${pkg} trong ${siblings.length} run chỉ khác cỡ mô hình. Ô màu vàng: khác với run đang xem.`
+    ? `Cùng gói ${pkg} trong ${siblings.length} run chỉ khác cỡ mô hình. Ô màu vàng: khác với run đang xem.${!siblings.some((r) => /a-tlm/i.test(r)) && /-x$/i.test(state.run) ? ' (A-TLM-X đã bị loại trên tập dev vì cho phép 1 gói độc.)' : ''}`
     : VARIANT.test(state.run)
       ? 'Không có run nào khác chỉ khác cỡ mô hình với run này, nên chưa có gì để so.'
       : 'Run này không thuộc bộ a-llm / a-slm / a-tlm. Chọn một run có hậu tố đó để so 3 cỡ mô hình.';
@@ -1334,8 +1335,25 @@ function switchModel(run) {
 
 function renderModelPick(siblings) {
   const box = $('model-pick');
-  box.hidden = siblings.length < 2 || state.view === 'summary';
+  box.hidden = siblings.length < 2 || state.view === 'summary' || state.view === 'benchmarks';
   if (box.hidden) return;
+  const missingTlmX = !siblings.some((r) => /a-tlm/i.test(r)) && /-x$/i.test(state.run);
+  const appendTlmHelp = () => {
+    if (!missingTlmX) return;
+    const tag = el('span', 'pill warn', 'A-TLM-X: bị loại ở dev');
+    tag.title = 'A-TLM-X cho phép 1 gói độc ở mọi ngưỡng trên tập dev nên không chạy tập test.';
+    box.append(tag);
+    for (const [target, text] of [
+      ['test-v1-a-llm', 'Mở đủ 3 mức (test)'],
+      ['dev-v1-a-llm-x', 'Mở đủ 3 mức -X (dev)'],
+    ]) {
+      if (!state.runs.includes(target)) continue;
+      const btn = el('button', 'bench-cfg-link', text);
+      btn.type = 'button';
+      btn.addEventListener('click', () => switchModel(target));
+      box.append(btn);
+    }
+  };
   if (state.view === 'single') {
     box.replaceChildren(el('span', 'field-label', 'Model cần xem:'), ...siblings.map((run) => {
       const variant = variantOf(run);
@@ -1349,7 +1367,11 @@ function renderModelPick(siblings) {
       input.addEventListener('change', () => switchModel(run));
       label.append(input, el('span', null, `A-${variant}`));
       return label;
-    }), el('small', 'count', 'cùng gói, đổi cỡ mô hình'));
+    }), ...(missingTlmX ? [] : [el('small', 'count', 'cùng gói, đổi cỡ mô hình')]));
+    if (missingTlmX) {
+      appendTlmHelp();
+      box.append(el('small', 'count', 'A-TLM-X đã bị loại ở dev; chọn "Mở đủ 3 mức" để xem cùng A-LLM, A-SLM và A-TLM.'));
+    }
     return;
   }
   const active = siblings.filter((run) => !state.models.size || state.models.has(variantOf(run))).map(variantOf);
@@ -1370,7 +1392,12 @@ function renderModelPick(siblings) {
     });
     label.append(input, el('span', null, `A-${variant}`));
     return label;
-  }), el('small', 'count', '1 model: xem riêng · 2–3 model: chạy cùng lúc, cạnh nhau'));
+  }));
+  appendTlmHelp();
+  box.append(el('small', 'count',
+    missingTlmX
+      ? 'Bấm nút bên trên để mở bộ run có đủ 3 cỡ model (A-LLM · A-SLM · A-TLM).'
+      : '1 model: xem riêng · 2–3 model: chạy cùng lúc, cạnh nhau'));
 }
 
 async function renderSide(runs) {
@@ -1484,6 +1511,475 @@ function playSide() {
   }, 100);
 }
 
+function benchMetricBar(value, tone = '') {
+  const wrap = el('div', 'mbar');
+  const txt = value == null ? '—' : fmtMetric(value);
+  wrap.append(el('strong', null, txt));
+  if (value != null) {
+    const track = el('div', 'mbar-track');
+    const fill = el('div', `mbar-fill${tone ? ` ${tone}` : ''}`);
+    fill.style.width = `${Math.max(0, Math.min(100, Number(value) * 100)).toFixed(1)}%`;
+    track.append(fill);
+    wrap.append(track);
+  }
+  return wrap;
+}
+
+function benchNumTd(text, cls = 'num') {
+  return el('td', cls, text);
+}
+
+function benchCallout(text, tone = '') {
+  return el('p', `bench-callout${tone ? ` ${tone}` : ''}`, text);
+}
+
+async function renderBenchmarks() {
+  const view = $('benchmarks-view');
+  if (view.hidden) return;
+  const body = $('benchmarks-body');
+  const toolbar = $('bench-toolbar');
+  if (!state.benchmarksData) {
+    body.replaceChildren(el('p', 'pending-copy', 'Đang nạp các bảng tổng hợp từ reports/ và data/…'));
+    try {
+      state.benchmarksData = await getJson('/api/benchmarks');
+    } catch (error) {
+      body.replaceChildren(el('p', 'error-copy', `Không nạp được /api/benchmarks: ${error.message}`));
+      return;
+    }
+  }
+  if (view.hidden) return;
+  const data = state.benchmarksData;
+  const split = state.benchSplit || 'test';
+  if (!state.benchSection) state.benchSection = 'all';
+  const show = (id) => state.benchSection === 'all' || state.benchSection === id;
+
+  const tabs = [
+    ['all', 'Tất cả'],
+    ['cmp', '1. So sánh cấu hình'],
+    ['osv', '2. OSV (luật R5)'],
+    ['sbx', '3. Sandbox VM'],
+    ['sweep', '4. Quét ngưỡng dev'],
+    ['data', '5. Bộ nhãn'],
+  ];
+  toolbar.replaceChildren(...tabs.map(([id, label]) => {
+    const btn = el('button', 'bench-tab', label);
+    btn.type = 'button';
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', String(state.benchSection === id));
+    btn.addEventListener('click', () => { state.benchSection = id; renderBenchmarks(); });
+    return btn;
+  }));
+
+  body.replaceChildren();
+  const cmpRows = (data.comparisons || {})[split] || [];
+  const agentRows = cmpRows.filter((r) => r.run_id && !r.run_id.startsWith('guarddog-'));
+  const gdRow = cmpRows.find((r) => r.run_id && r.run_id.startsWith('guarddog-'));
+  const bestAgent = [...agentRows].sort((a, b) => (b.f1 ?? -1) - (a.f1 ?? -1))[0];
+  const zeroMalCount = agentRows.filter((r) => r.malicious_approved === 0).length;
+  const spTotal = data.sandbox?.splits?.total;
+  const ds1 = (data.datasets || []).find((d) => d.name === 'labels-v1');
+  const ds2 = (data.datasets || []).find((d) => d.name === 'labels-v2-draft' || d.name === 'labels-v2');
+
+  // Top 4-KPI summary strip
+  const kpis = el('div', 'bench-kpis');
+  const addKpi = (title, value, sub, cls = '') => {
+    const card = el('div', `kpi-card${cls ? ` ${cls}` : ''}`);
+    card.append(el('small', null, title), el('strong', null, value), el('small', 'kpi-sub', sub));
+    kpis.append(card);
+  };
+  addKpi(
+    `Agent F1 cao nhất (${split})`,
+    bestAgent ? `${bestAgent.config} · ${fmtMetric(bestAgent.f1)}` : '—',
+    gdRow ? `Mốc GuardDog 2.6.0 đạt F1 ${fmtMetric(gdRow.f1)} (FPR ${fmtMetric(gdRow.fpr)})` : 'Chưa có GuardDog',
+    'accent',
+  );
+  addKpi(
+    `Chống lọt mã độc (${split})`,
+    `${zeroMalCount}/${agentRows.length || 0} (0 lọt)`,
+    bestAgent ? `FPR ${fmtMetric(bestAgent.fpr)} · Chờ duyệt ${bestAgent.review_rate != null ? `${Math.round(bestAgent.review_rate * 100)}%` : '—'}` : '—',
+    zeroMalCount > 0 ? 'ok' : 'bad',
+  );
+  addKpi(
+    'Độ phủ Sandbox VM (pha A)',
+    spTotal?.coverage_pct != null ? `${String(spTotal.coverage_pct).replace('.', ',')}%` : '—',
+    spTotal ? `${spTotal.with_result}/${spTotal.total} gói có hành vi · ${spTotal.script_ran} script chạy · ${spTotal.canary_touched} chạm canary` : '—',
+  );
+  addKpi(
+    'Bộ nhãn chuẩn hóa',
+    ds2 ? `${ds1?.total ?? '—'} → ${ds2.total} gói` : (ds1 ? `${ds1.total} gói` : '—'),
+    ds2 ? `${ds2.name}: ${ds2.by_split?.train ?? 0} train · ${ds2.by_split?.dev ?? 0} dev · ${ds2.by_split?.test ?? 0} test (after=${ds2.test_after ?? 0})` : 'labels-v1 đã đóng băng',
+  );
+  body.append(kpis);
+
+  // 1. All-config comparison table
+  if (show('cmp')) {
+    const cmpCard = el('section', 'panel-card');
+    cmpCard.append(el('h2', 'card-title', `1. So sánh 6 cấu hình & GuardDog trên tập ${split} (ngưỡng 0,95)`));
+    if (cmpRows.length) {
+      const wrap = el('div', 'table-scroll');
+      const table = el('table', 'bench-table');
+      const thead = el('thead');
+      const hr = el('tr');
+      for (const [h, isNum] of [
+        ['Cấu hình', false], ['Model', false], ['Precision', true], ['Recall', true],
+        ['F1', true], ['FPR', true], ['Độc duyệt', true], ['Review', true], ['Lỗi', true], ['Giây/gói', true],
+      ]) {
+        hr.append(el('th', isNum ? 'num' : null, h));
+      }
+      thead.append(hr);
+      const tbody = el('tbody');
+      for (const r of cmpRows) {
+        const isBest = bestAgent && r.config === bestAgent.config;
+        const isGd = Boolean(r.run_id && r.run_id.startsWith('guarddog-'));
+        const tr = el('tr', isBest ? 'is-best' : null);
+        const cfgCell = el('td');
+        const cfgBox = el('div', 'bench-cfg-cell');
+        if (r.run_id && state.runs.includes(r.run_id)) {
+          const link = el('button', 'bench-cfg-link', r.config);
+          link.type = 'button';
+          link.title = `Mở Tổng hợp lượt chạy cho ${r.run_id}`;
+          link.addEventListener('click', () => { setView('summary'); switchRun(r.run_id); });
+          cfgBox.append(link);
+        } else {
+          cfgBox.append(el('strong', null, r.config));
+        }
+        if (isBest) cfgBox.append(el('span', 'pill ok', 'Tốt nhất'));
+        else if (isGd) cfgBox.append(el('span', 'pill info', 'Mốc chuẩn'));
+        cfgCell.append(cfgBox);
+
+        const f1Td = el('td', 'num');
+        f1Td.append(benchMetricBar(r.f1));
+        const fprTd = el('td', 'num');
+        fprTd.append(benchMetricBar(r.fpr, 'blue'));
+
+        const malTd = el('td', 'num');
+        if (r.malicious_approved == null) {
+          malTd.textContent = '—';
+        } else {
+          const pillCls = r.malicious_approved === 0 ? 'ok' : 'bad';
+          malTd.append(el('span', `pill ${pillCls}`, r.malicious_approved === 0 ? '0 lọt' : `${r.malicious_approved} lọt`));
+          if (r.suspicious_approved) malTd.append(el('span', 'bench-sub', `nghi duyệt: ${r.suspicious_approved}`));
+        }
+
+        tr.append(
+          cfgCell,
+          el('td', 'mono-cell', r.model || '—'),
+          benchNumTd(fmtMetric(r.precision)),
+          benchNumTd(fmtMetric(r.recall)),
+          f1Td,
+          fprTd,
+          malTd,
+          benchNumTd(r.review_rate != null ? `${Math.round(r.review_rate * 100)}%` : '—'),
+          benchNumTd(r.error_rate != null ? `${Math.round(r.error_rate * 100)}%` : '—'),
+          benchNumTd(r.mean_seconds != null ? `${r.mean_seconds} s` : '—'),
+        );
+        tbody.append(tr);
+      }
+      table.append(thead, tbody);
+      wrap.append(table);
+      cmpCard.append(wrap);
+      if (split === 'test') {
+        cmpCard.append(benchCallout('A-TLM-X bị loại trên tập dev vì cho phép 1 gói độc ở mọi ngưỡng, nên không chạy trên tập test (chỉ còn 5 cấu hình agent + GuardDog).'));
+      }
+    } else {
+      cmpCard.append(el('p', 'outcome-meta', 'Chưa có dữ liệu tổng hợp cho tập này.'));
+    }
+    body.append(cmpCard);
+  }
+
+  // 2. OSV Ablation table
+  if (show('osv')) {
+    const osvRows = (data.osv_ablation || {})[split] || [];
+    const osvCard = el('section', 'panel-card');
+    osvCard.append(el('h2', 'card-title', `2. Đối chiếu Có và Không có OSV (luật R5 · tập ${split})`));
+    if (osvRows.length) {
+      const wrap = el('div', 'table-scroll');
+      const table = el('table', 'bench-table');
+      const thead = el('thead');
+      const hr = el('tr');
+      for (const [h, isNum] of [
+        ['Cấu hình', false],
+        ['Không OSV (F1)', true],
+        ['Có OSV (F1)', true],
+        ['Chênh F1', true],
+        ['Đổi QĐ', true],
+        ['Không lành duyệt (Không→Có)', true],
+      ]) {
+        hr.append(el('th', isNum ? 'num' : null, h));
+      }
+      thead.append(hr);
+      const tbody = el('tbody');
+      const metricCell = (m, useBar) => {
+        const td = el('td', 'num');
+        if (!m) { td.textContent = '—'; return td; }
+        td.append(useBar ? benchMetricBar(m.f1) : el('strong', 'mono-cell', fmtMetric(m.f1)));
+        td.append(el('span', 'bench-sub', `P ${fmtMetric(m.precision)} · R ${fmtMetric(m.recall)} · FPR ${fmtMetric(m.fpr)}`));
+        return td;
+      };
+      for (const r of osvRows) {
+        const tr = el('tr');
+        const cfgTd = el('td');
+        cfgTd.append(r.without_osv ? el('strong', null, r.config) : el('span', 'pill info', r.config));
+
+        const deltaTd = el('td', 'num');
+        if (r.without_osv?.f1 != null && r.with_osv?.f1 != null) {
+          const d = r.with_osv.f1 - r.without_osv.f1;
+          const sign = d > 0 ? '+' : '';
+          const cls = d > 0.0005 ? 'ok' : d < -0.0005 ? 'bad' : 'muted';
+          deltaTd.append(el('span', `pill ${cls}`, `${sign}${d.toFixed(4)}`));
+        } else {
+          deltaTd.textContent = '—';
+        }
+
+        const chgTd = el('td', 'num');
+        if (r.changed_count == null) chgTd.textContent = '—';
+        else chgTd.append(el('span', `pill ${r.changed_count > 0 ? 'info' : 'muted'}`, `${r.changed_count} gói`));
+
+        const appTd = el('td', 'num');
+        if (r.approved_not_benign_without == null) {
+          appTd.textContent = '—';
+        } else {
+          const cls = r.approved_not_benign_with === 0 ? 'ok' : r.approved_not_benign_with < r.approved_not_benign_without ? 'warn' : 'bad';
+          appTd.append(el('span', `pill ${cls}`, `${r.approved_not_benign_without} → ${r.approved_not_benign_with}`));
+        }
+
+        tr.append(cfgTd, metricCell(r.without_osv, false), metricCell(r.with_osv, true), deltaTd, chgTd, appTd);
+        tbody.append(tr);
+      }
+      table.append(thead, tbody);
+      wrap.append(table);
+      osvCard.append(wrap, benchCallout('Mốc "Chỉ OSV" cao vì phần lớn gói độc từ Datadog đã có mã MAL công khai; không phản ánh khả năng phát hiện gói độc mới (zero-day).', 'info'));
+    } else {
+      osvCard.append(el('p', 'outcome-meta', 'Chưa có dữ liệu OSV ablation.'));
+    }
+    body.append(osvCard);
+  }
+
+  // 3. Sandbox Coverage + 67 Missing Cases (A-F)
+  if (show('sbx')) {
+    const sbx = data.sandbox;
+    const sbxCard = el('section', 'panel-card');
+    sbxCard.append(el('h2', 'card-title', '3. Độ phủ Sandbox pha A trong VM (sbx-dev-v1b & sbx-test-v1b)'));
+    if (sbx && sbx.splits) {
+      const sp = sbx.splits;
+      const tot = sp.total;
+      if (tot && tot.total) {
+        const overview = el('div', 'sbx-overview');
+        const bar = el('div', 'sbx-bar');
+        const pOk = (tot.outcome_ok / tot.total) * 100;
+        const pStop = (tot.stopped_with_behavior / tot.total) * 100;
+        const pMiss = (tot.no_result / tot.total) * 100;
+        const s1 = el('div', 'sbx-seg-ok'); s1.style.width = `${pOk.toFixed(1)}%`; s1.title = `Cài xong: ${tot.outcome_ok}`;
+        const s2 = el('div', 'sbx-seg-stop'); s2.style.width = `${pStop.toFixed(1)}%`; s2.title = `Dừng có hành vi: ${tot.stopped_with_behavior}`;
+        const s3 = el('div', 'sbx-seg-miss'); s3.style.width = `${pMiss.toFixed(1)}%`; s3.title = `Thiếu kết quả: ${tot.no_result}`;
+        bar.append(s1, s2, s3);
+
+        const legend = el('div', 'sbx-legend');
+        const addLeg = (cls, label) => {
+          const item = el('span');
+          const dot = el('i', 'sbx-dot');
+          dot.style.background = `var(${cls})`;
+          item.append(dot, label);
+          legend.append(item);
+        };
+        addLeg('--mint', `Cài xong: ${tot.outcome_ok} (${pOk.toFixed(1)}%)`);
+        addLeg('--blue', `Dừng giữa chừng có hành vi: ${tot.stopped_with_behavior} (${pStop.toFixed(1)}%)`);
+        addLeg('--amber', `Không có kết quả: ${tot.no_result} (${pMiss.toFixed(1)}%)`);
+        overview.append(bar, legend);
+        sbxCard.append(overview);
+      }
+
+      const grid = el('div', 'bench-sbx-grid');
+      const covWrap = el('div', 'table-scroll');
+      const covTable = el('table', 'bench-table');
+      const cHead = el('thead');
+      const ch = el('tr');
+      for (const [h, isNum] of [['Chỉ số VM', false], ['Dev', true], ['Test', true], ['Tổng', true]]) ch.append(el('th', isNum ? 'num' : null, h));
+      cHead.append(ch);
+      const cBody = el('tbody');
+      for (const [label, fn, highlight] of [
+        ['Tổng số gói', (x) => String(x?.total ?? '—'), false],
+        ['Cài xong (ok)', (x) => String(x?.outcome_ok ?? '—'), false],
+        ['Dừng có hành vi', (x) => String(x?.stopped_with_behavior ?? '—'), false],
+        ['Thiếu kết quả', (x) => String(x?.no_result ?? '—'), false],
+        ['Độ phủ hành vi', (x) => x?.coverage_pct != null ? `${String(x.coverage_pct).replace('.', ',')}%` : '—', true],
+        ['Script đã chạy', (x) => String(x?.script_ran ?? '—'), false],
+        ['Chạm canary', (x) => String(x?.canary_touched ?? '—'), false],
+      ]) {
+        const tr = el('tr', highlight ? 'is-best' : null);
+        tr.append(el('td', null, label), benchNumTd(fn(sp.dev)), benchNumTd(fn(sp.test)), benchNumTd(fn(sp.total)));
+        cBody.append(tr);
+      }
+      covTable.append(cHead, cBody);
+      covWrap.append(covTable);
+      grid.append(covWrap);
+
+      const grpWrap = el('div', 'table-scroll');
+      const grpTable = el('table', 'bench-table');
+      const gHead = el('thead');
+      const gh = el('tr');
+      for (const [h, isNum] of [['Nhóm', false], ['Nguyên nhân 67 ca thiếu', false], ['Dev / Test / Tổng', true], ['Hướng xử lý', false]]) gh.append(el('th', isNum ? 'num' : null, h));
+      gHead.append(gh);
+      const gBody = el('tbody');
+      for (const g of sbx.missing_groups || []) {
+        const tr = el('tr');
+        const badgeTd = el('td');
+        badgeTd.append(el('span', 'pill muted', g.group));
+        const fixTd = el('td');
+        const fixLower = (g.fixable || '').toLowerCase();
+        const fixCls = fixLower.includes('có thể sửa') ? 'ok' : fixLower.includes('stderr') ? 'warn' : 'muted';
+        fixTd.append(el('span', `pill ${fixCls}`, g.fixable));
+        tr.append(badgeTd, el('td', null, g.reason), benchNumTd(`${g.dev} / ${g.test} / ${g.total}`), fixTd);
+        gBody.append(tr);
+      }
+      grpTable.append(gHead, gBody);
+      grpWrap.append(grpTable);
+      grid.append(grpWrap);
+      sbxCard.append(grid);
+    } else {
+      sbxCard.append(el('p', 'outcome-meta', 'Chưa có thư mục kết quả sandbox.'));
+    }
+    body.append(sbxCard);
+  }
+
+  // 4 & 5: Threshold sweeps + Dataset cards
+  const showSweep = show('sweep');
+  const showData = show('data');
+  if (showSweep || showData) {
+    const bottom = el('div', showSweep && showData ? 'bench-bottom' : 'benchmarks-body');
+
+    if (showSweep) {
+      const sweeps = data.sweeps || [];
+      const sweepCard = el('section', 'panel-card');
+      const sweepHead = el('div', 'section-head');
+      sweepHead.append(el('h2', 'card-title', '4. Quét ngưỡng trên tập dev (0,50 → 0,95)'));
+      if (sweeps.length) {
+        if (!sweeps.some((s) => s.config === state.sweepConfig)) state.sweepConfig = sweeps[0].config;
+        const pills = el('div', 'bench-cfg-pills');
+        pills.setAttribute('role', 'group');
+        pills.setAttribute('aria-label', 'Chọn cấu hình xem bảng quét ngưỡng');
+        sweepHead.append(pills);
+        sweepCard.append(sweepHead);
+
+        const wrap = el('div', 'table-scroll');
+        const table = el('table', 'bench-table');
+        const thead = el('thead');
+        const hr = el('tr');
+        for (const [h, isNum] of [['Ngưỡng', false], ['P', true], ['R', true], ['F1', true], ['FPR', true], ['Review', true], ['Độc duyệt', true]]) {
+          hr.append(el('th', isNum ? 'num' : null, h));
+        }
+        thead.append(hr);
+        const tbody = el('tbody');
+        const noteEl = el('p', 'bench-callout info');
+
+        const drawSweep = () => {
+          pills.replaceChildren(...sweeps.map((s) => {
+            const btn = el('button', null, s.config);
+            btn.type = 'button';
+            btn.setAttribute('aria-pressed', String(s.config === state.sweepConfig));
+            btn.addEventListener('click', () => { state.sweepConfig = s.config; drawSweep(); });
+            return btn;
+          }));
+          const entry = sweeps.find((s) => s.config === state.sweepConfig) || sweeps[0];
+          tbody.replaceChildren(...entry.rows.map((r) => {
+            const tr = el('tr', r.selected ? 'is-selected' : null);
+            const thrTd = el('td');
+            const thrBox = el('div', 'bench-cfg-cell');
+            thrBox.append(el('strong', 'mono-cell', r.threshold));
+            if (r.selected) thrBox.append(el('span', 'pill ok', 'Đang chọn'));
+            thrTd.append(thrBox);
+
+            const f1Td = el('td', 'num');
+            f1Td.append(benchMetricBar(r.f1));
+            const malTd = el('td', 'num');
+            malTd.append(el('span', `pill ${r.malicious_approved === 0 ? 'ok' : 'bad'}`, String(r.malicious_approved)));
+            tr.append(
+              thrTd,
+              benchNumTd(fmtMetric(r.precision)),
+              benchNumTd(fmtMetric(r.recall)),
+              f1Td,
+              benchNumTd(fmtMetric(r.fpr)),
+              benchNumTd(fmtMetric(r.review_rate)),
+              malTd,
+            );
+            return tr;
+          }));
+          noteEl.textContent = entry.note || '';
+          noteEl.hidden = !entry.note;
+        };
+        drawSweep();
+        table.append(thead, tbody);
+        wrap.append(table);
+        sweepCard.append(wrap, noteEl);
+      } else {
+        sweepCard.append(sweepHead, el('p', 'outcome-meta', 'Chưa có bảng quét ngưỡng.'));
+      }
+      bottom.append(sweepCard);
+    }
+
+    if (showData) {
+      const dsList = data.datasets || [];
+      const dsCard = el('section', 'panel-card');
+      dsCard.append(el('h2', 'card-title', '5. Thống kê bộ nhãn (labels-v1 & labels-v2-draft)'));
+      if (dsList.length) {
+        const cards = el('div', 'ds-cards');
+        for (const d of dsList) {
+          const card = el('article', 'ds-card');
+          const head = el('div', 'ds-card-head');
+          const title = el('div', 'ds-card-title');
+          const frozen = d.status.toLowerCase().includes('đóng băng');
+          title.append(el('strong', null, d.name), el('span', `pill ${frozen ? 'ok' : 'warn'}`, d.status));
+          head.append(title, el('span', 'ds-total', `${d.total} gói`));
+          card.append(head);
+
+          const lb = d.by_label || {};
+          const mal = lb.malicious || 0;
+          const ben = lb.benign || 0;
+          const sus = lb.suspicious || 0;
+          if (d.total) {
+            const bar = el('div', 'ds-dist-bar');
+            const mSeg = el('div', 'ds-seg-mal'); mSeg.style.width = `${(mal / d.total * 100).toFixed(1)}%`;
+            const bSeg = el('div', 'ds-seg-ben'); bSeg.style.width = `${(ben / d.total * 100).toFixed(1)}%`;
+            const sSeg = el('div', 'ds-seg-sus'); sSeg.style.width = `${(sus / d.total * 100).toFixed(1)}%`;
+            bar.append(mSeg, bSeg, sSeg);
+            card.append(bar);
+          }
+
+          const leg = el('div', 'ds-metrics-row');
+          leg.append(
+            el('span', 'bad', `Độc: ${mal}`),
+            el('span', 'ok', `Lành: ${ben}`),
+            el('span', 'warn', `Nghi: ${sus}`),
+          );
+          card.append(leg);
+
+          const sp = d.by_split || {};
+          const splits = el('div', 'ds-splits');
+          if (sp.train) splits.append(el('span', 'pill muted', `train ${sp.train}`));
+          if (sp.dev) splits.append(el('span', 'pill muted', `dev ${sp.dev}`));
+          if (sp.test) splits.append(el('span', 'pill muted', `test ${sp.test}`));
+          if (d.test_after != null) splits.append(el('span', 'pill info', `test & after ${d.test_after}`));
+          card.append(splits);
+
+          if (d.by_source || d.by_time) {
+            const bits = [];
+            if (d.by_source) bits.push(`Nguồn: ${Object.entries(d.by_source).map(([k, v]) => `${k}=${v}`).join(', ')}`);
+            if (d.by_time) bits.push(`after=${d.by_time.after || 0}`);
+            card.append(el('p', 'outcome-meta', bits.join(' · ')));
+          }
+          cards.append(card);
+        }
+        dsCard.append(cards);
+      } else {
+        dsCard.append(el('p', 'outcome-meta', 'Chưa tìm thấy file nhãn.'));
+      }
+      bottom.append(dsCard);
+    }
+
+    body.append(bottom);
+  }
+}
+
 function setView(view) {
   state.view = view;
   document.body.dataset.view = view;
@@ -1491,18 +1987,21 @@ function setView(view) {
   $('single-view').hidden = view !== 'single';
   $('summary-view').hidden = view !== 'summary';
   $('compare').hidden = view !== 'compare';
+  $('benchmarks-view').hidden = view !== 'benchmarks';
   if (view !== 'compare') stopSide();
   syncViewHash();
   if (state.run) renderModelPick(siblingsOf(state.run));
   if (view === 'summary') renderSummary();
   if (view === 'compare') renderCompare();
+  if (view === 'benchmarks') renderBenchmarks();
 }
 
 function syncViewHash() {
   if (!state.run) return;
   const extra = state.view === 'compare'
     ? `&view=compare${state.models.size ? `&models=${[...state.models].join(',')}` : ''}`
-    : state.view === 'summary' ? '&view=summary' : '';
+    : state.view === 'summary' ? '&view=summary'
+      : state.view === 'benchmarks' ? '&view=benchmarks' : '';
   history.replaceState(null, '', `#${linkFor(state.pkg)}${extra}`);
 }
 
@@ -1583,6 +2082,7 @@ async function init() {
   $('play').addEventListener('click', () => { if (state.timer) stopReplay(); else startReplay(); });
   $('speed').addEventListener('change', () => { if (state.timer) { stopReplay(); startReplay(); } });
   $('summary-split').addEventListener('change', (event) => { state.summarySplit = event.target.value; renderSummary(); });
+  $('bench-split').addEventListener('change', (event) => { state.benchSplit = event.target.value; renderBenchmarks(); });
   $('copy-link').addEventListener('click', async () => {
     const button = $('copy-link');
     try { await navigator.clipboard.writeText(location.href); button.textContent = 'Đã chép'; } catch { button.textContent = 'Không chép được'; }
@@ -1592,7 +2092,7 @@ async function init() {
   for (const button of document.querySelectorAll('.view-mode button')) button.addEventListener('click', () => setView(button.dataset.view));
   state.models = new Set((params.get('models') || '').split(',').filter((name) => ['LLM', 'SLM', 'TLM'].includes(name)));
   const askedView = params.get('view');
-  setView(askedView === 'compare' ? 'compare' : askedView === 'summary' ? 'summary' : 'single');
+  setView(askedView === 'compare' ? 'compare' : askedView === 'summary' ? 'summary' : askedView === 'benchmarks' ? 'benchmarks' : 'single');
   $('side-play').addEventListener('click', playSide);
   $('side-scrub').addEventListener('input', (event) => { stopSide(); setSideClock(Number(event.target.value)); });
   $('export-md').addEventListener('click', () => { exportReport(); document.querySelector('.share-menu').open = false; });
@@ -1604,7 +2104,7 @@ async function init() {
     const run = next.get('run');
     const pkg = next.get('pkg');
     const v = next.get('view');
-    if (v && ['single', 'summary', 'compare'].includes(v) && v !== state.view) setView(v);
+    if (v && ['single', 'summary', 'compare', 'benchmarks'].includes(v) && v !== state.view) setView(v);
     if (run && run !== state.run && state.runs.includes(run)) {
       stopReplay();
       stopPolling();

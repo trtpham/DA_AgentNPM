@@ -420,3 +420,100 @@ def test_package_extra_reads_osv_and_sandbox_safely(tmp_path):
         server.shutdown()
         server.server_close()
         thread.join(timeout=2)
+
+
+def test_benchmarks_endpoint_aggregates_tables(tmp_path: Path) -> None:
+    reports = tmp_path / "reports"
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    (data_dir / "labels-v1.csv").write_text(
+        "id,name,version,label,behavior_main,technique,file,lines,source,split,cluster\n"
+        "1,mal-a,1.0.0,malicious,dropper,dropper,index.js,1-2,npm,dev,c1\n"
+        "2,ben-b,1.0.0,benign,,,,github,test,c2\n",
+        encoding="utf-8",
+    )
+    (data_dir / "labels-v2-draft.csv").write_text(
+        "id,name,version,label,behavior_main,technique,file,lines,source,split,cluster,time_split\n"
+        "1,mal-a,1.0.0,malicious,dropper,dropper,index.js,1-2,npm,test,c1,after\n",
+        encoding="utf-8",
+    )
+
+    test_sum = reports / "test-v1-summary"
+    test_sum.mkdir(parents=True)
+    (test_sum / "metrics-a-llm-x.json").write_text(
+        json.dumps(
+            {
+                "scored": 300,
+                "precision": 0.72,
+                "recall": 0.98,
+                "f1": 0.8302,
+                "fpr": 0.41,
+                "confusion": {"malicious": {"benign": 0}, "suspicious": {"benign": 1}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    gd_test = reports / "guarddog-test-v1"
+    gd_test.mkdir(parents=True)
+    (gd_test / "metrics.json").write_text(
+        json.dumps({"scored": 300, "precision": 0.96, "recall": 0.81, "f1": 0.8835, "fpr": 0.0284}),
+        encoding="utf-8",
+    )
+
+    osv_dir = reports / "osv-ablation-v1"
+    osv_dir.mkdir(parents=True)
+    (osv_dir / "test-a-llm-x.json").write_text(
+        json.dumps(
+            {
+                "without_osv": {"scored": 300, "f1": 0.8257, "precision": 0.71, "recall": 0.97, "fpr": 0.42},
+                "with_osv": {"scored": 300, "f1": 0.8302, "precision": 0.72, "recall": 0.98, "fpr": 0.41},
+                "changed": [{"package": "mal-a@1.0.0"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (osv_dir / "test-osv-only.json").write_text(
+        json.dumps({"osv_only": {"scored": 300, "f1": 0.65, "precision": 1.0, "recall": 0.48, "fpr": 0.0}}),
+        encoding="utf-8",
+    )
+
+    sbx_dir = reports / "sbx-test-v1b" / "sandbox"
+    sbx_dir.mkdir(parents=True)
+    (sbx_dir / "ok@1.0.0.json").write_text(
+        json.dumps({"data": {"outcome": "ok", "script_ran": True, "canary_touched": ["npmrc"]}}),
+        encoding="utf-8",
+    )
+    (sbx_dir / "bad@1.0.0.json").write_text(
+        json.dumps({"fail_reason": "not_started", "dependencies": {"ok": False, "error": "npm error code EBADPLATFORM"}}),
+        encoding="utf-8",
+    )
+
+    dev_sum = reports / "dev-v1-summary"
+    dev_sum.mkdir(parents=True)
+    (dev_sum / "sweep-a-llm-x.md").write_text(
+        "| Ngưỡng | Precision | Recall | F1 | FPR | Tỉ lệ review | Malicious approved |\n"
+        "| --- | --- | --- | --- | --- | --- | --- |\n"
+        "| 0.80 (chọn) | 0.7000 | 0.9600 | 0.8100 | 0.3500 | 0.2500 | 0 |\n",
+        encoding="utf-8",
+    )
+
+    server = make_server(reports, 0, labels_file=data_dir / "labels-v1.csv")
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        status, _, body = request(server, "GET", "/api/benchmarks")
+        assert status == 200
+        payload = json.loads(body)
+        assert [c["config"] for c in payload["comparisons"]["test"]] == ["A-LLM-X", "GuardDog 2.6.0"]
+        assert payload["comparisons"]["test"][0]["malicious_approved"] == 0
+        assert len(payload["osv_ablation"]["test"]) == 2
+        assert payload["sandbox"]["splits"]["test"]["canary_touched"] == 1
+        assert payload["sandbox"]["missing_groups"][3]["total"] == 1
+        assert payload["sweeps"][0]["config"] == "A-LLM-X"
+        assert payload["sweeps"][0]["rows"][0]["selected"] is True
+        assert [d["name"] for d in payload["datasets"]] == ["labels-v1", "labels-v2-draft"]
+        assert payload["datasets"][1]["test_after"] == 1
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)

@@ -222,13 +222,14 @@ export function fmtMetric(value, digits = 3) {
 }
 
 export const FEATURED_RUNS = [
-  "test-v1-a-llm-x",
-  "test-v1-a-slm-x",
   "test-v1-a-llm",
   "test-v1-a-slm",
   "test-v1-a-tlm",
+  "test-v1-a-llm-x",
+  "test-v1-a-slm-x",
   "dev-v1-a-llm-x",
   "dev-v1-a-slm-x",
+  "dev-v1-a-tlm-x",
   "demo-live-npm",
   "demo-live-tuan07",
 ];

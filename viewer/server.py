@@ -15,6 +15,7 @@ from experiments.dataset import load_labels
 from experiments.encoding import decode_fields
 from experiments.metrics import load_results, score
 from experiments.run_batch import result_name
+from viewer.benchmarks import build_benchmarks
 
 
 RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
@@ -557,6 +558,8 @@ def make_server(reports: str | Path, port: int = 8765, labels_file: Path = LABEL
                     self._json(200, self._package_extra(parsed.query))
                 elif path == "/api/labels":
                     self._json(200, reference_labels(labels_file))
+                elif path == "/api/benchmarks":
+                    self._json(200, build_benchmarks(reports_root, labels_file.parent))
                 else:
                     self._json(404, {"error": "not_found"})
             except (ValueError, UnicodeError) as error:
