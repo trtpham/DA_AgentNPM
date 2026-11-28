@@ -720,6 +720,21 @@ function linkFor(pkg) {
   return `run=${encodeURIComponent(state.run)}${pkg ? `&pkg=${encodeURIComponent(pkg)}` : ''}`;
 }
 
+function resetSingleView() {
+  state.pkg = null;
+  state.events = [];
+  state.extra = null;
+  state.phases = [];
+  state.cursor = -1;
+  state.live = false;
+  $('package-name').textContent = 'Chưa chọn gói';
+  $('package-subtitle').textContent = '';
+  $('reviewed-toggle').checked = false;
+  $('timeline').replaceChildren();
+  render();
+  renderModelPick(siblingsOf(state.run));
+}
+
 function selectPackage(pkg, keepView = false) {
   stopReplay();
   stopPolling();
@@ -926,6 +941,8 @@ async function loadPackages(selectFirst, wanted) {
   else if (wanted && !packages.some((item) => item.package === wanted)) {
     // Deep-linked package without trace (e.g. extraction error)
     selectPackage(wanted, state.view === 'summary');
+  } else if (!packages.length && selectFirst) {
+    resetSingleView();
   }
 }
 
@@ -1204,7 +1221,8 @@ async function renderSummary() {
 // --- Compare View ---------------------------------------------------------------------------------
 async function renderCompare() {
   const panel = $('compare');
-  if (panel.hidden || !state.pkg) return;
+  const pkg = state.pkg;
+  if (panel.hidden || !pkg) return;
   const body = $('compare-body');
   body.replaceChildren();
   const allSiblings = siblingsOf(state.run);
@@ -1213,17 +1231,17 @@ async function renderCompare() {
   renderSide(siblings);
   const group = state.run.replace(VARIANT, '$1a-*');
   $('compare-note').textContent = siblings.length > 1
-    ? `Cùng gói ${state.pkg} trong ${siblings.length} run chỉ khác cỡ mô hình. Ô màu vàng: khác với run đang xem.`
+    ? `Cùng gói ${pkg} trong ${siblings.length} run chỉ khác cỡ mô hình. Ô màu vàng: khác với run đang xem.`
     : VARIANT.test(state.run)
       ? 'Không có run nào khác chỉ khác cỡ mô hình với run này, nên chưa có gì để so.'
       : 'Run này không thuộc bộ a-llm / a-slm / a-tlm. Chọn một run có hậu tố đó để so 3 cỡ mô hình.';
   const rows = await Promise.all(siblings.map(async (run) => {
     try {
       const list = await getJson(`/api/runs/${encodeURIComponent(run)}/packages`);
-      return {run, item: list.find((entry) => entry.package === state.pkg)};
+      return {run, item: list.find((entry) => entry.package === pkg)};
     } catch { return {run, item: null}; }
   }));
-  if (!panel.hidden) {
+  if (!panel.hidden && pkg === state.pkg) {
     const mine = rows.find((row) => row.run === state.run)?.item;
     for (const {run, item} of rows) {
       const tr = el('tr', run === state.run ? 'current' : null);
@@ -1242,7 +1260,7 @@ async function renderCompare() {
       const open = el('td');
       if (run !== state.run) {
         const link = el('a', null, 'Xem');
-        link.href = `#run=${encodeURIComponent(run)}&pkg=${encodeURIComponent(state.pkg)}`;
+        link.href = `#run=${encodeURIComponent(run)}&pkg=${encodeURIComponent(pkg)}`;
         open.append(link);
       }
       tr.append(open);
@@ -1253,7 +1271,7 @@ async function renderCompare() {
       const td = el('td');
       td.colSpan = 7;
       const race = el('a', null, 'Xem 3 model đua trên cùng gói trong văn phòng 3D →');
-      race.href = `/office#mode=compare&run=${encodeURIComponent(group)}&pkg=${encodeURIComponent(state.pkg)}`;
+      race.href = `/office#mode=compare&run=${encodeURIComponent(group)}&pkg=${encodeURIComponent(pkg)}`;
       td.append(race);
       row.append(td);
       body.append(row);
