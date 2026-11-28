@@ -1,0 +1,168 @@
+package,version,source_label,install_hook,source_url,review_status,search_term,observed_at
+swisseph,0.5.17,unlabeled,install,https://registry.npmjs.org/swisseph/0.5.17,needs_independent_review,binding,2026-11-28
+@cleocode/core,2026.11.19,unlabeled,postinstall,https://registry.npmjs.org/%40cleocode%2Fcore/2026.11.19,needs_independent_review,sqlite,2026-11-28
+ced,2.0.0,unlabeled,install,https://registry.npmjs.org/ced/2.0.0,needs_independent_review,node-gyp,2026-11-28
+@andersbakken/fisk-native,25.0.0,unlabeled,install,https://registry.npmjs.org/%40andersbakken%2Ffisk-native/25.0.0,needs_independent_review,cmake,2026-11-28
+@zvec/zvec-grep,0.3.1,unlabeled,postinstall,https://registry.npmjs.org/%40zvec%2Fzvec-grep/0.3.1,needs_independent_review,postinstall,2026-11-28
+hyperliquid,1.7.7,unlabeled,postinstall,https://registry.npmjs.org/hyperliquid/1.7.7,needs_independent_review,install script,2026-11-28
+boost-geospatial-index,1.5.0,unlabeled,install,https://registry.npmjs.org/boost-geospatial-index/1.5.0,needs_independent_review,node-gyp,2026-11-28
+@coralogix/tsgo-strict,0.3.0,unlabeled,postinstall,https://registry.npmjs.org/%40coralogix%2Ftsgo-strict/0.3.0,needs_independent_review,native addon,2026-11-28
+ref,1.3.5,unlabeled,install,https://registry.npmjs.org/ref/1.3.5,needs_independent_review,ffi,2026-11-28
+jsql-neo,6.10.1,unlabeled,postinstall,https://registry.npmjs.org/jsql-neo/6.10.1,needs_independent_review,rust,2026-11-28
+epoll,4.0.2,unlabeled,install,https://registry.npmjs.org/epoll/4.0.2,needs_independent_review,binding,2026-11-28
+@quatronic/sdk,0.11.0,unlabeled,postinstall,https://registry.npmjs.org/%40quatronic%2Fsdk/0.11.0,needs_independent_review,postinstall,2026-11-28
+electron-mksnapshot,45.5.0,unlabeled,install,https://registry.npmjs.org/electron-mksnapshot/45.5.0,needs_independent_review,electron,2026-11-28
+@dataiku/uv,0.12.0,unlabeled,postinstall,https://registry.npmjs.org/%40dataiku%2Fuv/0.12.0,needs_independent_review,rust,2026-11-28
+scryptlib,2.2.6,unlabeled,postinstall,https://registry.npmjs.org/scryptlib/2.2.6,needs_independent_review,install script,2026-11-28
+ember-froala-editor,4.7.1,unlabeled,preinstall,https://registry.npmjs.org/ember-froala-editor/4.7.1,needs_independent_review,native addon,2026-11-28
+@vellumai/assistant,0.12.10,unlabeled,postinstall,https://registry.npmjs.org/%40vellumai%2Fassistant/0.12.10,needs_independent_review,sqlite,2026-11-28
+@typerighter/rpc-server,0.71.3,unlabeled,postinstall,https://registry.npmjs.org/%40typerighter%2Frpc-server/0.71.3,needs_independent_review,postinstall,2026-11-28
+sqlx-ts,0.49.0,unlabeled,postinstall,https://registry.npmjs.org/sqlx-ts/0.49.0,needs_independent_review,sqlite,2026-11-28
+harper-fabric-embeddings,0.5.0,unlabeled,postinstall,https://registry.npmjs.org/harper-fabric-embeddings/0.5.0,needs_independent_review,native addon,2026-11-28
+@memtensor/memos-local-plugin,2.0.21,unlabeled,postinstall,https://registry.npmjs.org/%40memtensor%2Fmemos-local-plugin/2.0.21,needs_independent_review,install script,2026-11-28
+@kprint/kprint,0.65.0,unlabeled,postinstall,https://registry.npmjs.org/%40kprint%2Fkprint/0.65.0,needs_independent_review,rust,2026-11-28
+@swimlane/nodegit,2.0.11,unlabeled,preinstall;install;postinstall,https://registry.npmjs.org/%40swimlane%2Fnodegit/2.0.11,needs_independent_review,preinstall,2026-11-28
+@jitsi/electron-sdk,10.0.8,unlabeled,install,https://registry.npmjs.org/%40jitsi%2Felectron-sdk/10.0.8,needs_independent_review,electron,2026-11-28
+@whobot/cli,2.1.3,unlabeled,postinstall,https://registry.npmjs.org/%40whobot%2Fcli/2.1.3,needs_independent_review,postinstall,2026-11-28
+electron-edge-js,45.0.0,unlabeled,install,https://registry.npmjs.org/electron-edge-js/45.0.0,needs_independent_review,node-gyp,2026-11-28
+tipsi-stripe,11.0.1,unlabeled,postinstall,https://registry.npmjs.org/tipsi-stripe/11.0.1,needs_independent_review,binding,2026-11-28
+@minonl/dia,0.2.2,unlabeled,postinstall,https://registry.npmjs.org/%40minonl%2Fdia/0.2.2,needs_independent_review,postinstall,2026-11-28
+dumpme,2.1.0,unlabeled,install,https://registry.npmjs.org/dumpme/2.1.0,needs_independent_review,node-gyp,2026-11-28
+ffi,2.3.0,unlabeled,install,https://registry.npmjs.org/ffi/2.3.0,needs_independent_review,ffi,2026-11-28
+nodehun,3.0.2,unlabeled,install,https://registry.npmjs.org/nodehun/3.0.2,needs_independent_review,node-gyp,2026-11-28
+@microsoft/winappcli,0.8.0,unlabeled,postinstall,https://registry.npmjs.org/%40microsoft%2Fwinappcli/0.8.0,needs_independent_review,native addon,2026-11-28
+0xray,4.2.4,unlabeled,postinstall,https://registry.npmjs.org/0xray/4.2.4,needs_independent_review,postinstall,2026-11-28
+raw-socket,1.8.1,unlabeled,install,https://registry.npmjs.org/raw-socket/1.8.1,needs_independent_review,node-gyp,2026-11-28
+curve25519-n2,1.2.0,unlabeled,install,https://registry.npmjs.org/curve25519-n2/1.2.0,needs_independent_review,binding,2026-11-28
+onnxruntime,1.7.0,unlabeled,install,https://registry.npmjs.org/onnxruntime/1.7.0,needs_independent_review,binding,2026-11-28
+node-dump-syms,3.0.13,unlabeled,install,https://registry.npmjs.org/node-dump-syms/3.0.13,needs_independent_review,native addon,2026-11-28
+@julusian/segfault-raub,2.3.3,unlabeled,install,https://registry.npmjs.org/%40julusian%2Fsegfault-raub/2.3.3,needs_independent_review,native addon,2026-11-28
+kuzzle-espresso-logic-minimizer,2.3.1,unlabeled,install,https://registry.npmjs.org/kuzzle-espresso-logic-minimizer/2.3.1,needs_independent_review,node-gyp,2026-11-28
+xprofiler,4.0.0,unlabeled,install,https://registry.npmjs.org/xprofiler/4.0.0,needs_independent_review,node-gyp,2026-11-28
+naudiodon,2.3.6,unlabeled,install,https://registry.npmjs.org/naudiodon/2.3.6,needs_independent_review,node-gyp,2026-11-28
+linkbreakers-cli,1.205.2,unlabeled,postinstall,https://registry.npmjs.org/linkbreakers-cli/1.205.2,needs_independent_review,prebuilt binary,2026-11-28
+@elyra/canvas,13.53.0,unlabeled,postinstall,https://registry.npmjs.org/%40elyra%2Fcanvas/13.53.0,needs_independent_review,canvas,2026-11-28
+napi-ldap,1.0.4,unlabeled,install,https://registry.npmjs.org/napi-ldap/1.0.4,needs_independent_review,napi,2026-11-28
+agora-electron-sdk,4.6.2,unlabeled,install;postinstall,https://registry.npmjs.org/agora-electron-sdk/4.6.2,needs_independent_review,electron,2026-11-28
+@cup319/mmpl,3.17.7,unlabeled,postinstall,https://registry.npmjs.org/%40cup319%2Fmmpl/3.17.7,needs_independent_review,postinstall,2026-11-28
+@circuitwall/jarela,3.9.1,unlabeled,postinstall,https://registry.npmjs.org/%40circuitwall%2Fjarela/3.9.1,needs_independent_review,sqlite,2026-11-28
+node-libcurl-ja3,5.2.2,unlabeled,install;postinstall,https://registry.npmjs.org/node-libcurl-ja3/5.2.2,needs_independent_review,prebuilt binary,2026-11-28
+detect-character-encoding,0.9.0,unlabeled,install,https://registry.npmjs.org/detect-character-encoding/0.9.0,needs_independent_review,node-gyp,2026-11-28
+adblock-rs,0.13.6,unlabeled,postinstall,https://registry.npmjs.org/adblock-rs/0.13.6,needs_independent_review,rust,2026-11-28
+electron-drag-click,1.0.6,unlabeled,install,https://registry.npmjs.org/electron-drag-click/1.0.6,needs_independent_review,electron,2026-11-28
+yencode,1.2.4,unlabeled,install,https://registry.npmjs.org/yencode/1.2.4,needs_independent_review,node-gyp,2026-11-28
+@tencentdb-agent-memory/memory-tencentdb,1.0.3,unlabeled,postinstall,https://registry.npmjs.org/%40tencentdb-agent-memory%2Fmemory-tencentdb/1.0.3,needs_independent_review,sqlite,2026-11-28
+@stagetimerio/grandiose,0.2.1,unlabeled,install,https://registry.npmjs.org/%40stagetimerio%2Fgrandiose/0.2.1,needs_independent_review,node-gyp,2026-11-28
+@picturae/mmmagic,0.5.5,unlabeled,install,https://registry.npmjs.org/%40picturae%2Fmmmagic/0.5.5,needs_independent_review,binding,2026-11-28
+@2060.io/ffi-napi,4.0.9,unlabeled,install,https://registry.npmjs.org/%402060.io%2Fffi-napi/4.0.9,needs_independent_review,napi,2026-11-28
+madarx,2.195.0,unlabeled,postinstall,https://registry.npmjs.org/madarx/2.195.0,needs_independent_review,sqlite,2026-11-28
+@microsoft/cpp-language-server,0.4.7,unlabeled,postinstall,https://registry.npmjs.org/%40microsoft%2Fcpp-language-server/0.4.7,needs_independent_review,cmake,2026-11-28
+@eduardo191labs/opencode-free-pi,0.7.16,unlabeled,postinstall,https://registry.npmjs.org/%40eduardo191labs%2Fopencode-free-pi/0.7.16,needs_independent_review,postinstall,2026-11-28
+@photostructure/sqlite,3.3.1,unlabeled,install,https://registry.npmjs.org/%40photostructure%2Fsqlite/3.3.1,needs_independent_review,sqlite,2026-11-28
+react-native-nitro-player,1.11.0,unlabeled,postinstall,https://registry.npmjs.org/react-native-nitro-player/1.11.0,needs_independent_review,prebuild,2026-11-28
+libxmljs4,2.1.0,unlabeled,install,https://registry.npmjs.org/libxmljs4/2.1.0,needs_independent_review,node-gyp,2026-11-28
+@motionharness/cli,0.1.8,unlabeled,postinstall,https://registry.npmjs.org/%40motionharness%2Fcli/0.1.8,needs_independent_review,postinstall,2026-11-28
+tilth,0.15.0,unlabeled,postinstall,https://registry.npmjs.org/tilth/0.15.0,needs_independent_review,prebuilt binary,2026-11-28
+electron-check-biometric-auth-changed,1.0.0,unlabeled,install,https://registry.npmjs.org/electron-check-biometric-auth-changed/1.0.0,needs_independent_review,electron,2026-11-28
+@signalhouse-sms/sdk,1.17.1,unlabeled,postinstall,https://registry.npmjs.org/%40signalhouse-sms%2Fsdk/1.17.1,needs_independent_review,postinstall,2026-11-28
+@dolthub/doltlite,0.51.15,unlabeled,install,https://registry.npmjs.org/%40dolthub%2Fdoltlite/0.51.15,needs_independent_review,node-gyp,2026-11-28
+@meteorjs/swc-core,1.16.2,unlabeled,postinstall,https://registry.npmjs.org/%40meteorjs%2Fswc-core/1.16.2,needs_independent_review,swc,2026-11-28
+@jamicaw56/yopes,0.1.89,unlabeled,postinstall,https://registry.npmjs.org/%40jamicaw56%2Fyopes/0.1.89,needs_independent_review,postinstall,2026-11-28
+nlpplus,1.3.81,unlabeled,install,https://registry.npmjs.org/nlpplus/1.3.81,needs_independent_review,prebuilt binary,2026-11-28
+@agent-dock/cli,0.3.29,unlabeled,postinstall,https://registry.npmjs.org/%40agent-dock%2Fcli/0.3.29,needs_independent_review,sqlite,2026-11-28
+@2060.io/ref-napi,3.0.6,unlabeled,install,https://registry.npmjs.org/%402060.io%2Fref-napi/3.0.6,needs_independent_review,napi,2026-11-28
+@asiainfo-sdd/multica-cli-test,0.3.39,unlabeled,postinstall,https://registry.npmjs.org/%40asiainfo-sdd%2Fmultica-cli-test/0.3.39,needs_independent_review,postinstall,2026-11-28
+tauri,0.15.0,unlabeled,postinstall,https://registry.npmjs.org/tauri/0.15.0,needs_independent_review,binding,2026-11-28
+@vlcn.io/crsqlite,0.16.3,unlabeled,install,https://registry.npmjs.org/%40vlcn.io%2Fcrsqlite/0.16.3,needs_independent_review,sqlite,2026-11-28
+opencv-build,0.1.9,unlabeled,install,https://registry.npmjs.org/opencv-build/0.1.9,needs_independent_review,cmake,2026-11-28
+node-lmdb,0.10.1,unlabeled,install,https://registry.npmjs.org/node-lmdb/0.10.1,needs_independent_review,binding,2026-11-28
+rcf-lite,0.43.0,unlabeled,preinstall,https://registry.npmjs.org/rcf-lite/0.43.0,needs_independent_review,preinstall,2026-11-28
+electron-overlay-window,5.0.1,unlabeled,install,https://registry.npmjs.org/electron-overlay-window/5.0.1,needs_independent_review,electron,2026-11-28
+@readme/nodegit,3.2.0,unlabeled,install;postinstall,https://registry.npmjs.org/%40readme%2Fnodegit/3.2.0,needs_independent_review,preinstall,2026-11-28
+arkime-iptrie,0.1.0,unlabeled,install,https://registry.npmjs.org/arkime-iptrie/0.1.0,needs_independent_review,node-gyp,2026-11-28
+@vygruppen/spor-react,15.0.0,unlabeled,postinstall,https://registry.npmjs.org/%40vygruppen%2Fspor-react/15.0.0,needs_independent_review,postinstall,2026-11-28
+cap,0.2.1,unlabeled,install,https://registry.npmjs.org/cap/0.2.1,needs_independent_review,binding,2026-11-28
+@lynx-js/cef-webview,0.0.31,unlabeled,postinstall,https://registry.npmjs.org/%40lynx-js%2Fcef-webview/0.0.31,needs_independent_review,native addon,2026-11-28
+@nurvision/lumen,0.1.37,unlabeled,postinstall,https://registry.npmjs.org/%40nurvision%2Flumen/0.1.37,needs_independent_review,postinstall,2026-11-28
+@guandata/guancli,1.0.76,unlabeled,postinstall,https://registry.npmjs.org/%40guandata%2Fguancli/1.0.76,needs_independent_review,postinstall,2026-11-28
+@noego/telemetry,0.2.3,unlabeled,install,https://registry.npmjs.org/%40noego%2Ftelemetry/0.2.3,needs_independent_review,native addon,2026-11-28
+nodejs-mobile-react-native,18.20.4,unlabeled,postinstall,https://registry.npmjs.org/nodejs-mobile-react-native/18.20.4,needs_independent_review,cmake,2026-11-28
+@lukaselmer/odbc,2.7.1,unlabeled,install,https://registry.npmjs.org/%40lukaselmer%2Fodbc/2.7.1,needs_independent_review,native addon,2026-11-28
+spellchecker-wasm,0.4.0,unlabeled,postinstall,https://registry.npmjs.org/spellchecker-wasm/0.4.0,needs_independent_review,rust,2026-11-28
+electron-deeplink,1.0.10,unlabeled,install,https://registry.npmjs.org/electron-deeplink/1.0.10,needs_independent_review,electron,2026-11-28
+publishport-opencli,1.0.69,unlabeled,postinstall,https://registry.npmjs.org/publishport-opencli/1.0.69,needs_independent_review,electron,2026-11-28
+@oakoss/oakum,0.12.1,unlabeled,postinstall,https://registry.npmjs.org/%40oakoss%2Foakum/0.12.1,needs_independent_review,postinstall,2026-11-28
+claude-code-termux,1.0.191,unlabeled,postinstall,https://registry.npmjs.org/claude-code-termux/1.0.191,needs_independent_review,sharp,2026-11-28
+@jfrog-boost/boost,0.17.8,unlabeled,postinstall,https://registry.npmjs.org/%40jfrog-boost%2Fboost/0.17.8,needs_independent_review,prebuilt binary,2026-11-28
+@origintrail-official/dkg,10.1.3,unlabeled,preinstall;postinstall,https://registry.npmjs.org/%40origintrail-official%2Fdkg/10.1.3,needs_independent_review,postinstall,2026-11-28
+@lpm-registry/cli,0.89.0,unlabeled,postinstall,https://registry.npmjs.org/%40lpm-registry%2Fcli/0.89.0,needs_independent_review,postinstall,2026-11-28
+@incremental/engine,0.1.5,unlabeled,install,https://registry.npmjs.org/%40incremental%2Fengine/0.1.5,needs_independent_review,postinstall,2026-11-28
+moflo,4.13.8,unlabeled,preinstall;postinstall,https://registry.npmjs.org/moflo/4.13.8,needs_independent_review,node-gyp,2026-11-28
+@band-app/server,0.70.0,unlabeled,postinstall,https://registry.npmjs.org/%40band-app%2Fserver/0.70.0,needs_independent_review,electron,2026-11-28
+node-mbus,2.2.6,unlabeled,install,https://registry.npmjs.org/node-mbus/2.2.6,needs_independent_review,binding,2026-11-28
+node-icu-charset-detector,0.2.0,unlabeled,install,https://registry.npmjs.org/node-icu-charset-detector/0.2.0,needs_independent_review,binding,2026-11-28
+@s8fy/xdoc,0.26.0,unlabeled,preinstall,https://registry.npmjs.org/%40s8fy%2Fxdoc/0.26.0,needs_independent_review,binding,2026-11-28
+talib,2.0.6,unlabeled,install,https://registry.npmjs.org/talib/2.0.6,needs_independent_review,node-gyp,2026-11-28
+@hayatialikeles/dtln-rs,0.3.1,unlabeled,postinstall,https://registry.npmjs.org/%40hayatialikeles%2Fdtln-rs/0.3.1,needs_independent_review,native addon,2026-11-28
+@bobfrankston/msger,0.1.440,unlabeled,postinstall,https://registry.npmjs.org/%40bobfrankston%2Fmsger/0.1.440,needs_independent_review,rust,2026-11-28
+dicom-dimse-native,2.6.1,unlabeled,install,https://registry.npmjs.org/dicom-dimse-native/2.6.1,needs_independent_review,native addon,2026-11-28
+@hitrading/ctp-node,6.1.0,unlabeled,install,https://registry.npmjs.org/%40hitrading%2Fctp-node/6.1.0,needs_independent_review,binding,2026-11-28
+@onreza/nrz,0.54.0,unlabeled,postinstall,https://registry.npmjs.org/%40onreza%2Fnrz/0.54.0,needs_independent_review,postinstall,2026-11-28
+@yunfanye/opencli,1.8.8,unlabeled,postinstall,https://registry.npmjs.org/%40yunfanye%2Fopencli/1.8.8,needs_independent_review,electron,2026-11-28
+stable-diffusion-cpp-node-api,0.15.0,unlabeled,preinstall,https://registry.npmjs.org/stable-diffusion-cpp-node-api/0.15.0,needs_independent_review,prebuilt binary,2026-11-28
+@carbon/storybook-addon-theme,2.27.0,unlabeled,postinstall,https://registry.npmjs.org/%40carbon%2Fstorybook-addon-theme/2.27.0,needs_independent_review,native addon,2026-11-28
+duduclaw,1.85.0,unlabeled,postinstall,https://registry.npmjs.org/duduclaw/1.85.0,needs_independent_review,rust,2026-11-28
+screeps,4.3.3,unlabeled,postinstall,https://registry.npmjs.org/screeps/4.3.3,needs_independent_review,node-gyp,2026-11-28
+open-memex,0.11.0,unlabeled,postinstall,https://registry.npmjs.org/open-memex/0.11.0,needs_independent_review,sqlite,2026-11-28
+@civitas-cerebrum/sql-client,0.1.3,unlabeled,postinstall,https://registry.npmjs.org/%40civitas-cerebrum%2Fsql-client/0.1.3,needs_independent_review,sqlite,2026-11-28
+lean-ctx-bin,3.12.8,unlabeled,preinstall;postinstall,https://registry.npmjs.org/lean-ctx-bin/3.12.8,needs_independent_review,postinstall,2026-11-28
+dart-decimate,0.0.81,unlabeled,postinstall,https://registry.npmjs.org/dart-decimate/0.0.81,needs_independent_review,rust,2026-11-28
+@asiainfo-sdd/multica-cli,0.3.39,unlabeled,postinstall,https://registry.npmjs.org/%40asiainfo-sdd%2Fmultica-cli/0.3.39,needs_independent_review,postinstall,2026-11-28
+dsh-liuying-voice,1.6.6,unlabeled,postinstall,https://registry.npmjs.org/dsh-liuying-voice/1.6.6,needs_independent_review,postinstall,2026-11-28
+@guandata/guanvis,0.1.66,unlabeled,postinstall,https://registry.npmjs.org/%40guandata%2Fguanvis/0.1.66,needs_independent_review,postinstall,2026-11-28
+@manzt/uv,0.8.13,unlabeled,postinstall,https://registry.npmjs.org/%40manzt%2Fuv/0.8.13,needs_independent_review,rust,2026-11-28
+lp_solve,0.2.18,unlabeled,install,https://registry.npmjs.org/lp_solve/0.2.18,needs_independent_review,binding,2026-11-28
+fasttext,1.0.0,unlabeled,install,https://registry.npmjs.org/fasttext/1.0.0,needs_independent_review,binding,2026-11-28
+glslang-validator-prebuilt,0.0.7,unlabeled,postinstall,https://registry.npmjs.org/glslang-validator-prebuilt/0.0.7,needs_independent_review,prebuilt binary,2026-11-28
+pi-courier,1.8.3,unlabeled,postinstall,https://registry.npmjs.org/pi-courier/1.8.3,needs_independent_review,postinstall,2026-11-28
+mcp-sqlite,1.0.9,unlabeled,postinstall,https://registry.npmjs.org/mcp-sqlite/1.0.9,needs_independent_review,sqlite,2026-11-28
+electron-native-speech-backend-macos,0.1.7,unlabeled,postinstall,https://registry.npmjs.org/electron-native-speech-backend-macos/0.1.7,needs_independent_review,electron,2026-11-28
+@oj-bin/oj,0.1.146,unlabeled,postinstall,https://registry.npmjs.org/%40oj-bin%2Foj/0.1.146,needs_independent_review,postinstall,2026-11-28
+magik-moji,1.0.1,unlabeled,postinstall,https://registry.npmjs.org/magik-moji/1.0.1,needs_independent_review,postinstall,2026-11-28
+native-dawn,0.1.6,unlabeled,install,https://registry.npmjs.org/native-dawn/0.1.6,needs_independent_review,node-gyp,2026-11-28
+cargoscope,0.12.0,unlabeled,postinstall,https://registry.npmjs.org/cargoscope/0.12.0,needs_independent_review,rust,2026-11-28
+pqclean,0.8.1,unlabeled,install,https://registry.npmjs.org/pqclean/0.8.1,needs_independent_review,native addon,2026-11-28
+dev-change-report,1.5.3,unlabeled,postinstall,https://registry.npmjs.org/dev-change-report/1.5.3,needs_independent_review,postinstall,2026-11-28
+@jenga-ai/agent,5.3.0,unlabeled,postinstall,https://registry.npmjs.org/%40jenga-ai%2Fagent/5.3.0,needs_independent_review,postinstall,2026-11-28
+@nothumanwork/wit,0.1.74,unlabeled,postinstall,https://registry.npmjs.org/%40nothumanwork%2Fwit/0.1.74,needs_independent_review,postinstall,2026-11-28
+worktree-for-agents,1.2.3,unlabeled,postinstall,https://registry.npmjs.org/worktree-for-agents/1.2.3,needs_independent_review,postinstall,2026-11-28
+@hicccc77/electron-liquid-glass,0.4.0,unlabeled,install,https://registry.npmjs.org/%40hicccc77%2Felectron-liquid-glass/0.4.0,needs_independent_review,electron,2026-11-28
+react-native-nitro-http-server,1.11.0,unlabeled,postinstall,https://registry.npmjs.org/react-native-nitro-http-server/1.11.0,needs_independent_review,ffi,2026-11-28
+@realtimex/node-llama-cpp,0.283.0,unlabeled,postinstall,https://registry.npmjs.org/%40realtimex%2Fnode-llama-cpp/0.283.0,needs_independent_review,node-gyp,2026-11-28
+@ia-ccun/idea-plugin-share,0.0.88,unlabeled,postinstall,https://registry.npmjs.org/%40ia-ccun%2Fidea-plugin-share/0.0.88,needs_independent_review,postinstall,2026-11-28
+linux-device,2.1.4,unlabeled,install,https://registry.npmjs.org/linux-device/2.1.4,needs_independent_review,native addon,2026-11-28
+iterate-harness,2.27.0,unlabeled,postinstall,https://registry.npmjs.org/iterate-harness/2.27.0,needs_independent_review,postinstall,2026-11-28
+@whobot/cli-test,0.2.7,unlabeled,postinstall,https://registry.npmjs.org/%40whobot%2Fcli-test/0.2.7,needs_independent_review,postinstall,2026-11-28
+atlascloud-cli,0.1.55,unlabeled,postinstall,https://registry.npmjs.org/atlascloud-cli/0.1.55,needs_independent_review,postinstall,2026-11-28
+@ask-loft/loft,2.4.3,unlabeled,postinstall,https://registry.npmjs.org/%40ask-loft%2Floft/2.4.3,needs_independent_review,prebuilt binary,2026-11-28
+trtc-electron-sdk,13.3.801,unlabeled,install;postinstall,https://registry.npmjs.org/trtc-electron-sdk/13.3.801,needs_independent_review,electron,2026-11-28
+@dagucloud/dagu,2.27.0,unlabeled,postinstall,https://registry.npmjs.org/%40dagucloud%2Fdagu/2.27.0,needs_independent_review,postinstall,2026-11-28
+@milaboratories/pframes-rs-node,1.3.1,unlabeled,install,https://registry.npmjs.org/%40milaboratories%2Fpframes-rs-node/1.3.1,needs_independent_review,native addon,2026-11-28
+npm-audit,0.0.3,unlabeled,postinstall,https://registry.npmjs.org/npm-audit/0.0.3,needs_independent_review,postinstall,2026-11-28
+codesift-mcp,0.26.5,unlabeled,postinstall,https://registry.npmjs.org/codesift-mcp/0.26.5,needs_independent_review,postinstall,2026-11-28
+@lyricalstring/gale,0.1.5,unlabeled,postinstall,https://registry.npmjs.org/%40lyricalstring%2Fgale/0.1.5,needs_independent_review,rust,2026-11-28
+@makeomatic/ffi-napi,4.2.0,unlabeled,install,https://registry.npmjs.org/%40makeomatic%2Fffi-napi/4.2.0,needs_independent_review,napi,2026-11-28
+kinerouter,0.2.6,unlabeled,postinstall,https://registry.npmjs.org/kinerouter/0.2.6,needs_independent_review,postinstall,2026-11-28
+@guandata/guanskill,0.1.59,unlabeled,postinstall,https://registry.npmjs.org/%40guandata%2Fguanskill/0.1.59,needs_independent_review,postinstall,2026-11-28
+@muhammara/native-with-source,7.3.0,unlabeled,install,https://registry.npmjs.org/%40muhammara%2Fnative-with-source/7.3.0,needs_independent_review,native addon,2026-11-28
+truffle-security,1.7.3,unlabeled,postinstall,https://registry.npmjs.org/truffle-security/1.7.3,needs_independent_review,node-gyp,2026-11-28
+fastpilot,0.7.4,unlabeled,postinstall,https://registry.npmjs.org/fastpilot/0.7.4,needs_independent_review,prebuilt binary,2026-11-28
+@reqlan/analytical,1.23.0,unlabeled,postinstall,https://registry.npmjs.org/%40reqlan%2Fanalytical/1.23.0,needs_independent_review,postinstall,2026-11-28
+@guandata/guanwf,0.1.846,unlabeled,postinstall,https://registry.npmjs.org/%40guandata%2Fguanwf/0.1.846,needs_independent_review,postinstall,2026-11-28
+@shiju-ai/shiju,0.8.3,unlabeled,postinstall,https://registry.npmjs.org/%40shiju-ai%2Fshiju/0.8.3,needs_independent_review,rust,2026-11-28
+@0xdoublesharp/abi-typegen,0.9.3,unlabeled,postinstall,https://registry.npmjs.org/%400xdoublesharp%2Fabi-typegen/0.9.3,needs_independent_review,postinstall,2026-11-28
+@automattic/yara,2.7.0,unlabeled,install,https://registry.npmjs.org/%40automattic%2Fyara/2.7.0,needs_independent_review,node-gyp,2026-11-28
+onstarjs2,2.16.8,unlabeled,postinstall,https://registry.npmjs.org/onstarjs2/2.16.8,needs_independent_review,postinstall,2026-11-28
+sq-native,1.0.10,unlabeled,install,https://registry.npmjs.org/sq-native/1.0.10,needs_independent_review,binding,2026-11-28
+@unomed/react-native-matrix-sdk,0.10.2,unlabeled,postinstall,https://registry.npmjs.org/%40unomed%2Freact-native-matrix-sdk/0.10.2,needs_independent_review,ffi,2026-11-28
+@rankingcoach/vanguard,2.11.0,unlabeled,postinstall,https://registry.npmjs.org/%40rankingcoach%2Fvanguard/2.11.0,needs_independent_review,postinstall,2026-11-28
