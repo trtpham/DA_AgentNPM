@@ -497,6 +497,41 @@ def test_benchmarks_endpoint_aggregates_tables(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
+    (reports / "inj1109b-summary.json").write_text(
+        json.dumps(
+            {
+                "lure": "IGNORE",
+                "placements": {
+                    "comment": {
+                        "what": "inside comment",
+                        "models": {
+                            "A-TLM-X": {"run_id": "inj-tlm", "n": 9, "model_fooled": 5, "system_fooled": 0, "denied": 0, "review": 9},
+                        },
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (reports / "corpus-v2-summary.json").write_text(
+        json.dumps(
+            {
+                "A-LLM": {
+                    "total": 22,
+                    "safe": 22,
+                    "strict_correct": 18,
+                    "malicious_denied": 11,
+                    "n_malicious": 11,
+                    "malicious_approved": 0,
+                    "benign_denied": 0,
+                    "pairs_separated": 9,
+                    "n_pairs": 9,
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
     server = make_server(reports, 0, labels_file=data_dir / "labels-v1.csv")
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -506,6 +541,7 @@ def test_benchmarks_endpoint_aggregates_tables(tmp_path: Path) -> None:
         payload = json.loads(body)
         assert [c["config"] for c in payload["comparisons"]["test"]] == ["A-LLM-X", "GuardDog 2.6.0"]
         assert payload["comparisons"]["test"][0]["malicious_approved"] == 0
+        assert payload["comparisons"]["test"][0]["confusion"]["malicious"]["benign"] == 0
         assert len(payload["osv_ablation"]["test"]) == 2
         assert payload["sandbox"]["splits"]["test"]["canary_touched"] == 1
         assert payload["sandbox"]["missing_groups"][3]["total"] == 1
@@ -513,6 +549,8 @@ def test_benchmarks_endpoint_aggregates_tables(tmp_path: Path) -> None:
         assert payload["sweeps"][0]["rows"][0]["selected"] is True
         assert [d["name"] for d in payload["datasets"]] == ["labels-v1", "labels-v2-draft"]
         assert payload["datasets"][1]["test_after"] == 1
+        assert payload["prompt_injection"]["placements"][0]["models"]["A-TLM-X"]["system_fooled"] == 0
+        assert payload["anti_rote"][0]["pairs_separated"] == 9
     finally:
         server.shutdown()
         server.server_close()

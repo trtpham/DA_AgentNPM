@@ -25,6 +25,22 @@
     <p class="about-howto">Chọn một <b>run</b> bên trái → xem <b>Chi tiết một gói</b> (kết luận, luật chốt, hành vi nguồn–hành động–đích, dòng mã được trích), chuyển sang <b>Tổng hợp lượt chạy</b> để xem ma trận nhầm lẫn, so GuardDog và ca sai, hoặc <b>So sánh model</b>.</p>
   </details>
 
+  <details class="about live-helper" id="live-helper">
+    <summary>Quét live một gói npm bất kỳ (sinh lệnh chạy an toàn trong container — trình xem tự cập nhật)</summary>
+    <div class="live-helper-body">
+      <div class="live-helper-fields">
+        <label>Gói npm <input type="text" id="live-pkg" value="@abc54d/postinstall-hello-world@1.0.0" placeholder="vd: chalk@5.3.0 hoặc @scope/pkg@1.0.0" autocomplete="off"></label>
+        <label>Cấu hình <select id="live-cfg"><option value="A-LLM-X" selected>A-LLM-X (9B mở rộng)</option><option value="A-LLM">A-LLM (9B cơ bản)</option><option value="A-SLM-X">A-SLM-X (4B mở rộng)</option><option value="A-SLM">A-SLM (4B cơ bản)</option><option value="A-TLM">A-TLM (0.8B)</option></select></label>
+        <label>Tên lượt (run_id) <input type="text" id="live-run" value="demo-live-npm" autocomplete="off"></label>
+      </div>
+      <div class="live-cmd-row">
+        <code id="live-cmd">py -3.14 -m experiments.run_isolated demo-live-npm A-LLM-X --package @abc54d/postinstall-hello-world@1.0.0</code>
+        <button type="button" class="ghost" id="live-copy">Chép lệnh</button>
+      </div>
+      <p class="outcome-meta">Chạy lệnh trên ở PowerShell trong thư mục dự án (container cô lập, tắt mạng khi đọc, dry-run). Trình xem tự theo dõi <code>reports/</code> theo thời gian thực để hiện từng bước.</p>
+    </div>
+  </details>
+
   <div class="viewer">
     <aside class="sidebar" aria-labelledby="picker-title">
       <div class="sidebar-head">

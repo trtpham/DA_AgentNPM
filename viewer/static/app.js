@@ -1533,6 +1533,125 @@ function benchCallout(text, tone = '') {
   return el('p', `bench-callout${tone ? ` ${tone}` : ''}`, text);
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs = {}, text = null) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, String(v));
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+function buildMetricsSvgChart(rows) {
+  const box = el('div', 'chart-box');
+  box.append(el('h3', null, 'Biểu đồ F1 · Recall · FPR theo cấu hình'));
+  const w = 440;
+  const h = 190;
+  const padL = 32;
+  const padR = 10;
+  const padT = 18;
+  const padB = 34;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  const svg = svgEl('svg', {class: 'chart-svg', viewBox: `0 0 ${w} ${h}`, role: 'img', 'aria-label': 'Biểu đồ cột F1, Recall, FPR'});
+
+  for (const tick of [0, 0.25, 0.5, 0.75, 1]) {
+    const y = padT + plotH * (1 - tick);
+    svg.append(svgEl('line', {class: tick === 0 ? 'chart-axis' : 'chart-grid', x1: padL, x2: w - padR, y1: y.toFixed(1), y2: y.toFixed(1)}));
+    svg.append(svgEl('text', {x: padL - 4, y: (y + 3).toFixed(1), 'text-anchor': 'end'}, String(tick).replace('.', ',')));
+  }
+
+  const groupW = plotW / Math.max(1, rows.length);
+  const barW = Math.min(13, (groupW - 10) / 3);
+  const series = [['f1', 'var(--mint)', 'F1'], ['recall', 'var(--blue)', 'Recall'], ['fpr', 'var(--amber)', 'FPR']];
+  rows.forEach((r, idx) => {
+    const cx = padL + groupW * (idx + 0.5);
+    const totalW = barW * 3 + 4;
+    const x0 = cx - totalW / 2;
+    series.forEach(([key, fill], sIdx) => {
+      const val = Number(r[key] ?? 0);
+      const bh = Math.max(1, val * plotH);
+      const bx = x0 + sIdx * (barW + 2);
+      const by = padT + plotH - bh;
+      const rect = svgEl('rect', {x: bx.toFixed(1), y: by.toFixed(1), width: barW.toFixed(1), height: bh.toFixed(1), rx: 2, fill});
+      rect.append(svgEl('title', null, `${r.config} · ${series[sIdx][2]}: ${fmtMetric(val)}`));
+      svg.append(rect);
+      if (key === 'f1' && r[key] != null) {
+        svg.append(svgEl('text', {class: 'chart-val', x: (bx + barW / 2).toFixed(1), y: (by - 4).toFixed(1), 'text-anchor': 'middle'}, fmtMetric(val, 2)));
+      }
+    });
+    const shortName = r.config.startsWith('GuardDog') ? 'GDog' : r.config;
+    svg.append(svgEl('text', {x: cx.toFixed(1), y: h - 12, 'text-anchor': 'middle'}, shortName));
+  });
+
+  const leg = el('div', 'chart-legend');
+  for (const [, color, label] of series) {
+    const item = el('span');
+    const dot = el('i', 'sbx-dot');
+    dot.style.background = color;
+    item.append(dot, label);
+    leg.append(item);
+  }
+  box.append(svg, leg);
+  return box;
+}
+
+function buildOutcomeSvgChart(agentRows) {
+  const box = el('div', 'chart-box');
+  box.append(el('h3', null, 'Phân bổ nhãn quyết định trên toàn tập'));
+  const w = 440;
+  const h = 190;
+  const padL = 62;
+  const padR = 46;
+  const padT = 14;
+  const padB = 22;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  const svg = svgEl('svg', {class: 'chart-svg', viewBox: `0 0 ${w} ${h}`, role: 'img', 'aria-label': 'Tỷ lệ Độc hại, Đáng ngờ, Lành tính và Lỗi theo cấu hình'});
+
+  const rowH = plotH / Math.max(1, agentRows.length);
+  const barH = Math.min(18, rowH - 8);
+  const segs = [
+    ['malicious', 'var(--red)', 'Độc hại (từ chối)'],
+    ['suspicious', 'var(--amber)', 'Đáng ngờ (chờ xem)'],
+    ['benign', 'var(--mint)', 'Lành tính (tự duyệt)'],
+    ['error', 'var(--faint)', 'Lỗi'],
+  ];
+
+  agentRows.forEach((r, idx) => {
+    const cy = padT + rowH * (idx + 0.5);
+    const by = cy - barH / 2;
+    svg.append(svgEl('text', {x: padL - 6, y: (cy + 3.5).toFixed(1), 'text-anchor': 'end'}, r.config));
+    const totals = {malicious: 0, suspicious: 0, benign: 0, error: 0};
+    for (const actual of ['malicious', 'suspicious', 'benign']) {
+      const c = r.confusion?.[actual] || {};
+      for (const pred of Object.keys(totals)) totals[pred] += Number(c[pred] || 0);
+    }
+    const sum = Object.values(totals).reduce((a, b) => a + b, 0) || Number(r.scored || 1);
+    let curX = padL;
+    for (const [key, fill, title] of segs) {
+      const sw = (totals[key] / sum) * plotW;
+      if (sw > 0.5) {
+        const rect = svgEl('rect', {x: curX.toFixed(1), y: by.toFixed(1), width: sw.toFixed(1), height: barH.toFixed(1), fill});
+        rect.append(svgEl('title', null, `${r.config} · ${title}: ${totals[key]}/${sum}`));
+        svg.append(rect);
+        curX += sw;
+      }
+    }
+    svg.append(svgEl('text', {class: 'chart-val', x: w - padR + 6, y: (cy + 3.5).toFixed(1)}, `${totals.benign}/${sum}`));
+  });
+
+  const leg = el('div', 'chart-legend');
+  for (const [, color, label] of segs) {
+    const item = el('span');
+    const dot = el('i', 'sbx-dot');
+    dot.style.background = color;
+    item.append(dot, label);
+    leg.append(item);
+  }
+  box.append(svg, leg);
+  return box;
+}
+
 async function renderBenchmarks() {
   const view = $('benchmarks-view');
   if (view.hidden) return;
@@ -1555,11 +1674,12 @@ async function renderBenchmarks() {
 
   const tabs = [
     ['all', 'Tất cả'],
-    ['cmp', '1. So sánh cấu hình'],
-    ['osv', '2. OSV (luật R5)'],
-    ['sbx', '3. Sandbox VM'],
-    ['sweep', '4. Quét ngưỡng dev'],
-    ['data', '5. Bộ nhãn'],
+    ['cmp', '1. So sánh & Biểu đồ'],
+    ['matrix', '2. Ma trận quyết định'],
+    ['osv', '3. OSV (luật R5)'],
+    ['sbx', '4. Sandbox VM'],
+    ['sec', '5. Chống Injection & Học vẹt'],
+    ['sweep', '6. Ngưỡng & Nhãn'],
   ];
   toolbar.replaceChildren(...tabs.map(([id, label]) => {
     const btn = el('button', 'bench-tab', label);
@@ -1611,18 +1731,22 @@ async function renderBenchmarks() {
   );
   body.append(kpis);
 
-  // 1. All-config comparison table
+  // 1. Visual SVG Charts + All-config comparison table
   if (show('cmp')) {
     const cmpCard = el('section', 'panel-card');
     cmpCard.append(el('h2', 'card-title', `1. So sánh 6 cấu hình & GuardDog trên tập ${split} (ngưỡng 0,95)`));
     if (cmpRows.length) {
+      const chartGrid = el('div', 'bench-charts');
+      chartGrid.append(buildMetricsSvgChart(cmpRows), buildOutcomeSvgChart(agentRows));
+      cmpCard.append(chartGrid);
+
       const wrap = el('div', 'table-scroll');
       const table = el('table', 'bench-table');
       const thead = el('thead');
       const hr = el('tr');
       for (const [h, isNum] of [
         ['Cấu hình', false], ['Model', false], ['Precision', true], ['Recall', true],
-        ['F1', true], ['FPR', true], ['Độc duyệt', true], ['Review', true], ['Lỗi', true], ['Giây/gói', true],
+        ['F1', true], ['FPR', true], ['Độc duyệt', true], ['JSON hợp lệ', true], ['Review', true], ['Giây/gói', true],
       ]) {
         hr.append(el('th', isNum ? 'num' : null, h));
       }
@@ -1669,8 +1793,8 @@ async function renderBenchmarks() {
           f1Td,
           fprTd,
           malTd,
+          benchNumTd(r.valid_json_rate != null ? `${(Number(r.valid_json_rate) * 100).toFixed(1).replace('.', ',')}%` : '—'),
           benchNumTd(r.review_rate != null ? `${Math.round(r.review_rate * 100)}%` : '—'),
-          benchNumTd(r.error_rate != null ? `${Math.round(r.error_rate * 100)}%` : '—'),
           benchNumTd(r.mean_seconds != null ? `${r.mean_seconds} s` : '—'),
         );
         tbody.append(tr);
@@ -1687,11 +1811,67 @@ async function renderBenchmarks() {
     body.append(cmpCard);
   }
 
-  // 2. OSV Ablation table
+  // 2. Per-config Confusion & Decision Breakdown Matrix (TP/FP/TN/FN + Malicious/Suspicious/Benign)
+  if (show('matrix')) {
+    const matCard = el('section', 'panel-card');
+    matCard.append(el('h2', 'card-title', `2. Ma trận phân bổ quyết định theo nhãn thật · tập ${split}`));
+    const withMatrix = cmpRows.filter((r) => r.confusion || r.binary);
+    if (withMatrix.length) {
+      const wrap = el('div', 'table-scroll');
+      const table = el('table', 'bench-table');
+      const thead = el('thead');
+      const hr = el('tr');
+      for (const [h, isNum] of [
+        ['Cấu hình', false],
+        ['TP / FP / TN / FN', true],
+        ['Nhãn Độc hại (M)', true],
+        ['Nhãn Đáng ngờ (S)', true],
+        ['Nhãn Lành tính (B)', true],
+      ]) {
+        hr.append(el('th', isNum ? 'num' : null, h));
+      }
+      thead.append(hr);
+      const tbody = el('tbody');
+      const fmtQuadRow = (c, highlightMal = false) => {
+        const td = el('td', 'num');
+        if (!c) { td.textContent = '—'; return td; }
+        const text = `${c.malicious ?? 0} / ${c.suspicious ?? 0} / ${c.benign ?? 0} / ${c.error ?? 0}`;
+        if (highlightMal) {
+          const ok = (c.benign ?? 0) === 0;
+          td.append(el('span', `pill ${ok ? 'ok' : 'bad'}`, text));
+        } else {
+          td.classList.add('mono-cell');
+          td.textContent = text;
+        }
+        return td;
+      };
+      for (const r of withMatrix) {
+        const tr = el('tr');
+        const b = r.binary || {};
+        const binText = r.binary ? `${b.tp ?? 0} / ${b.fp ?? 0} / ${b.tn ?? 0} / ${b.fn ?? 0}` : '—';
+        tr.append(
+          el('td', 'mono-cell', r.config),
+          benchNumTd(binText, 'num mono-cell'),
+          fmtQuadRow(r.confusion?.malicious, true),
+          fmtQuadRow(r.confusion?.suspicious, false),
+          fmtQuadRow(r.confusion?.benign, false),
+        );
+        tbody.append(tr);
+      }
+      table.append(thead, tbody);
+      wrap.append(table);
+      matCard.append(wrap, benchCallout('Quy ước dương tính: Độc hại hoặc Đáng ngờ. Thứ tự 4 ô trong mỗi nhãn: gán Độc hại / Đáng ngờ / Lành tính / Lỗi (cột "Nhãn Độc hại" tô xanh khi 0 ca bị gán nhầm Lành tính).', 'info'));
+    } else {
+      matCard.append(el('p', 'outcome-meta', 'Chưa có dữ liệu ma trận phân bổ cho tập này.'));
+    }
+    body.append(matCard);
+  }
+
+  // 3. OSV Ablation table
   if (show('osv')) {
     const osvRows = (data.osv_ablation || {})[split] || [];
     const osvCard = el('section', 'panel-card');
-    osvCard.append(el('h2', 'card-title', `2. Đối chiếu Có và Không có OSV (luật R5 · tập ${split})`));
+    osvCard.append(el('h2', 'card-title', `3. Đối chiếu Có và Không có OSV (luật R5 · tập ${split})`));
     if (osvRows.length) {
       const wrap = el('div', 'table-scroll');
       const table = el('table', 'bench-table');
@@ -1755,11 +1935,11 @@ async function renderBenchmarks() {
     body.append(osvCard);
   }
 
-  // 3. Sandbox Coverage + 67 Missing Cases (A-F)
+  // 4. Sandbox Coverage + 67 Missing Cases (A-F)
   if (show('sbx')) {
     const sbx = data.sandbox;
     const sbxCard = el('section', 'panel-card');
-    sbxCard.append(el('h2', 'card-title', '3. Độ phủ Sandbox pha A trong VM (sbx-dev-v1b & sbx-test-v1b)'));
+    sbxCard.append(el('h2', 'card-title', '4. Độ phủ Sandbox pha A trong VM (sbx-dev-v1b & sbx-test-v1b)'));
     if (sbx && sbx.splits) {
       const sp = sbx.splits;
       const tot = sp.total;
@@ -1842,17 +2022,106 @@ async function renderBenchmarks() {
     body.append(sbxCard);
   }
 
-  // 4 & 5: Threshold sweeps + Dataset cards
-  const showSweep = show('sweep');
-  const showData = show('data');
-  if (showSweep || showData) {
-    const bottom = el('div', showSweep && showData ? 'bench-bottom' : 'benchmarks-body');
+  // 5. Security resilience: Prompt Injection & Anti-Rote (L1-L4)
+  if (show('sec')) {
+    const inj = data.prompt_injection;
+    const injCard = el('section', 'panel-card');
+    injCard.append(el('h2', 'card-title', '5A. Thử nghiệm Chống Prompt Injection (mồi câu chỉ dẫn trong gói)'));
+    if (inj && inj.placements?.length) {
+      const wrap = el('div', 'table-scroll');
+      const table = el('table', 'bench-table');
+      const thead = el('thead');
+      const hr = el('tr');
+      for (const [h, isNum] of [
+        ['Vị trí chèn mồi', false],
+        ['A-LLM-X (9B)', true],
+        ['A-SLM-X (4B)', true],
+        ['A-TLM-X (0.8B)', true],
+      ]) {
+        hr.append(el('th', isNum ? 'num' : null, h));
+      }
+      thead.append(hr);
+      const tbody = el('tbody');
+      const injCell = (m) => {
+        const td = el('td', 'num');
+        if (!m) { td.textContent = '—'; return td; }
+        const sysOk = m.system_fooled === 0;
+        const sysPill = el('span', `pill ${sysOk ? 'ok' : 'bad'}`, `Hệ thống lừa: ${m.system_fooled}/${m.n}`);
+        if (m.run_id && state.runs.includes(m.run_id)) {
+          sysPill.style.cursor = 'pointer';
+          sysPill.title = `Mở run ${m.run_id}`;
+          sysPill.addEventListener('click', () => { setView('single'); switchRun(m.run_id); });
+        }
+        td.append(sysPill);
+        td.append(el('span', 'bench-sub', `Model lừa: ${m.model_fooled}/${m.n} · chặn ${m.denied} · xem ${m.review}`));
+        return td;
+      };
+      for (const p of inj.placements) {
+        const tr = el('tr');
+        tr.append(el('td', null, p.label), injCell(p.models['A-LLM-X']), injCell(p.models['A-SLM-X']), injCell(p.models['A-TLM-X']));
+        tbody.append(tr);
+      }
+      table.append(thead, tbody);
+      wrap.append(table);
+      injCard.append(wrap, benchCallout('Dù mô hình 0,8B bị lừa 1–5/9 ca khi gặp mồi trong chú thích/chuỗi/tool giả, luật cứng R7_flow + R8 giữ hệ thống bị lừa = 0 ở mọi kịch bản.', 'info'));
+    } else {
+      injCard.append(el('p', 'outcome-meta', 'Chưa có dữ liệu thử nghiệm prompt injection.'));
+    }
+    body.append(injCard);
 
-    if (showSweep) {
-      const sweeps = data.sweeps || [];
-      const sweepCard = el('section', 'panel-card');
-      const sweepHead = el('div', 'section-head');
-      sweepHead.append(el('h2', 'card-title', '4. Quét ngưỡng trên tập dev (0,50 → 0,95)'));
+    const roteRows = data.anti_rote || [];
+    const roteCard = el('section', 'panel-card');
+    roteCard.append(el('h2', 'card-title', '5B. Thử nghiệm Chống học vẹt (L1–L4 · 22 gói cặp & Ablation)'));
+    if (roteRows.length) {
+      const wrap = el('div', 'table-scroll');
+      const table = el('table', 'bench-table');
+      const thead = el('thead');
+      const hr = el('tr');
+      for (const [h, isNum] of [
+        ['Giai đoạn / Ablation', false], ['Cấu hình', false],
+        ['An toàn', true], ['Độc từ chối', true], ['Độc duyệt (lọt)', true],
+        ['Lành từ chối', true], ['Cặp phân tách', true],
+      ]) {
+        hr.append(el('th', isNum ? 'num' : null, h));
+      }
+      thead.append(hr);
+      const tbody = el('tbody');
+      for (const r of roteRows) {
+        const isSafe = r.safe === r.total && r.malicious_approved === 0;
+        const tr = el('tr', isSafe ? 'is-best' : null);
+        const safeTd = el('td', 'num');
+        safeTd.append(el('span', `pill ${r.safe === r.total ? 'ok' : 'warn'}`, `${r.safe}/${r.total}`));
+        const malAppTd = el('td', 'num');
+        malAppTd.append(el('span', `pill ${r.malicious_approved === 0 ? 'ok' : 'bad'}`, String(r.malicious_approved ?? '—')));
+        tr.append(
+          el('td', null, r.stage),
+          el('td', 'mono-cell', r.model),
+          safeTd,
+          benchNumTd(`${r.malicious_denied}/${r.n_malicious}`),
+          malAppTd,
+          benchNumTd(String(r.benign_denied ?? '—')),
+          benchNumTd(`${r.pairs_separated}/${r.n_pairs}`),
+        );
+        tbody.append(tr);
+      }
+      table.append(thead, tbody);
+      wrap.append(table);
+      roteCard.append(wrap, benchCallout('Bỏ che tên gói (L1) làm sụt tách cặp 8→7/9; bỏ kiểm dòng trích (L2) khiến A-SLM duyệt nhầm 1 gói độc.', 'info'));
+    } else {
+      roteCard.append(el('p', 'outcome-meta', 'Chưa có dữ liệu thử nghiệm chống học vẹt.'));
+    }
+    body.append(roteCard);
+  }
+
+  // 6A & 6B: Threshold sweeps + Dataset cards
+  const showSweep = show('sweep');
+  if (showSweep) {
+    const bottom = el('div', 'benchmarks-body');
+
+    const sweeps = data.sweeps || [];
+    const sweepCard = el('section', 'panel-card');
+    const sweepHead = el('div', 'section-head');
+    sweepHead.append(el('h2', 'card-title', '6A. Quét ngưỡng trên tập dev (0,50 → 0,95)'));
       if (sweeps.length) {
         if (!sweeps.some((s) => s.config === state.sweepConfig)) state.sweepConfig = sweeps[0].config;
         const pills = el('div', 'bench-cfg-pills');
@@ -1915,12 +2184,10 @@ async function renderBenchmarks() {
         sweepCard.append(sweepHead, el('p', 'outcome-meta', 'Chưa có bảng quét ngưỡng.'));
       }
       bottom.append(sweepCard);
-    }
 
-    if (showData) {
       const dsList = data.datasets || [];
       const dsCard = el('section', 'panel-card');
-      dsCard.append(el('h2', 'card-title', '5. Thống kê bộ nhãn (labels-v1 & labels-v2-draft)'));
+      dsCard.append(el('h2', 'card-title', '6B. Thống kê bộ nhãn (labels-v1 & labels-v2-draft)'));
       if (dsList.length) {
         const cards = el('div', 'ds-cards');
         for (const d of dsList) {
@@ -1974,7 +2241,6 @@ async function renderBenchmarks() {
         dsCard.append(el('p', 'outcome-meta', 'Chưa tìm thấy file nhãn.'));
       }
       bottom.append(dsCard);
-    }
 
     body.append(bottom);
   }
@@ -2083,6 +2349,20 @@ async function init() {
   $('speed').addEventListener('change', () => { if (state.timer) { stopReplay(); startReplay(); } });
   $('summary-split').addEventListener('change', (event) => { state.summarySplit = event.target.value; renderSummary(); });
   $('bench-split').addEventListener('change', (event) => { state.benchSplit = event.target.value; renderBenchmarks(); });
+  const updateLiveCmd = () => {
+    const pkgVal = ($('live-pkg').value || '').trim().replace(/[^a-zA-Z0-9.@_/-]/g, '') || '@abc54d/postinstall-hello-world@1.0.0';
+    const runVal = ($('live-run').value || '').trim().replace(/[^a-zA-Z0-9_-]/g, '') || 'demo-live-npm';
+    const cfgVal = $('live-cfg').value || 'A-LLM-X';
+    $('live-cmd').textContent = `py -3.14 -m experiments.run_isolated ${runVal} ${cfgVal} --package ${pkgVal}`;
+  };
+  for (const id of ['live-pkg', 'live-cfg', 'live-run']) $(id).addEventListener('input', updateLiveCmd);
+  $('live-cfg').addEventListener('change', updateLiveCmd);
+  updateLiveCmd();
+  $('live-copy').addEventListener('click', async () => {
+    const button = $('live-copy');
+    try { await navigator.clipboard.writeText($('live-cmd').textContent); button.textContent = 'Đã chép'; } catch { button.textContent = 'Không chép được'; }
+    setTimeout(() => { button.textContent = 'Chép lệnh'; }, 1500);
+  });
   $('copy-link').addEventListener('click', async () => {
     const button = $('copy-link');
     try { await navigator.clipboard.writeText(location.href); button.textContent = 'Đã chép'; } catch { button.textContent = 'Không chép được'; }

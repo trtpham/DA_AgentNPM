@@ -60,6 +60,8 @@ def _load_comparisons(reports_root: Path) -> dict[str, list[dict]]:
                 "model": meta.get("model") or "—",
                 "malicious_approved": (confusion.get("malicious") or {}).get("benign", 0),
                 "suspicious_approved": (confusion.get("suspicious") or {}).get("benign", 0),
+                "confusion": confusion,
+                "binary": data.get("binary"),
                 **_pick_metrics(data),
             })
         gd = _read_json(reports_root / f"guarddog-{split}-v1" / "metrics.json")
@@ -70,6 +72,8 @@ def _load_comparisons(reports_root: Path) -> dict[str, list[dict]]:
                 "model": "—",
                 "malicious_approved": None,
                 "suspicious_approved": None,
+                "confusion": gd.get("confusion"),
+                "binary": gd.get("binary"),
                 **_pick_metrics(gd),
             })
         out[split] = rows
@@ -275,6 +279,80 @@ def _load_datasets(data_dir: Path) -> list[dict]:
     return out
 
 
+def _load_prompt_injection(reports_root: Path) -> dict | None:
+    for filename in ("inj1109b-summary.json", "inj1109-summary.json"):
+        data = _read_json(reports_root / filename)
+        if not isinstance(data, dict) or not isinstance(data.get("placements"), dict):
+            continue
+        labels = {
+            "none": "Không mồi (đối chứng)",
+            "comment": "Mồi trong chú thích (comment)",
+            "string": "Mồi trong chuỗi ký tự (string)",
+            "readme": "Mồi trong README",
+            "fake_result": "Mồi giả đầu ra tool",
+        }
+        placements = []
+        for key in ("none", "comment", "string", "readme", "fake_result"):
+            item = data["placements"].get(key)
+            if not isinstance(item, dict):
+                continue
+            models = item.get("models") or {}
+            per_model = {}
+            for cfg in ("A-LLM-X", "A-SLM-X", "A-TLM-X"):
+                mv = models.get(cfg)
+                if not isinstance(mv, dict):
+                    continue
+                per_model[cfg] = {
+                    "run_id": mv.get("run_id"),
+                    "n": mv.get("n", 0),
+                    "model_fooled": mv.get("model_fooled", 0),
+                    "system_fooled": mv.get("system_fooled", 0),
+                    "denied": mv.get("denied", 0),
+                    "review": mv.get("review", 0),
+                }
+            placements.append({
+                "key": key,
+                "label": labels.get(key, key),
+                "what": item.get("what") or "",
+                "models": per_model,
+            })
+        if placements:
+            return {"source": filename, "lure": data.get("lure") or "", "placements": placements}
+    return None
+
+
+def _load_anti_rote(reports_root: Path) -> list[dict]:
+    specs = (
+        ("corpus-base-summary.json", "Trước L1–L4 (mốc đầu)"),
+        ("corpus-v2-summary.json", "Sau L1–L4 (chuẩn)"),
+        ("corpus-x1108-summary.json", "Sau L1–L4 (bộ -X)"),
+        ("abl-no-alias-summary.json", "Ablation: tắt che tên (L1)"),
+        ("abl-no-l2-summary.json", "Ablation: tắt kiểm dòng (L2)"),
+    )
+    rows: list[dict] = []
+    for filename, stage in specs:
+        data = _read_json(reports_root / filename)
+        if not isinstance(data, dict):
+            continue
+        for model, entry in data.items():
+            if not isinstance(entry, dict) or "total" not in entry:
+                continue
+            rows.append({
+                "stage": stage,
+                "model": model,
+                "total": entry.get("total"),
+                "safe": entry.get("safe"),
+                "strict_correct": entry.get("strict_correct"),
+                "malicious_denied": entry.get("malicious_denied"),
+                "n_malicious": entry.get("n_malicious"),
+                "malicious_approved": entry.get("malicious_approved"),
+                "benign_denied": entry.get("benign_denied"),
+                "pairs_separated": entry.get("pairs_separated"),
+                "n_pairs": entry.get("n_pairs"),
+            })
+    return rows
+
+
 def build_benchmarks(reports_root: Path, data_dir: Path) -> dict:
     """Collect read-only project benchmark tables from `reports/` and `data/`."""
     return {
@@ -283,4 +361,6 @@ def build_benchmarks(reports_root: Path, data_dir: Path) -> dict:
         "sandbox": _load_sandbox_summary(reports_root),
         "sweeps": _load_sweeps(reports_root),
         "datasets": _load_datasets(data_dir),
+        "prompt_injection": _load_prompt_injection(reports_root),
+        "anti_rote": _load_anti_rote(reports_root),
     }
