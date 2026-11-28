@@ -50,6 +50,39 @@ def _get(url: str) -> bytes:
     return data
 
 
+def resolve_npm_package(spec: str, fetch=_get) -> dict:
+    """Resolve `name` or `name@version` into a labelled container row using registry.npmjs.org."""
+    from tools.intel import NAME, VERSION
+
+    text = (spec or "").strip()
+    if not text:
+        raise ValueError("package spec cannot be empty")
+    if text.startswith("@"):
+        if "@" in text[1:]:
+            name, _, version = text.rpartition("@")
+        else:
+            name, version = text, ""
+    else:
+        name, _, version = text.partition("@")
+    if not NAME.fullmatch(name):
+        raise ValueError(f"invalid npm package name: {name!r}")
+    if version and not VERSION.fullmatch(version):
+        raise ValueError(f"invalid npm package version: {version!r}")
+
+    quoted_name = urllib.parse.quote(name, safe="")
+    if not version:
+        listing = json.loads(fetch(f"https://registry.npmjs.org/{quoted_name}"))
+        version = str((listing.get("dist-tags") or {}).get("latest") or "")
+        if not VERSION.fullmatch(version):
+            raise ValueError(f"no valid latest version for {name}")
+    meta = json.loads(fetch(f"https://registry.npmjs.org/{quoted_name}/{urllib.parse.quote(version, safe='')}"))
+    tarball = str((meta.get("dist") or {}).get("tarball") or "")
+    parsed = urllib.parse.urlsplit(tarball)
+    if parsed.scheme != "https" or parsed.hostname != "registry.npmjs.org":
+        raise ValueError("tarball host not allowed")
+    return {"name": name, "version": version, "source": tarball}
+
+
 def materialize(row: dict, work: Path) -> Path:
     """Download and safely extract one labelled source into `work/package`; returns that directory."""
     from data.scripts.datadog_container import _extract_members
@@ -341,6 +374,8 @@ def main() -> None:
     parser.add_argument("--labels", type=Path, default=Path("data/labels-v1.csv"))
     parser.add_argument("--split", choices=("dev", "test"))
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--package", action="append", default=[],
+                        help="public npm package (name or name@version) to inspect inside disposable container")
     parser.add_argument("--reports", type=Path, default=Path("reports"))
     parser.add_argument("--guarddog", action="store_true", help="GuardDog baseline instead of the agent (no variant)")
     parser.add_argument("--contexts", type=Path,
@@ -359,8 +394,11 @@ def main() -> None:
         return
     if not args.run_id or not (args.variant or args.guarddog):
         parser.error("run_id and variant (or --guarddog) are required")
-    from experiments.dataset import load_labels
-    rows = [row for row in load_labels(args.labels) if not args.split or row["split"] == args.split]
+    if args.package:
+        rows = [resolve_npm_package(spec) for spec in args.package]
+    else:
+        from experiments.dataset import load_labels
+        rows = [row for row in load_labels(args.labels) if not args.split or row["split"] == args.split]
     rows = rows[:args.limit] if args.limit else rows
     if args.guarddog:
         print(json.dumps(run_guarddog(args.run_id, rows, args.reports)))

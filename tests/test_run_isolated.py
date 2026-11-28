@@ -238,3 +238,37 @@ def test_inside_sends_out_only_encoded_traces(monkeypatch, tmp_path):
     monkeypatch.setattr(iso.shutil, "rmtree", lambda *a, **k: None)
     out = iso.inside({"row": {"name": "a", "version": "1.0.0"}, "config": {"name": "A-TLM", "model": "m"}})
     assert code[40:120] not in out["trace"] and not iso.has_plain_preview(out["trace"])
+
+
+def test_resolve_npm_package_supports_version_latest_and_scoped():
+    seen_urls = []
+
+    def fake_fetch(url: str) -> bytes:
+        seen_urls.append(url)
+        if url.endswith("/%40scope%2Fpkg"):
+            return json.dumps({"dist-tags": {"latest": "2.1.0"}}).encode()
+        if url.endswith("/%40scope%2Fpkg/2.1.0"):
+            return json.dumps({"dist": {"tarball": "https://registry.npmjs.org/@scope/pkg/-/pkg-2.1.0.tgz"}}).encode()
+        if url.endswith("/chalk/5.3.0"):
+            return json.dumps({"dist": {"tarball": "https://registry.npmjs.org/chalk/-/chalk-5.3.0.tgz"}}).encode()
+        raise AssertionError(f"unexpected url: {url}")
+
+    assert iso.resolve_npm_package("chalk@5.3.0", fetch=fake_fetch) == {
+        "name": "chalk", "version": "5.3.0", "source": "https://registry.npmjs.org/chalk/-/chalk-5.3.0.tgz",
+    }
+    assert iso.resolve_npm_package("@scope/pkg", fetch=fake_fetch) == {
+        "name": "@scope/pkg", "version": "2.1.0", "source": "https://registry.npmjs.org/@scope/pkg/-/pkg-2.1.0.tgz",
+    }
+    assert any(u.endswith("/%40scope%2Fpkg") for u in seen_urls)
+
+
+def test_resolve_npm_package_rejects_bad_spec_or_untrusted_tarball():
+    with pytest.raises(ValueError, match="invalid npm package"):
+        iso.resolve_npm_package("../evil@1.0.0")
+    with pytest.raises(ValueError, match="invalid npm package version"):
+        iso.resolve_npm_package("chalk@bad version")
+    with pytest.raises(ValueError, match="tarball host"):
+        iso.resolve_npm_package(
+            "chalk@5.3.0",
+            fetch=lambda _u: json.dumps({"dist": {"tarball": "https://evil.example/chalk.tgz"}}).encode(),
+        )
